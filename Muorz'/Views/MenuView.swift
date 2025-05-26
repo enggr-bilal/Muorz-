@@ -88,9 +88,9 @@ struct MenuView: View {
                                         ForEach(filteredItems[category] ?? []) { item in
                                             MenuItemRow(
                                                 item: item,
-                                                showHighProtein: true,
-                                                showLowFat: true,
-                                                showLowCarbs: true,
+                                                showHighProtein: preferences.showHighProteinLabel,
+                                                showLowFat: preferences.showLowFatLabel,
+                                                showLowCarbs: preferences.showLowCarbsLabel,
                                                 selectionManager: selectionManager
                                             )
                                             

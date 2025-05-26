@@ -1,12 +1,3 @@
-//
-//  TEST.swift
-//  Muorz’
-//
-//  Created by Simon Naud on 26/05/25.
-//
-
-import SwiftUI
-
 struct ProfileView: View {
     @ObservedObject var preferences: UserPreferences
     @Environment(\.dismiss) private var dismiss
@@ -15,13 +6,19 @@ struct ProfileView: View {
     var body: some View {
         NavigationView {
             List {
+                // User Info Section
+                Section {
+                    UserInfoHeader(
+                        userName: $preferences.userName,
+                        onNameChange: { preferences.saveUserName() }
+                    )
+                }
                 
                 // Default Dietary Preference
                 Section(header: Text("Default Dietary Preference"), footer: Text("Menus will be filtered to only show dishes that match your selected diets.")) {
                     DietaryPreferencePicker(selectedPreference: $preferences.defaultDietaryPreference)
                 }
-               
-                
+                .headerProminence(.increased)
                 
                 // Default Nutrition Labels
                 Section(header: Text("Default Nutrition Labels"), footer: Text("Selected priorities will be displayed with badges to help you spot the right dishes faster.")) {
@@ -30,10 +27,15 @@ struct ProfileView: View {
                         onPreferenceChange: { preferences.saveNutritionPreferences() }
                     )
                 }
-               
+                .headerProminence(.increased)
                 
-              
-                
+                // Label Visibility Settings
+                Section(header: Text("Label Visibility"), footer: Text("Toggle which nutrition labels you want to see on menu items.")) {
+                    Toggle("Show High Protein Label", isOn: $preferences.showHighProteinLabel)
+                    Toggle("Show Low Fat Label", isOn: $preferences.showLowFatLabel)
+                    Toggle("Show Low Carbs Label", isOn: $preferences.showLowCarbsLabel)
+                }
+                .headerProminence(.increased)
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

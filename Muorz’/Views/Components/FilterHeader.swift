@@ -35,128 +35,31 @@ struct FilterHeader: View {
     @Binding var selectedDietTag: String?
     @Binding var selectedNutritionTags: Set<String>
     let categories: [String]
-    
-    private var selectedDietOption: PreferenceOption? {
-        UserPreferences.dietaryOptions.first { $0.id == selectedDietTag }
-    }
-    
-    private var selectedNutritionLabels: String {
-        if selectedNutritionTags.isEmpty {
-            return "Nutrition"
-        }
-        return selectedNutritionTags.count == 1 ? "1 Filter" : "\(selectedNutritionTags.count) Filters"
-    }
+
+    // MARK: - Helpers
     
     private var selectedCategoryLabel: String {
         selectedCategory == "all" ? "All" : selectedCategory.capitalized
     }
     
+    private var selectedDietOption: PreferenceOption? {
+        UserPreferences.dietaryOptions.first { $0.id == selectedDietTag }
+    }
+
+    private var selectedNutritionLabel: String {
+        switch selectedNutritionTags.count {
+        case 0: return "Nutrition"
+        case 1: return "1 Filter"
+        default: return "\(selectedNutritionTags.count) Filters"
+        }
+    }
+
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
-                // Categories Menu
-                Menu {
-                    ForEach(categories, id: \.self) { category in
-                        Button(action: {
-                            withAnimation {
-                                selectedCategory = category
-                            }
-                        }) {
-                            HStack {
-                                Text(category == "all" ? "All Categories" : category.capitalized)
-                                if selectedCategory == category {
-                                    Image(systemName: "checkmark")
-                                }
-                            }
-                        }
-                    }
-                } label: {
-                    FilterButton(
-                        title: selectedCategoryLabel,
-                        icon: "list.bullet",
-                        isSelected: selectedCategory != "all"
-                    )
-                }
-                
-                // Diet Filter Button
-                Menu {
-                    Button(action: {
-                        selectedDietTag = nil
-                    }) {
-                        HStack {
-                            Text("No Preference")
-                            if selectedDietTag == nil {
-                                Image(systemName: "checkmark")
-                            }
-                        }
-                    }
-                    
-                    ForEach(UserPreferences.dietaryOptions) { option in
-                        Button(action: {
-                            selectedDietTag = option.id
-                        }) {
-                            HStack {
-                                Label(option.name, systemImage: option.icon)
-                                if selectedDietTag == option.id {
-                                    Image(systemName: "checkmark")
-                                }
-                            }
-                        }
-                    }
-                } label: {
-                    if let dietOption = selectedDietOption {
-                        FilterButton(
-                            title: dietOption.name,
-                            icon: "dietOption.icon",
-                            isSelected: true
-                        )
-                    } else {
-                        FilterButton(
-                            title: "Diet",
-                            icon: "fork.knife",
-                            isSelected: false
-                        )
-                    }
-                }
-                
-                // Nutrition Tags Menu
-                Menu {
-                    ForEach(UserPreferences.nutritionOptions) { option in
-                        Button(action: {
-                            withAnimation {
-                                if selectedNutritionTags.contains(option.id) {
-                                    selectedNutritionTags.remove(option.id)
-                                } else {
-                                    selectedNutritionTags.insert(option.id)
-                                }
-                            }
-                        }) {
-                            HStack {
-                                Label(option.name, systemImage: option.icon)
-                                if selectedNutritionTags.contains(option.id) {
-                                    Image(systemName: "checkmark")
-                                }
-                            }
-                        }
-                    }
-                    
-                    if !selectedNutritionTags.isEmpty {
-                        Divider()
-                        Button(role: .destructive, action: {
-                            withAnimation {
-                                selectedNutritionTags.removeAll()
-                            }
-                        }) {
-                            Label("Clear All", systemImage: "xmark.circle.fill")
-                        }
-                    }
-                } label: {
-                    FilterButton(
-                        title: selectedNutritionLabels,
-                        icon: "tag.fill",
-                        isSelected: !selectedNutritionTags.isEmpty
-                    )
-                }
+                categoryMenu()
+                dietMenu()
+                nutritionMenu()
             }
             .padding(.horizontal)
         }
@@ -164,13 +67,108 @@ struct FilterHeader: View {
         .background(Color.white)
         .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
     }
-}
 
-#Preview {
-    FilterHeader(
-        selectedCategory: .constant("all"),
-        selectedDietTag: .constant("vegetarian"),
-        selectedNutritionTags: .constant(["protein"]),
-        categories: ["all", "appetizers", "main course", "desserts"]
-    )
-} 
+    // MARK: - Menus
+
+    @ViewBuilder
+    private func categoryMenu() -> some View {
+        Menu {
+            ForEach(categories, id: \.self) { category in
+                Button {
+                    withAnimation {
+                        selectedCategory = category
+                    }
+                } label: {
+                    HStack {
+                        Text(category == "all" ? "All Categories" : category.capitalized)
+                        if selectedCategory == category {
+                            Image(systemName: "checkmark")
+                        }
+                    }
+                }
+            }
+        } label: {
+            FilterButton(
+                title: selectedCategoryLabel,
+                icon: "list.bullet",
+                isSelected: selectedCategory != "all"
+            )
+        }
+    }
+
+    @ViewBuilder
+    private func dietMenu() -> some View {
+        Menu {
+            Button {
+                selectedDietTag = nil
+            } label: {
+                HStack {
+                    Text("No Preference")
+                    if selectedDietTag == nil {
+                        Image(systemName: "checkmark")
+                    }
+                }
+            }
+
+            ForEach(UserPreferences.dietaryOptions) { option in
+                Button {
+                    selectedDietTag = option.id
+                } label: {
+                    HStack {
+                        Label(option.name, systemImage: option.icon)
+                        if selectedDietTag == option.id {
+                            Image(systemName: "checkmark")
+                        }
+                    }
+                }
+            }
+        } label: {
+            if let diet = selectedDietOption {
+                FilterButton(title: diet.name, icon: diet.icon, isSelected: true)
+            } else {
+                FilterButton(title: "Diet", icon: "fork.knife", isSelected: false)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func nutritionMenu() -> some View {
+        Menu {
+            ForEach(UserPreferences.nutritionOptions) { option in
+                Button {
+                    withAnimation {
+                        if selectedNutritionTags.contains(option.id) {
+                            selectedNutritionTags.remove(option.id)
+                        } else {
+                            selectedNutritionTags.insert(option.id)
+                        }
+                    }
+                } label: {
+                    HStack {
+                        Label(option.name, systemImage: option.icon)
+                        if selectedNutritionTags.contains(option.id) {
+                            Image(systemName: "checkmark")
+                        }
+                    }
+                }
+            }
+
+            if !selectedNutritionTags.isEmpty {
+                Divider()
+                Button(role: .destructive) {
+                    withAnimation {
+                        selectedNutritionTags.removeAll()
+                    }
+                } label: {
+                    Label("Clear All", systemImage: "xmark.circle.fill")
+                }
+            }
+        } label: {
+            FilterButton(
+                title: selectedNutritionLabel,
+                icon: "tag.fill",
+                isSelected: !selectedNutritionTags.isEmpty
+            )
+        }
+    }
+}

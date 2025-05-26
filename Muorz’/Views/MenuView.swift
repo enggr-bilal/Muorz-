@@ -140,10 +140,13 @@ struct MenuView: View {
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        showingProfile = true
-                    } label: {
-                        Image(systemName: "person.circle")
+                   
+                        
+                        Button {
+                            showingProfile = true
+                        } label: {
+                            Image(systemName: "gear")
+        
                     }
                 }
             }
