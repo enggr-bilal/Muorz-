@@ -123,31 +123,12 @@ struct MenuView: View {
                     }
                 }
                 
-                // Floating Action Button
+                // Floating Cart Button
                 if selectionManager.totalItems > 0 {
-                    VStack {
-                        Spacer()
-                        Button(action: {
-                            showingSelection = true
-                        }) {
-                            HStack {
-                                Text("\(selectionManager.totalItems)")
-                                Spacer()
-                                Text("My Selection")
-                                    .fontWeight(.semibold)
-                                Spacer()
-                                Text(String(format: "%.2f €", selectionManager.totalPrice))
-                                    
-                            }
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 12)
-                            .background(Color.accentColor)
-                            .clipShape(Capsule())
-                            .shadow(color: Color.black.opacity(0.2), radius: 5, x: 0, y: 2)
-                        }
-                        .padding(.bottom, 16)
-                    }
+                    FloatingCartButton(
+                        itemCount: selectionManager.totalItems,
+                        action: { showingSelection = true }
+                    )
                 }
             }
             .navigationTitle("Menu")
@@ -158,7 +139,7 @@ struct MenuView: View {
                         .font(.system(.title2, design: .serif))
                 }
                 
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         showingProfile = true
                     } label: {

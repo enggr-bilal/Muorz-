@@ -112,27 +112,12 @@ struct MenuView: View {
                     }
                 }
                 
-                // Floating Action Button
+                // Floating Cart Button
                 if selectionManager.totalItems > 0 {
-                    VStack {
-                        Spacer()
-                        Button(action: {
-                            showingSelection = true
-                        }) {
-                            HStack {
-                                Image(systemName: "cart.fill")
-                                Text("\(selectionManager.totalItems)")
-                                    .fontWeight(.semibold)
-                            }
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 12)
-                            .background(Color.accentColor)
-                            .clipShape(Capsule())
-                            .shadow(color: Color.black.opacity(0.2), radius: 5, x: 0, y: 2)
-                        }
-                        .padding(.bottom, 16)
-                    }
+                    FloatingCartButton(
+                        itemCount: selectionManager.totalItems,
+                        action: { showingSelection = true }
+                    )
                 }
             }
             .navigationTitle("Menu")
