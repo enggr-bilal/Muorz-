@@ -9,9 +9,11 @@ import SwiftUI
 
 @main
 struct OCRMenuApp: App {
+    @StateObject private var preferences = UserPreferences()
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MenuView(preferences: preferences)
         }
     }
 }

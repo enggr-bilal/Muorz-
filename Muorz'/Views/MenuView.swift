@@ -1,14 +1,3 @@
-//
-//  TEST.swift
-//  Muorz’
-//
-//  Created by Simon Naud on 26/05/25.
-//
-
-import SwiftUI
-
-// Import MenuItemRow view
-
 struct MenuView: View {
     let menuItems = MenuItem.sampleData
     @StateObject private var selectionManager = SelectionManager()
@@ -131,13 +120,9 @@ struct MenuView: View {
                             showingSelection = true
                         }) {
                             HStack {
+                                Image(systemName: "cart.fill")
                                 Text("\(selectionManager.totalItems)")
-                                Spacer()
-                                Text("My Selection")
                                     .fontWeight(.semibold)
-                                Spacer()
-                                Text(String(format: "%.2f €", selectionManager.totalPrice))
-                                    
                             }
                             .foregroundColor(.white)
                             .padding(.horizontal, 20)
@@ -178,4 +163,4 @@ struct MenuView: View {
 
 #Preview {
     MenuView(preferences: UserPreferences())
-}
+} 
