@@ -1,69 +1,18 @@
 //
-//  TEST.swift
-//  Muorz’
+//  MenuView.swift
+//  Muorz'
 //
 //  Created by Simon Naud on 26/05/25.
 //
 
 import SwiftUI
 
-// Import MenuItemRow view
-
 struct MenuView: View {
-    let menuItems = MenuItem.sampleData
+    @StateObject private var viewModel = MenuViewModel()
     @StateObject private var selectionManager = SelectionManager()
-    @State private var selectedCategory: String = "all"
     @ObservedObject var preferences: UserPreferences
     @State private var showingSelection = false
     @State private var showingProfile = false
-    
-    var categories: [String] {
-        ["all"] + Array(Set(menuItems.map { $0.categoryEn })).sorted()
-    }
-    
-    // Constants for nutritional thresholds
-    private let highProteinThreshold = 6
-    private let lowFatThreshold = 5
-    private let lowCarbsThreshold = 4
-    
-    var filteredItems: [String: [MenuItem]] {
-        // First, filter by category
-        let categoryFiltered = selectedCategory == "all" ? menuItems : menuItems.filter { $0.categoryEn == selectedCategory }
-        
-        // Then, filter by dietary preferences
-        let dietFiltered = preferences.defaultDietaryPreference == nil ? categoryFiltered : categoryFiltered.filter { item in
-            switch preferences.defaultDietaryPreference {
-            case "vegetarian": return item.tags.vegetarian
-            case "vegan": return item.tags.vegan
-            case "glutenFree": return item.tags.glutenFree
-            case "dairyFree": return item.tags.dairyFree
-            default: return true
-            }
-        }
-        
-        // Finally, filter by nutrition preferences
-        let nutritionFiltered = dietFiltered.filter { item in
-            // If no nutrition filters are selected, show all items
-            guard !preferences.defaultNutritionPreferences.isEmpty else { return true }
-            
-            // Check each selected nutrition filter
-            for filter in preferences.defaultNutritionPreferences {
-                switch filter {
-                case "protein":
-                    if item.nutritionScores.protein >= highProteinThreshold { return true }
-                case "fat":
-                    if item.nutritionScores.fat <= lowFatThreshold { return true }
-                case "carbs":
-                    if item.nutritionScores.carbs <= lowCarbsThreshold { return true }
-                default:
-                    continue
-                }
-            }
-            return false
-        }
-        
-        return Dictionary(grouping: nutritionFiltered) { $0.categoryEn }
-    }
     
     var body: some View {
         NavigationView {
@@ -72,54 +21,73 @@ struct MenuView: View {
                     .ignoresSafeArea()
                 
                 VStack(spacing: 0) {
+                    // Search Bar
+                    SearchBar(
+                        searchText: $viewModel.searchText,
+                        placeholder: "Search ingredients, dishes...",
+                        suggestions: viewModel.getSearchSuggestions(),
+                        onSuggestionTap: { suggestion in
+                            viewModel.searchItems(with: suggestion)
+                        }
+                    )
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+                    
+                    // Search Results Summary
+                    SearchResultsSummary(
+                        resultsCount: viewModel.filteredItemsCount,
+                        searchText: viewModel.searchText,
+                        hasActiveFilters: viewModel.hasActiveFilters,
+                        onClearFilters: {
+                            viewModel.clearAllFilters()
+                        }
+                    )
+                    .padding(.horizontal, 16)
+                    .padding(.top, viewModel.hasActiveFilters ? 8 : 0)
+                    
+                    // Filter Header
                     FilterHeader(
-                        selectedCategory: $selectedCategory,
+                        selectedCategory: $viewModel.selectedCategory,
                         selectedDietTag: Binding(
-                            get: { preferences.defaultDietaryPreference },
-                            set: { preferences.defaultDietaryPreference = $0 }
+                            get: { viewModel.selectedDietaryPreference },
+                            set: { viewModel.updateDietaryPreference($0) }
                         ),
                         selectedNutritionTags: Binding(
-                            get: { preferences.defaultNutritionPreferences },
-                            set: { preferences.defaultNutritionPreferences = $0 }
+                            get: { viewModel.selectedNutritionPreferences },
+                            set: { viewModel.selectedNutritionPreferences = $0 }
                         ),
-                        categories: categories
+                        categories: viewModel.categories
                     )
                     
-                    // Menu List
-                    ScrollView {
-                        LazyVStack(spacing: 16) {
-                            ForEach(filteredItems.keys.sorted(), id: \.self) { category in
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text(category.description.capitalized)
-                                        .font(.system(size: 24, weight: .regular, design: .serif))
-                                        .foregroundColor(.black)
-                                        .padding(.horizontal, 16)
-                                    
-                                    VStack(alignment: .leading, spacing: 0) {
-                                        ForEach(filteredItems[category] ?? []) { item in
-                                            MenuItemRow(
-                                                item: item,
-                                                showHighProtein: true,
-                                                showLowFat: true,
-                                                showLowCarbs: true,
-                                                selectionManager: selectionManager
-                                            )
-                                            
-                                            if item.id != filteredItems[category]?.last?.id {
-                                                Divider()
-                                                    .padding(.horizontal, 16)
-                                            }
-                                        }
-                                    }
-                                    .background(Color.white)
-                                    .cornerRadius(12)
-                                    .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
-                                }
-                                .padding(.horizontal)
+                    // Loading State
+                    if viewModel.isLoading {
+                        LoadingView()
+                    }
+                    // Error State
+                    else if let errorMessage = viewModel.errorMessage {
+                        ErrorView(
+                            message: errorMessage,
+                            onRetry: {
+                                viewModel.clearError()
+                                viewModel.loadSampleData()
                             }
-                        }
-                        .padding(.vertical)
-                        .padding(.bottom, 80) // Add padding at the bottom for the floating button
+                        )
+                    }
+                    // Empty State
+                    else if viewModel.filteredItems.isEmpty {
+                        EmptyStateView(
+                            hasActiveFilters: viewModel.hasActiveFilters,
+                            onClearFilters: {
+                                viewModel.clearAllFilters()
+                            }
+                        )
+                    }
+                    // Menu List
+                    else {
+                        MenuListView(
+                            filteredItems: viewModel.filteredItems,
+                            selectionManager: selectionManager
+                        )
                     }
                 }
                 
@@ -140,13 +108,10 @@ struct MenuView: View {
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                   
-                        
-                        Button {
-                            showingProfile = true
-                        } label: {
-                            Image(systemName: "gear")
-        
+                    Button {
+                        showingProfile = true
+                    } label: {
+                        Image(systemName: "gear")
                     }
                 }
             }
@@ -156,6 +121,143 @@ struct MenuView: View {
             .sheet(isPresented: $showingProfile) {
                 ProfileView(preferences: preferences)
             }
+            .refreshable {
+                await viewModel.refreshMenu()
+            }
+        }
+        .onAppear {
+            // Sync preferences with ViewModel
+            viewModel.selectedDietaryPreference = preferences.defaultDietaryPreference
+            viewModel.selectedNutritionPreferences = preferences.defaultNutritionPreferences
+        }
+        .onChange(of: preferences.defaultDietaryPreference) { newValue in
+            viewModel.updateDietaryPreference(newValue)
+        }
+        .onChange(of: preferences.defaultNutritionPreferences) { newValue in
+            viewModel.selectedNutritionPreferences = newValue
+        }
+    }
+}
+
+// MARK: - Supporting Views
+
+struct LoadingView: View {
+    var body: some View {
+        VStack(spacing: 16) {
+            ProgressView()
+                .scaleEffect(1.2)
+            
+            Text("Processing menu...")
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(UIColor.systemGray6))
+    }
+}
+
+struct ErrorView: View {
+    let message: String
+    let onRetry: () -> Void
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "exclamationmark.triangle")
+                .font(.system(size: 48))
+                .foregroundColor(.orange)
+            
+            Text("Something went wrong")
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundColor(.primary)
+            
+            Text(message)
+                .font(.system(size: 16))
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+            
+            Button("Try Again") {
+                onRetry()
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(UIColor.systemGray6))
+    }
+}
+
+struct EmptyStateView: View {
+    let hasActiveFilters: Bool
+    let onClearFilters: () -> Void
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            Image(systemName: hasActiveFilters ? "magnifyingglass" : "fork.knife")
+                .font(.system(size: 48))
+                .foregroundColor(.gray)
+            
+            Text(hasActiveFilters ? "No items found" : "No menu items")
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundColor(.primary)
+            
+            Text(hasActiveFilters ?
+                 "Try adjusting your search or filters" :
+                 "Menu items will appear here")
+                .font(.system(size: 16))
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+            
+            if hasActiveFilters {
+                Button("Clear Filters") {
+                    onClearFilters()
+                }
+                .buttonStyle(.borderedProminent)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(UIColor.systemGray6))
+    }
+}
+
+struct MenuListView: View {
+    let filteredItems: [String: [MenuItem]]
+    let selectionManager: SelectionManager
+    
+    var body: some View {
+        ScrollView {
+            LazyVStack(spacing: 16) {
+                ForEach(filteredItems.keys.sorted(), id: \.self) { category in
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(category.description.capitalized)
+                            .font(.system(size: 24, weight: .regular, design: .serif))
+                            .foregroundColor(.black)
+                            .padding(.horizontal, 16)
+                        
+                        VStack(alignment: .leading, spacing: 0) {
+                            ForEach(filteredItems[category] ?? []) { item in
+                                MenuItemRow(
+                                    item: item,
+                                    showHighProtein: true,
+                                    showLowFat: true,
+                                    showLowCarbs: true,
+                                    selectionManager: selectionManager
+                                )
+                                
+                                if item.id != filteredItems[category]?.last?.id {
+                                    Divider()
+                                        .padding(.horizontal, 16)
+                                }
+                            }
+                        }
+                        .background(Color.white)
+                        .cornerRadius(12)
+                        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+                    }
+                    .padding(.horizontal)
+                }
+            }
+            .padding(.vertical)
+            .padding(.bottom, 80) // Add padding at the bottom for the floating button
         }
     }
 }
