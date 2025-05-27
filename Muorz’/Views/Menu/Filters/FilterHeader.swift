@@ -17,7 +17,7 @@ struct FilterButton: View {
             .font(.system(size: 16, weight: .medium))
             .foregroundColor(isSelected ? .white : .primary)
             .padding(.horizontal, 16)
-            .padding(.vertical, 8)
+            .frame(height: 36) // ✅ Hauteur fixe uniforme
             .background(
                 RoundedRectangle(cornerRadius: 20)
                     .fill(isSelected ? Color.accentColor : .white)
@@ -99,35 +99,39 @@ struct FilterHeader: View {
     @ViewBuilder
     private func dietMenu() -> some View {
         Menu {
+            // Option "No Preference"
             Button {
                 selectedDietTag = nil
             } label: {
                 HStack {
                     Text("No Preference")
                     if selectedDietTag == nil {
+                        Spacer()
                         Image(systemName: "checkmark")
                     }
                 }
             }
 
+            // Autres options
             ForEach(UserPreferences.dietaryOptions) { option in
                 Button {
                     selectedDietTag = option.id
                 } label: {
                     HStack {
-                        Label(option.name, systemImage: option.icon)
+                        Text(option.name)
                         if selectedDietTag == option.id {
+                            Spacer()
                             Image(systemName: "checkmark")
                         }
                     }
                 }
             }
         } label: {
-            if let diet = selectedDietOption {
-                FilterButton(title: diet.name, icon: diet.icon, isSelected: true)
-            } else {
-                FilterButton(title: "Diet", icon: "fork.knife", isSelected: false)
-            }
+            FilterButton(
+                title: selectedDietOption?.name ?? "Diet",
+                icon: "fork.knife", // Icône constante
+                isSelected: selectedDietOption != nil
+            )
         }
     }
 
