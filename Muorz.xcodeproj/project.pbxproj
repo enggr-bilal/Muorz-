@@ -7,13 +7,13 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		9D0C953B2DD23B1F0027FD8D /* Muorz’.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Muorz’.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		9D0C953B2DD23B1F0027FD8D /* Muorz.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Muorz.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		9D0C953D2DD23B1F0027FD8D /* Muorz’ */ = {
+		9D0C953D2DD23B1F0027FD8D /* Muorz */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "Muorz’";
+			path = Muorz;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -32,7 +32,7 @@
 		9D0C95322DD23B1F0027FD8D = {
 			isa = PBXGroup;
 			children = (
-				9D0C953D2DD23B1F0027FD8D /* Muorz’ */,
+				9D0C953D2DD23B1F0027FD8D /* Muorz */,
 				9D0C953C2DD23B1F0027FD8D /* Products */,
 			);
 			sourceTree = "<group>";
@@ -40,7 +40,7 @@
 		9D0C953C2DD23B1F0027FD8D /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				9D0C953B2DD23B1F0027FD8D /* Muorz’.app */,
+				9D0C953B2DD23B1F0027FD8D /* Muorz.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,9 +48,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		9D0C953A2DD23B1F0027FD8D /* Muorz’ */ = {
+		9D0C953A2DD23B1F0027FD8D /* Muorz */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 9D0C95492DD23B200027FD8D /* Build configuration list for PBXNativeTarget "Muorz’" */;
+			buildConfigurationList = 9D0C95492DD23B200027FD8D /* Build configuration list for PBXNativeTarget "Muorz" */;
 			buildPhases = (
 				9D0C95372DD23B1F0027FD8D /* Sources */,
 				9D0C95382DD23B1F0027FD8D /* Frameworks */,
@@ -61,13 +61,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				9D0C953D2DD23B1F0027FD8D /* Muorz’ */,
+				9D0C953D2DD23B1F0027FD8D /* Muorz */,
 			);
-			name = "Muorz’";
+			name = Muorz;
 			packageProductDependencies = (
 			);
 			productName = "Muorz’";
-			productReference = 9D0C953B2DD23B1F0027FD8D /* Muorz’.app */;
+			productReference = 9D0C953B2DD23B1F0027FD8D /* Muorz.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -85,7 +85,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 9D0C95362DD23B1F0027FD8D /* Build configuration list for PBXProject "Muorz’" */;
+			buildConfigurationList = 9D0C95362DD23B1F0027FD8D /* Build configuration list for PBXProject "Muorz" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -99,7 +99,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				9D0C953A2DD23B1F0027FD8D /* Muorz’ */,
+				9D0C953A2DD23B1F0027FD8D /* Muorz */,
 			);
 		};
 /* End PBXProject section */
@@ -251,8 +251,8 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"Muorz’/Preview Content\"";
-				DEVELOPMENT_TEAM = 752USSB6XX;
+				DEVELOPMENT_ASSET_PATHS = "\"Muorz/Preview Content\"";
+				DEVELOPMENT_TEAM = S2HMY3482H;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "$(PRODUCT_NAME)";
@@ -281,8 +281,8 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"Muorz’/Preview Content\"";
-				DEVELOPMENT_TEAM = 752USSB6XX;
+				DEVELOPMENT_ASSET_PATHS = "\"Muorz/Preview Content\"";
+				DEVELOPMENT_TEAM = S2HMY3482H;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "$(PRODUCT_NAME)";
@@ -307,7 +307,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		9D0C95362DD23B1F0027FD8D /* Build configuration list for PBXProject "Muorz’" */ = {
+		9D0C95362DD23B1F0027FD8D /* Build configuration list for PBXProject "Muorz" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9D0C95472DD23B200027FD8D /* Debug */,
@@ -316,7 +316,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		9D0C95492DD23B200027FD8D /* Build configuration list for PBXNativeTarget "Muorz’" */ = {
+		9D0C95492DD23B200027FD8D /* Build configuration list for PBXNativeTarget "Muorz" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9D0C954A2DD23B200027FD8D /* Debug */,
