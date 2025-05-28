@@ -7,7 +7,55 @@
 
 import Foundation
 
-// MARK: - Menu Item Models
+// MARK: - API Response Models (Gemini API Format)
+
+/// Root response structure from Gemini API
+struct GeminiMenuResponse: Codable {
+    let categories: [MenuCategory]
+    
+    // Custom decoder to handle array directly
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        self.categories = try container.decode([MenuCategory].self)
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(categories)
+    }
+}
+
+/// Menu category from API
+struct MenuCategory: Codable {
+    let categoryName: String
+    let dishes: [APIDish]
+    
+    enum CodingKeys: String, CodingKey {
+        case categoryName = "ctg"
+        case dishes = "dsh"
+    }
+}
+
+/// Dish structure from API (compact format)
+struct APIDish: Codable {
+    let originalName: String
+    let translatedName: String
+    let ingredients: [String]
+    let nutritionScores: [Int] // [protein, fat, carbs]
+    let tags: [Int] // [vegetarian, vegan, gluten_free, dairy_free] as 0/1
+    let price: String
+    
+    enum CodingKeys: String, CodingKey {
+        case originalName = "nme"
+        case translatedName = "tr_nme"
+        case ingredients = "ingr"
+        case nutritionScores = "n_scr"
+        case tags = "tgs"
+        case price = "prc"
+    }
+}
+
+// MARK: - Internal App Models
 
 struct MenuItem: Identifiable, Codable, Equatable {
     let id = UUID()
@@ -19,7 +67,7 @@ struct MenuItem: Identifiable, Codable, Equatable {
     let nutritionScores: NutritionScores
     let tags: DietaryTags
     
-    // Coding keys for API JSON mapping
+    // Coding keys for internal storage/persistence
     enum CodingKeys: String, CodingKey {
         case originalName = "original_name"
         case translatedName = "translated_name"
@@ -30,7 +78,7 @@ struct MenuItem: Identifiable, Codable, Equatable {
         case tags
     }
     
-    // Custom initializer for manual creation (keeping existing functionality)
+    // Custom initializer for manual creation
     init(originalName: String, translatedName: String, ingredientsEn: [String],
          categoryEn: String, price: String?, nutritionScores: NutritionScores, tags: DietaryTags) {
         self.originalName = originalName
@@ -40,6 +88,32 @@ struct MenuItem: Identifiable, Codable, Equatable {
         self.price = price
         self.nutritionScores = nutritionScores
         self.tags = tags
+    }
+    
+    // Initializer from API dish
+    init(from apiDish: APIDish, category: String) {
+        self.originalName = apiDish.originalName
+        self.translatedName = apiDish.translatedName
+        self.ingredientsEn = apiDish.ingredients
+        self.categoryEn = category.lowercased()
+        self.price = apiDish.price.isEmpty ? nil : apiDish.price
+        
+        // Convert nutrition scores array to struct
+        let scores = apiDish.nutritionScores
+        self.nutritionScores = NutritionScores(
+            protein: scores.count > 0 ? scores[0] : 0,
+            fat: scores.count > 1 ? scores[1] : 0,
+            carbs: scores.count > 2 ? scores[2] : 0
+        )
+        
+        // Convert tags array to struct
+        let tagArray = apiDish.tags
+        self.tags = DietaryTags(
+            vegetarian: tagArray.count > 0 ? tagArray[0] == 1 : false,
+            vegan: tagArray.count > 1 ? tagArray[1] == 1 : false,
+            glutenFree: tagArray.count > 2 ? tagArray[2] == 1 : false,
+            dairyFree: tagArray.count > 3 ? tagArray[3] == 1 : false
+        )
     }
     
     // Custom Equatable implementation (ignoring ID for comparison)
@@ -74,7 +148,7 @@ struct DietaryTags: Codable, Equatable {
     }
 }
 
-// MARK: - Menu Response Model (for API)
+// MARK: - Menu Response Model (for internal use)
 
 struct MenuResponse: Codable, Equatable {
     let menuItems: [MenuItem]
@@ -83,6 +157,27 @@ struct MenuResponse: Codable, Equatable {
     enum CodingKeys: String, CodingKey {
         case menuItems = "menu_items"
         case restaurantInfo = "restaurant_info"
+    }
+    
+    // Initializer from Gemini API response
+    init(from geminiResponse: GeminiMenuResponse, restaurantInfo: RestaurantInfo? = nil) {
+        var items: [MenuItem] = []
+        
+        for category in geminiResponse.categories {
+            for dish in category.dishes {
+                let menuItem = MenuItem(from: dish, category: category.categoryName)
+                items.append(menuItem)
+            }
+        }
+        
+        self.menuItems = items
+        self.restaurantInfo = restaurantInfo
+    }
+    
+    // Standard initializer
+    init(menuItems: [MenuItem], restaurantInfo: RestaurantInfo?) {
+        self.menuItems = menuItems
+        self.restaurantInfo = restaurantInfo
     }
 }
 

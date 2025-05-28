@@ -19,8 +19,8 @@ class OCRViewModel: ObservableObject {
     
     private let menuService: MenuServiceProtocol
     
-    init(menuService: MenuServiceProtocol = MenuService()) {
-        self.menuService = menuService
+    init(menuService: MenuServiceProtocol? = nil) {
+        self.menuService = menuService ?? APIConfiguration.createMenuService()
     }
 
     func processImage(_ image: UIImage) {

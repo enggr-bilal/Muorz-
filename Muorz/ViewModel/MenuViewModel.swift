@@ -80,9 +80,11 @@ class MenuViewModel: ObservableObject {
     
     // MARK: - Initialization
     
-    init(menuService: MenuServiceProtocol = MenuService()) {
+    init(menuService: MenuServiceProtocol = MenuService(), loadSampleData: Bool = false) {
         self.menuService = menuService
-        loadSampleData()
+        if loadSampleData {
+            self.loadSampleData()
+        }
         setupSearchDebouncing()
     }
     

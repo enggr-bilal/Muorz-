@@ -132,6 +132,114 @@ struct APIConfiguration {
         let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "1"
         return "\(version)(\(build))"
     }
+    
+    // MARK: - Gemini API Configuration
+    
+    /// Gemini API Key - Replace with your actual API key
+    /// Get your API key from: https://makersuite.google.com/app/apikey
+    static let geminiAPIKey: String = {
+        // First, try to get from environment variable (for development)
+        if let envKey = ProcessInfo.processInfo.environment["GEMINI_API_KEY"], !envKey.isEmpty {
+            return envKey
+        }
+        
+        // Then try to get from Info.plist (for production)
+        if let path = Bundle.main.path(forResource: "Info", ofType: "plist"),
+           let plist = NSDictionary(contentsOfFile: path),
+           let key = plist["GEMINI_API_KEY"] as? String, !key.isEmpty {
+            return key
+        }
+        
+        // Finally, return placeholder (will use sample data)
+        return "YOUR_GEMINI_API_KEY_HERE"
+    }()
+    
+    /// Gemini API Base URL
+    static let geminiBaseURL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+    
+    // MARK: - API Validation
+    
+    /// Check if Gemini API is properly configured
+    static var isGeminiAPIConfigured: Bool {
+        return !geminiAPIKey.isEmpty && 
+               geminiAPIKey != "YOUR_GEMINI_API_KEY_HERE" &&
+               geminiAPIKey != "YOUR_GEMINI_API_KEY"
+    }
+    
+    /// Get configured MenuService instance
+    static func createMenuService() -> MenuServiceProtocol {
+        if isGeminiAPIConfigured {
+            return MenuService(apiKey: geminiAPIKey)
+        } else {
+            print("⚠️ Gemini API not configured, using MockMenuService")
+            return MockMenuService()
+        }
+    }
+    
+    // MARK: - Development Configuration
+    
+    /// Whether to use mock service for development
+    static let useMockService: Bool = {
+        #if DEBUG
+        return ProcessInfo.processInfo.environment["USE_MOCK_SERVICE"] == "true"
+        #else
+        return false
+        #endif
+    }()
+    
+    /// API request timeout in seconds
+    static let requestTimeout: TimeInterval = 30.0
+    
+    /// Maximum retries for failed requests
+    static let maxRetries: Int = 3
+    
+    // MARK: - Logging Configuration
+    
+    /// Enable API request/response logging
+    static let enableAPILogging: Bool = {
+        #if DEBUG
+        return true
+        #else
+        return false
+        #endif
+    }()
+    
+    /// Log API requests and responses
+    static func logAPIRequest(_ request: URLRequest) {
+        guard enableAPILogging else { return }
+        
+        print("🌐 API Request:")
+        print("   URL: \(request.url?.absoluteString ?? "Unknown")")
+        print("   Method: \(request.httpMethod ?? "Unknown")")
+        
+        if let headers = request.allHTTPHeaderFields {
+            print("   Headers: \(headers)")
+        }
+        
+        if let body = request.httpBody,
+           let bodyString = String(data: body, encoding: .utf8) {
+            print("   Body: \(bodyString.prefix(500))...")
+        }
+    }
+    
+    static func logAPIResponse(_ data: Data?, _ response: URLResponse?, _ error: Error?) {
+        guard enableAPILogging else { return }
+        
+        print("📡 API Response:")
+        
+        if let httpResponse = response as? HTTPURLResponse {
+            print("   Status: \(httpResponse.statusCode)")
+        }
+        
+        if let error = error {
+            print("   Error: \(error.localizedDescription)")
+        }
+        
+        if let data = data,
+           let responseString = String(data: data, encoding: .utf8) {
+            print("   Data: \(responseString.prefix(500))...")
+        }
+    }
 }
 
 // MARK: - API Request Builder
@@ -267,4 +375,49 @@ extension APIConfiguration {
             print("Error: \(error.localizedDescription)")
         }
     }
-} 
+}
+
+// MARK: - API Setup Instructions
+
+/*
+ 
+ ## Gemini API Setup Instructions
+ 
+ ### 1. Get your API Key
+ - Go to https://makersuite.google.com/app/apikey
+ - Sign in with your Google account
+ - Create a new API key
+ - Copy the generated key
+ 
+ ### 2. Configure the API Key (Choose one method)
+ 
+ #### Method A: Environment Variable (Recommended for development)
+ 1. In Xcode, go to Product → Scheme → Edit Scheme
+ 2. Select "Run" on the left
+ 3. Go to "Arguments" tab
+ 4. Under "Environment Variables", add:
+    - Name: GEMINI_API_KEY
+    - Value: your_actual_api_key_here
+ 
+ #### Method B: Info.plist (For production builds)
+ 1. Open Info.plist in Xcode
+ 2. Add a new key:
+    - Key: GEMINI_API_KEY
+    - Type: String
+    - Value: your_actual_api_key_here
+ 
+ #### Method C: Direct replacement (Not recommended)
+ Replace "YOUR_GEMINI_API_KEY_HERE" in the geminiAPIKey property above
+ 
+ ### 3. Test the Configuration
+ - Run the app
+ - Try processing a menu image
+ - Check the console for configuration messages
+ 
+ ### 4. Security Notes
+ - Never commit API keys to version control
+ - Use environment variables for development
+ - Consider using a secure key management service for production
+ - Add Info.plist to .gitignore if using Method B
+ 
+ */ 

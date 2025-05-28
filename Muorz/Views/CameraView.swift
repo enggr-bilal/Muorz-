@@ -92,7 +92,7 @@ struct CameraView: View {
                 ImagePicker(selectedImage: $selectedImage)
             }
             .fullScreenCover(isPresented: $showMenuView) {
-                MenuView(preferences: preferences)
+                MenuView(viewModel: menuViewModel, preferences: preferences)
             }
             .onChange(of: selectedImage) { newImage in
                 if let image = newImage {

@@ -8,12 +8,18 @@
 import SwiftUI
 
 struct MenuView: View {
-    @StateObject private var viewModel = MenuViewModel()
+    @ObservedObject var viewModel: MenuViewModel
     @StateObject private var selectionManager = SelectionManager()
     @ObservedObject var preferences: UserPreferences
     @State private var showingSelection = false
     @State private var showingProfile = false
     @State private var isSearching = false
+    
+    // Initializer to accept MenuViewModel
+    init(viewModel: MenuViewModel, preferences: UserPreferences) {
+        self.viewModel = viewModel
+        self.preferences = preferences
+    }
     
     var body: some View {
         NavigationView {
@@ -104,7 +110,9 @@ struct MenuView: View {
                             showLowFatTag: preferences.showLowFatTag,
                             showLowCarbsTag: preferences.showLowCarbsTag,
                             onRefresh: {
-                                await viewModel.refreshMenu()
+                                Task {
+                                    await viewModel.refreshMenu()
+                                }
                             }
                         )
                     }
@@ -278,5 +286,5 @@ struct MenuListView: View {
 }
 
 #Preview {
-    MenuView(preferences: UserPreferences())
+    MenuView(viewModel: MenuViewModel(loadSampleData: true), preferences: UserPreferences())
 }
