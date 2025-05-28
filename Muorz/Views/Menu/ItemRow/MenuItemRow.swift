@@ -1,6 +1,6 @@
 //
 //  TEST.swift
-//  Muorz’
+//  Muorz'
 //
 //  Created by Simon Naud on 26/05/25.
 //
@@ -12,6 +12,7 @@ struct MenuItemRow: View {
     let showHighProtein: Bool
     let showLowFat: Bool
     let showLowCarbs: Bool
+    let searchText: String
     @ObservedObject var selectionManager: SelectionManager
     
     // Thresholds for nutritional tags
@@ -40,7 +41,8 @@ struct MenuItemRow: View {
             showLowCarbs: showLowCarbs,
             isHighProtein: isHighProtein,
             isLowFat: isLowFat,
-            isLowCarbs: isLowCarbs
+            isLowCarbs: isLowCarbs,
+            searchText: searchText
         )
     }
 }
@@ -52,6 +54,7 @@ struct MenuItemRow: View {
             showHighProtein: true,
             showLowFat: true,
             showLowCarbs: true,
+            searchText: "",
             selectionManager: SelectionManager()
         )
         
@@ -60,6 +63,7 @@ struct MenuItemRow: View {
             showHighProtein: true,
             showLowFat: true,
             showLowCarbs: true,
+            searchText: "",
             selectionManager: SelectionManager()
         )
     }

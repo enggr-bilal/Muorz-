@@ -12,6 +12,7 @@ struct SearchBar: View {
     let placeholder: String
     let suggestions: [String]
     let onSuggestionTap: (String) -> Void
+    let onClose: (() -> Void)?
     
     @State private var isEditing = false
     @State private var showSuggestions = false
@@ -20,12 +21,14 @@ struct SearchBar: View {
         searchText: Binding<String>,
         placeholder: String = "Search ingredients...",
         suggestions: [String] = [],
-        onSuggestionTap: @escaping (String) -> Void = { _ in }
+        onSuggestionTap: @escaping (String) -> Void = { _ in },
+        onClose: (() -> Void)? = nil
     ) {
         self._searchText = searchText
         self.placeholder = placeholder
         self.suggestions = suggestions
         self.onSuggestionTap = onSuggestionTap
+        self.onClose = onClose
     }
     
     var body: some View {
@@ -50,10 +53,14 @@ struct SearchBar: View {
                         }
                     }
                 
-                if isEditing {
-                    Button("Cancel") {
+                if isEditing || onClose != nil {
+                    Button(onClose != nil ? "Done" : "Cancel") {
                         withAnimation(.easeInOut(duration: 0.2)) {
-                            searchText = ""
+                            if let onClose = onClose {
+                                onClose()
+                            } else {
+                                searchText = ""
+                            }
                             isEditing = false
                             showSuggestions = false
                             hideKeyboard()
@@ -185,6 +192,50 @@ struct SearchResultsSummary: View {
             .background(Color(.systemGray6))
             .cornerRadius(8)
         }
+    }
+}
+
+// MARK: - Highlighted Text Component
+
+struct HighlightedText: View {
+    let text: String
+    let searchText: String
+    let font: Font
+    let highlightColor: Color
+    
+    init(text: String, searchText: String, font: Font = .body, highlightColor: Color = .yellow) {
+        self.text = text
+        self.searchText = searchText
+        self.font = font
+        self.highlightColor = highlightColor
+    }
+    
+    var body: some View {
+        if searchText.isEmpty {
+            Text(text)
+                .font(font)
+        } else {
+            let attributedString = createAttributedString()
+            Text(AttributedString(attributedString))
+                .font(font)
+        }
+    }
+    
+    private func createAttributedString() -> NSAttributedString {
+        let attributedString = NSMutableAttributedString(string: text)
+        let range = NSRange(location: 0, length: text.count)
+        
+        // Set default attributes
+        attributedString.addAttribute(.foregroundColor, value: UIColor.label, range: range)
+        
+        // Find and highlight search text
+        let searchRange = (text.lowercased() as NSString).range(of: searchText.lowercased())
+        if searchRange.location != NSNotFound {
+            attributedString.addAttribute(.backgroundColor, value: UIColor(highlightColor), range: searchRange)
+            attributedString.addAttribute(.foregroundColor, value: UIColor.black, range: searchRange)
+        }
+        
+        return attributedString
     }
 }
 

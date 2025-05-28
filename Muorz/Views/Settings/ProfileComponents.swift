@@ -1,6 +1,6 @@
 //
 //  TEST.swift
-//  Muorz’
+//  Muorz'
 //
 //  Created by Simon Naud on 26/05/25.
 //
@@ -35,12 +35,12 @@ struct DietaryPreferencePicker: View {
         Picker("Dietary Preference", selection: $selectedPreference) {
             Text("None")
                 .tag(Optional<String>.none)
-            ForEach(FilterData.dietFilters) { option in
+            ForEach(UserPreferences.dietaryOptions) { option in
                 Label {
                     Text(option.name)
                 } icon: {
                     Image(systemName: option.icon)
-                        .foregroundColor(.green)
+                        .foregroundColor(.accentColor)
                 }
                 .tag(Optional(option.id))
             }
@@ -48,28 +48,35 @@ struct DietaryPreferencePicker: View {
     }
 }
 
-struct NutritionPreferenceToggles: View {
-    @Binding var selectedPreferences: Set<String>
-    let onPreferenceChange: () -> Void
+struct NutritionDisplayToggles: View {
+    @ObservedObject var preferences: UserPreferences
     
     var body: some View {
-        ForEach(FilterData.nutritionFilters) { option in
-            Toggle(isOn: Binding(
-                get: { selectedPreferences.contains(option.tag) },
-                set: { isOn in
-                    if isOn {
-                        selectedPreferences.insert(option.tag)
-                    } else {
-                        selectedPreferences.remove(option.tag)
-                    }
-                    onPreferenceChange()
-                }
-            )) {
+        VStack(alignment: .leading, spacing: 12) {
+            Toggle(isOn: $preferences.showHighProteinTag) {
                 Label {
-                    Text(option.name)
+                    Text("High Protein")
                 } icon: {
-                    Image(systemName: option.icon)
-                        .foregroundColor(.accentColor)
+                    Image(systemName: "figure.strengthtraining.traditional")
+                        .foregroundColor(.blue)
+                }
+            }
+            
+            Toggle(isOn: $preferences.showLowFatTag) {
+                Label {
+                    Text("Low Fat")
+                } icon: {
+                    Image(systemName: "leaf.fill")
+                        .foregroundColor(.green)
+                }
+            }
+            
+            Toggle(isOn: $preferences.showLowCarbsTag) {
+                Label {
+                    Text("Low Carbs")
+                } icon: {
+                    Image(systemName: "chart.line.downtrend.xyaxis")
+                        .foregroundColor(.orange)
                 }
             }
         }

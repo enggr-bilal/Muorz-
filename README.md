@@ -12,6 +12,64 @@ The application allows users to:
 - Filter and search through dishes and ingredients
 - Customize display according to dietary preferences
 
+## 🎯 User Preferences & Filtering System
+
+### Architecture Overview
+
+The app uses a clear separation between **default preferences** and **temporary filters**:
+
+#### Default Preferences (ProfileView only)
+- **Default Dietary Filter**: Automatically applied when the app opens
+- **Nutrition Tag Display**: Controls which nutrition tags are visible on menu items
+- These settings are persistent and only changeable from the ProfileView
+
+#### Temporary Filters (MenuView)
+- **Category Filter**: Filter by food category (Starter, Main, Dessert, etc.)
+- **Dietary Filter**: Temporarily override the default dietary preference
+- **Nutrition Filters**: Filter items by nutritional properties (High Protein, Low Fat, Low Carbs)
+- **Search**: Text-based search in dish names and ingredients
+- These filters reset to default values when the app restarts
+
+### Key Behaviors
+
+1. **Default Dietary Preference**:
+   - Set in ProfileView → Settings → Default Dietary Filter
+   - Automatically applied when opening the app
+   - Changing filters in MenuView does NOT affect this default
+   - Only way to change: ProfileView settings
+
+2. **Nutrition Tag Display**:
+   - Toggles in ProfileView control which tags are shown on menu items
+   - These are display preferences, NOT filters
+   - Tags show nutritional properties: High Protein, Low Fat, Low Carbs
+
+3. **MenuView Filters**:
+   - All filters are temporary and session-based
+   - Start with default dietary preference applied
+   - Nutrition filters start empty (no filtering)
+   - Can be changed freely without affecting defaults
+   - Reset when app restarts
+
+### Search & Highlighting
+
+- **Search Bar**: Hidden by default, accessible via magnifying glass button
+- **Text Highlighting**: Search terms are highlighted in yellow in dish names and ingredients
+- **Suggestions**: Intelligent suggestions based on available ingredients
+- **Real-time**: Search results update as you type
+
+### Filters
+
+- **Categories**: All, Starter, Main Course, Dessert
+- **Diets**: Vegetarian, Vegan, Gluten-Free, Dairy-Free (temporary override of default)
+- **Nutrition**: High Protein, Low Fat, Low Carbs (temporary filtering)
+  - *Adaptive: Only visible if corresponding tags are enabled in preferences*
+
+### Interface States
+- **Loading**: During OCR/API processing
+- **Error**: With retry capability
+- **Empty**: When no results match filters
+- **Success**: Structured menu display
+
 ## 🏗️ Architecture
 
 ### Project Structure
@@ -126,12 +184,13 @@ struct MenuItem: Identifiable, Codable {
 // - Dish names (original and translated)
 // - Ingredients
 // - Automatic suggestions based on available ingredients
+// - Real-time highlighting of search terms in results
 ```
 
 ### Filters
 - **Categories**: All, Starter, Main Course, Dessert
-- **Diets**: Vegetarian, Vegan, Gluten-Free, Dairy-Free
-- **Nutrition**: High Protein, Low Fat, Low Carbs
+- **Diets**: Vegetarian, Vegan, Gluten-Free, Dairy-Free (temporary override of default)
+- **Nutrition**: High Protein, Low Fat, Low Carbs (temporary filtering)
 
 ### Interface States
 - **Loading**: During OCR/API processing
@@ -221,6 +280,11 @@ let mockService = MockMenuService()
 - ✅ Consistent naming
 - ✅ Component reusability
 - ✅ Asynchronous state management
+
+### User Preferences
+- **Default Dietary Filter**: Persistent setting applied on app launch
+- **Nutrition Tag Display**: Controls visibility of nutrition tags (not filtering)
+- **Temporary Filters**: Session-based, reset on app restart
 
 ---
 

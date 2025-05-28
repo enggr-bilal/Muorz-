@@ -1,6 +1,6 @@
 //
 //  TEST.swift
-//  Muorz’
+//  Muorz'
 //
 //  Created by Simon Naud on 26/05/25.
 //
@@ -8,58 +8,63 @@
 import Foundation
 
 class UserPreferences: ObservableObject {
+    // MARK: - Default Values (only changeable from ProfileView)
     @Published var defaultDietaryPreference: String? {
         didSet {
             saveDietaryPreference()
         }
     }
-    @Published var defaultNutritionPreferences: Set<String>
+    
+    // MARK: - Display Preferences (toggles for showing/hiding tags)
+    @Published var showHighProteinTag: Bool {
+        didSet {
+            saveDisplayPreferences()
+        }
+    }
+    @Published var showLowFatTag: Bool {
+        didSet {
+            saveDisplayPreferences()
+        }
+    }
+    @Published var showLowCarbsTag: Bool {
+        didSet {
+            saveDisplayPreferences()
+        }
+    }
+    
+    // MARK: - User Info
     @Published var userName: String
     
-    // Visibility preferences for nutrition labels
-    @Published var showHighProteinLabel: Bool {
-        didSet {
-            saveLabelVisibility()
-        }
-    }
-    @Published var showLowFatLabel: Bool {
-        didSet {
-            saveLabelVisibility()
-        }
-    }
-    @Published var showLowCarbsLabel: Bool {
-        didSet {
-            saveLabelVisibility()
-        }
-    }
-    
-    // Dietary preferences options
+    // MARK: - Static Options
     static let dietaryOptions = [
-        PreferenceOption(id: "vegetarian", name: "Vegetarian", icon: ""),
-        PreferenceOption(id: "vegan", name: "Vegan", icon: ""),
-        PreferenceOption(id: "glutenFree", name: "Gluten Free", icon: ""),
-        PreferenceOption(id: "dairyFree", name: "Dairy Free", icon: "")
+        PreferenceOption(id: "vegetarian", name: "Vegetarian", icon: "leaf.fill"),
+        PreferenceOption(id: "vegan", name: "Vegan", icon: "carrot.fill"),
+        PreferenceOption(id: "glutenFree", name: "Gluten Free", icon: "g.circle.fill"),
+        PreferenceOption(id: "dairyFree", name: "Dairy Free", icon: "drop.fill")
     ]
     
-    // Nutrition preferences options
-    static let nutritionOptions = [
+    static let nutritionDisplayOptions = [
         PreferenceOption(id: "protein", name: "High Protein", icon: "figure.strengthtraining.traditional"),
         PreferenceOption(id: "fat", name: "Low Fat", icon: "leaf.fill"),
         PreferenceOption(id: "carbs", name: "Low Carbs", icon: "chart.line.downtrend.xyaxis")
     ]
     
     init() {
-        // Load saved preferences from UserDefaults
         let defaults = UserDefaults.standard
-        self.defaultDietaryPreference = defaults.string(forKey: "defaultDietaryPreference")
-        self.defaultNutritionPreferences = Set(defaults.array(forKey: "defaultNutritionPreferences") as? [String] ?? [])
-        self.userName = defaults.string(forKey: "userName") ?? ""
         
-        // Load label visibility preferences
-        self.showHighProteinLabel = defaults.bool(forKey: "showHighProteinLabel")
-        self.showLowFatLabel = defaults.bool(forKey: "showLowFatLabel")
-        self.showLowCarbsLabel = defaults.bool(forKey: "showLowCarbsLabel")
+        // Load default dietary preference
+        self.defaultDietaryPreference = defaults.string(forKey: "defaultDietaryPreference")
+        
+        // Load display preferences (default to true for better UX)
+        self.showHighProteinTag = defaults.object(forKey: "showHighProteinTag") as? Bool ?? true
+        self.showLowFatTag = defaults.object(forKey: "showLowFatTag") as? Bool ?? true
+        self.showLowCarbsTag = defaults.object(forKey: "showLowCarbsTag") as? Bool ?? true
+        
+        // Load user info
+        self.userName = defaults.string(forKey: "userName") ?? ""
     }
+    
+    // MARK: - Save Methods
     
     private func saveDietaryPreference() {
         if let preference = defaultDietaryPreference {
@@ -69,19 +74,15 @@ class UserPreferences: ObservableObject {
         }
     }
     
-    func saveNutritionPreferences() {
-        UserDefaults.standard.set(Array(defaultNutritionPreferences), forKey: "defaultNutritionPreferences")
+    private func saveDisplayPreferences() {
+        let defaults = UserDefaults.standard
+        defaults.set(showHighProteinTag, forKey: "showHighProteinTag")
+        defaults.set(showLowFatTag, forKey: "showLowFatTag")
+        defaults.set(showLowCarbsTag, forKey: "showLowCarbsTag")
     }
     
     func saveUserName() {
         UserDefaults.standard.set(userName, forKey: "userName")
-    }
-    
-    private func saveLabelVisibility() {
-        let defaults = UserDefaults.standard
-        defaults.set(showHighProteinLabel, forKey: "showHighProteinLabel")
-        defaults.set(showLowFatLabel, forKey: "showLowFatLabel")
-        defaults.set(showLowCarbsLabel, forKey: "showLowCarbsLabel")
     }
 }
 

@@ -1,6 +1,6 @@
 //
 //  TEST.swift
-//  Muorz’
+//  Muorz'
 //
 //  Created by Simon Naud on 26/05/25.
 //
@@ -11,6 +11,7 @@ struct SelectionView: View {
     @ObservedObject var selectionManager: SelectionManager
     @Environment(\.dismiss) private var dismiss
     @State private var showTranslation = false
+    @State private var showingWarningAlert = false
     
     var body: some View {
         NavigationView {
@@ -34,7 +35,6 @@ struct SelectionView: View {
                     }
                     .padding()
                 }
-               Spacer()
                 
                 if !selectionManager.selectedItems.isEmpty {
                     VStack(spacing: 16) {
@@ -66,34 +66,39 @@ struct SelectionView: View {
                         }
                         
                         Button(action: {
-                            withAnimation(.spring()) {
-                                showTranslation.toggle()
+                            if !showTranslation {
+                                // Show warning alert before showing original names
+                                showingWarningAlert = true
+                            } else {
+                                // Switch back to selection view without warning
+                                withAnimation(.spring()) {
+                                    showTranslation = false
+                                }
                             }
                         }) {
                             HStack {
-                                Image(systemName: showTranslation ? "character.book.closed" : "character.book.closed.fill")
-                                    .font(.system(size: 24))
-                                Text(showTranslation ? "Show Prices" : "Show Original Names")
+                                Image(systemName: showTranslation ? "list.star" : "translate")
+                                    .font(.system(size: 20))
+                                Text(showTranslation ? "Show Selection" : "Show Original Names")
                                     .fontWeight(.semibold)
                             }
                             .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(showTranslation ? Color.orange : Color.accentColor)
+                            .frame(height: 50) // Fixed height
+                            .background(showTranslation ? Color.gray : Color.accentColor)
                             .foregroundColor(.white)
-                            .cornerRadius(12)
+                            .clipShape(Capsule()) // Capsule shape
                         }
                         .padding(.horizontal)
                         .padding(.bottom, 8)
                     }
                     .background(Color(UIColor.systemBackground))
-                   
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Text("Your Selection")
-                        .font(.system(.title2, design: .serif)) // Serif dynamique
+                        .font(.system(.title2, design: .serif))
                         .accessibilityAddTraits(.isHeader)
                 }
 
@@ -114,10 +119,15 @@ struct SelectionView: View {
                     }
                 }
             }
-           
-                
-              
+            .alert("Warning", isPresented: $showingWarningAlert) {
+                Button("Understood", role: .none) {
+                    withAnimation(.spring()) {
+                        showTranslation = true
                     }
                 }
+            } message: {
+                Text("This app provides dietary suggestions, but cannot guarantee the absence of allergens. Please confirm with restaurant staff before ordering.")
             }
-      
+        }
+    }
+}

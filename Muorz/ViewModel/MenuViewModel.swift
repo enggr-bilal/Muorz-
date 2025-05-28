@@ -20,8 +20,7 @@ class MenuViewModel: ObservableObject {
     @Published var selectedCategory = "all"
     @Published var restaurantInfo: RestaurantInfo?
     
-    // MARK: - Filter Properties
-    
+    // MARK: - Temporary Filter Properties (reset on each app launch)
     @Published var selectedDietaryPreference: String?
     @Published var selectedNutritionPreferences: Set<String> = []
     
@@ -126,7 +125,7 @@ class MenuViewModel: ObservableObject {
         loadSampleData()
     }
     
-    // MARK: - Filter Methods
+    // MARK: - Filter Methods (temporary filters, don't affect defaults)
     
     func updateDietaryPreference(_ preference: String?) {
         selectedDietaryPreference = preference
@@ -142,6 +141,14 @@ class MenuViewModel: ObservableObject {
     
     func clearNutritionPreferences() {
         selectedNutritionPreferences.removeAll()
+    }
+    
+    // MARK: - Initialization from User Preferences
+    
+    func initializeWithDefaults(from preferences: UserPreferences) {
+        // Initialize temporary filters with default values
+        selectedDietaryPreference = preferences.defaultDietaryPreference
+        selectedNutritionPreferences.removeAll() // Nutrition filters start empty
     }
     
     // MARK: - Search Methods

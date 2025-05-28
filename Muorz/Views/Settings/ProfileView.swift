@@ -1,6 +1,6 @@
 //
 //  TEST.swift
-//  Muorz’
+//  Muorz'
 //
 //  Created by Simon Naud on 26/05/25.
 //
@@ -17,23 +17,20 @@ struct ProfileView: View {
             List {
                 
                 // Default Dietary Preference
-                Section(header: Text("Default Dietary Preference"), footer: Text("Menus will be filtered to only show dishes that match your selected diets.")) {
+                Section(
+                    header: Text("Default Dietary Filter"),
+                    footer: Text("This filter will be automatically applied when you open the app. You can temporarily change it in the menu view without affecting this default setting.")
+                ) {
                     DietaryPreferencePicker(selectedPreference: $preferences.defaultDietaryPreference)
                 }
                
-                
-                
-                // Default Nutrition Labels
-                Section(header: Text("Default Nutrition Labels"), footer: Text("Selected priorities will be displayed with badges to help you spot the right dishes faster.")) {
-                    NutritionPreferenceToggles(
-                        selectedPreferences: $preferences.defaultNutritionPreferences,
-                        onPreferenceChange: { preferences.saveNutritionPreferences() }
-                    )
+                // Nutrition Tag Display Settings
+                Section(
+                    header: Text("Nutrition Tag Display"),
+                    footer: Text("Choose which nutrition tags to display on menu items. These toggles only control visibility, not filtering.")
+                ) {
+                    NutritionDisplayToggles(preferences: preferences)
                 }
-               
-                
-              
-                
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

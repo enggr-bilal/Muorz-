@@ -13,6 +13,7 @@ struct MenuView: View {
     @ObservedObject var preferences: UserPreferences
     @State private var showingSelection = false
     @State private var showingProfile = false
+    @State private var isSearching = false
     
     var body: some View {
         NavigationView {
@@ -21,44 +22,54 @@ struct MenuView: View {
                     .ignoresSafeArea()
                 
                 VStack(spacing: 0) {
-                    // Search Bar
-                    SearchBar(
-                        searchText: $viewModel.searchText,
-                        placeholder: "Search ingredients, dishes...",
-                        suggestions: viewModel.getSearchSuggestions(),
-                        onSuggestionTap: { suggestion in
-                            viewModel.searchItems(with: suggestion)
+                    // Header Section - White background
+                    VStack(spacing: 16) {
+                        // Title
+                        HStack {
+                            Text("Menu")
+                                .font(.system(.largeTitle, design: .serif, weight: .medium))
+                                .foregroundColor(.black)
+                            
+                            Spacer()
+                            
+                            Button {
+                                showingProfile = true
+                            } label: {
+                                Image(systemName: "gear")
+                                    .font(.title2)
+                                    .foregroundColor(.black)
+                            }
                         }
-                    )
-                    .padding(.horizontal, 16)
-                    .padding(.top, 8)
+                        .padding(.horizontal, 16)
+                        .padding(.top, 8)
+                        
+                        // Filter Header with integrated search
+                        FilterHeader(
+                            selectedCategory: $viewModel.selectedCategory,
+                            selectedDietTag: Binding(
+                                get: { viewModel.selectedDietaryPreference },
+                                set: { viewModel.updateDietaryPreference($0) }
+                            ),
+                            selectedNutritionTags: Binding(
+                                get: { viewModel.selectedNutritionPreferences },
+                                set: { viewModel.selectedNutritionPreferences = $0 }
+                            ),
+                            searchText: $viewModel.searchText,
+                            isSearching: $isSearching,
+                            categories: viewModel.categories,
+                            searchSuggestions: viewModel.getSearchSuggestions(),
+                            onSuggestionTap: { suggestion in
+                                viewModel.searchItems(with: suggestion)
+                            },
+                            showHighProteinTag: preferences.showHighProteinTag,
+                            showLowFatTag: preferences.showLowFatTag,
+                            showLowCarbsTag: preferences.showLowCarbsTag
+                        )
+                    }
+                    .background(Color.white)
+                  
                     
-                    // Search Results Summary
-                    SearchResultsSummary(
-                        resultsCount: viewModel.filteredItemsCount,
-                        searchText: viewModel.searchText,
-                        hasActiveFilters: viewModel.hasActiveFilters,
-                        onClearFilters: {
-                            viewModel.clearAllFilters()
-                        }
-                    )
-                    .padding(.horizontal, 16)
-                    .padding(.top, viewModel.hasActiveFilters ? 8 : 0)
-                    
-                    // Filter Header
-                    FilterHeader(
-                        selectedCategory: $viewModel.selectedCategory,
-                        selectedDietTag: Binding(
-                            get: { viewModel.selectedDietaryPreference },
-                            set: { viewModel.updateDietaryPreference($0) }
-                        ),
-                        selectedNutritionTags: Binding(
-                            get: { viewModel.selectedNutritionPreferences },
-                            set: { viewModel.selectedNutritionPreferences = $0 }
-                        ),
-                        categories: viewModel.categories
-                    )
-                    
+                    // Content Section
                     // Loading State
                     if viewModel.isLoading {
                         LoadingView()
@@ -79,6 +90,7 @@ struct MenuView: View {
                             hasActiveFilters: viewModel.hasActiveFilters,
                             onClearFilters: {
                                 viewModel.clearAllFilters()
+                                isSearching = false
                             }
                         )
                     }
@@ -86,7 +98,14 @@ struct MenuView: View {
                     else {
                         MenuListView(
                             filteredItems: viewModel.filteredItems,
-                            selectionManager: selectionManager
+                            selectionManager: selectionManager,
+                            searchText: viewModel.searchText,
+                            showHighProteinTag: preferences.showHighProteinTag,
+                            showLowFatTag: preferences.showLowFatTag,
+                            showLowCarbsTag: preferences.showLowCarbsTag,
+                            onRefresh: {
+                                await viewModel.refreshMenu()
+                            }
                         )
                     }
                 }
@@ -99,42 +118,29 @@ struct MenuView: View {
                     )
                 }
             }
-            .navigationTitle("Menu")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text("Menu")
-                        .font(.system(.title2, design: .serif))
-                }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        showingProfile = true
-                    } label: {
-                        Image(systemName: "gear")
-                    }
-                }
-            }
+            .navigationBarHidden(true)
             .sheet(isPresented: $showingSelection) {
                 SelectionView(selectionManager: selectionManager)
             }
             .sheet(isPresented: $showingProfile) {
                 ProfileView(preferences: preferences)
             }
-            .refreshable {
-                await viewModel.refreshMenu()
-            }
         }
         .onAppear {
-            // Sync preferences with ViewModel
-            viewModel.selectedDietaryPreference = preferences.defaultDietaryPreference
-            viewModel.selectedNutritionPreferences = preferences.defaultNutritionPreferences
+            // Initialize filters with default values (only on first load)
+            viewModel.initializeWithDefaults(from: preferences)
         }
         .onChange(of: preferences.defaultDietaryPreference) { newValue in
-            viewModel.updateDietaryPreference(newValue)
+            // Don't automatically update the filter when default changes
+            // User needs to restart the app or manually reset filters
         }
-        .onChange(of: preferences.defaultNutritionPreferences) { newValue in
-            viewModel.selectedNutritionPreferences = newValue
+        .onChange(of: isSearching) { newValue in
+            if !newValue {
+                // When closing search, clear search text if empty
+                if viewModel.searchText.isEmpty {
+                    viewModel.clearSearch()
+                }
+            }
         }
     }
 }
@@ -222,6 +228,11 @@ struct EmptyStateView: View {
 struct MenuListView: View {
     let filteredItems: [String: [MenuItem]]
     let selectionManager: SelectionManager
+    let searchText: String
+    let showHighProteinTag: Bool
+    let showLowFatTag: Bool
+    let showLowCarbsTag: Bool
+    let onRefresh: () async -> Void
     
     var body: some View {
         ScrollView {
@@ -237,9 +248,10 @@ struct MenuListView: View {
                             ForEach(filteredItems[category] ?? []) { item in
                                 MenuItemRow(
                                     item: item,
-                                    showHighProtein: true,
-                                    showLowFat: true,
-                                    showLowCarbs: true,
+                                    showHighProtein: showHighProteinTag,
+                                    showLowFat: showLowFatTag,
+                                    showLowCarbs: showLowCarbsTag,
+                                    searchText: searchText,
                                     selectionManager: selectionManager
                                 )
                                 
@@ -258,6 +270,9 @@ struct MenuListView: View {
             }
             .padding(.vertical)
             .padding(.bottom, 80) // Add padding at the bottom for the floating button
+        }
+        .refreshable {
+            await onRefresh()
         }
     }
 }

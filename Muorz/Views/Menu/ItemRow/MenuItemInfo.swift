@@ -1,6 +1,6 @@
 //
 //  TEST.swift
-//  Muorz’
+//  Muorz'
 //
 //  Created by Simon Naud on 26/05/25.
 //
@@ -16,6 +16,7 @@ struct MenuItemInfo: View {
     let isHighProtein: Bool
     let isLowFat: Bool
     let isLowCarbs: Bool
+    let searchText: String
     
     private var quantity: Int {
         selectionManager.quantity(for: item)
@@ -25,10 +26,14 @@ struct MenuItemInfo: View {
         VStack(alignment: .leading, spacing: 8) {
             // Title and Price row
             HStack {
-                Text(item.translatedName)
-                    .font(.system(size: 20, weight: .regular, design: .serif))
-                    .foregroundColor(.black)
-                    .lineLimit(1)
+                HighlightedText(
+                    text: item.translatedName,
+                    searchText: searchText,
+                    font: .system(size: 20, weight: .regular, design: .serif),
+                    highlightColor: .yellow.opacity(0.6)
+                )
+                .foregroundColor(.black)
+                .lineLimit(1)
                 
                 Spacer()
                 
@@ -39,11 +44,15 @@ struct MenuItemInfo: View {
             
             // Description
             HStack {
-                Text(item.ingredientsEn.joined(separator: ", "))
-                    .font(.footnote)
-                    .foregroundColor(.gray)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.leading)
+                HighlightedText(
+                    text: item.ingredientsEn.joined(separator: ", "),
+                    searchText: searchText,
+                    font: .footnote,
+                    highlightColor: .yellow.opacity(0.6)
+                )
+                .foregroundColor(.gray)
+                .lineLimit(2)
+                .multilineTextAlignment(.leading)
                 Spacer()
             }
             
@@ -112,7 +121,8 @@ struct MenuItemInfo: View {
             showLowCarbs: true,
             isHighProtein: true,
             isLowFat: true,
-            isLowCarbs: true
+            isLowCarbs: true,
+            searchText: ""
         )
         .background(Color.white)
         
@@ -124,7 +134,8 @@ struct MenuItemInfo: View {
             showLowCarbs: true,
             isHighProtein: true,
             isLowFat: true,
-            isLowCarbs: true
+            isLowCarbs: true,
+            searchText: ""
         )
         .background(Color.white)
     }
