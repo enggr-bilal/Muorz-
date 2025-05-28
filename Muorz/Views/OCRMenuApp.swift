@@ -1,6 +1,6 @@
 //
 //  OCRMenuApp.swift
-//  Muorz’
+//  Muorz'
 //
 //  Created by Muhammad Bilal on 12/05/25.
 //
