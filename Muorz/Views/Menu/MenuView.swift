@@ -50,9 +50,9 @@ struct MenuView: View {
                                 get: { viewModel.selectedDietaryPreference },
                                 set: { viewModel.updateDietaryPreference($0) }
                             ),
-                            selectedNutritionTags: Binding(
-                                get: { viewModel.selectedNutritionPreferences },
-                                set: { viewModel.selectedNutritionPreferences = $0 }
+                            selectedNutritionSortPriority: Binding(
+                                get: { viewModel.selectedNutritionSortPriority },
+                                set: { viewModel.updateNutritionSortPriority($0) }
                             ),
                             searchText: $viewModel.searchText,
                             isSearching: $isSearching,

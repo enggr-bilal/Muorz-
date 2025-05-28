@@ -48,6 +48,24 @@ struct DietaryPreferencePicker: View {
     }
 }
 
+struct NutritionSortPicker: View {
+    @Binding var selectedSortPriority: String
+    
+    var body: some View {
+        Picker("Nutrition Sort Priority", selection: $selectedSortPriority) {
+            ForEach(UserPreferences.nutritionSortOptions) { option in
+                Label {
+                    Text(option.name)
+                } icon: {
+                    Image(systemName: option.icon)
+                        .foregroundColor(.accentColor)
+                }
+                .tag(option.id)
+            }
+        }
+    }
+}
+
 struct NutritionDisplayToggles: View {
     @ObservedObject var preferences: UserPreferences
     

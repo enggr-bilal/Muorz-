@@ -1,6 +1,6 @@
 //
 //  TEST.swift
-//  Muorz’
+//  Muorz'
 //
 //  Created by Simon Naud on 26/05/25.
 //
@@ -16,15 +16,19 @@ struct SelectedItemRow: View {
     var body: some View {
         HStack {
             if showTranslation {
-                HStack(spacing: 16) {
-                    Text("\(selectedItem.quantity)×")
-                        .font(.system(size: 32, weight: .bold))
-                        .foregroundColor(.accentColor)
+                VStack(alignment: .leading, spacing: 8) {
                     
-                    Text(selectedItem.menuItem.originalName)
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundColor(.primary)
-                        .lineLimit(1)
+                        Text("\(selectedItem.quantity)×")
+                            .font(.system(size: 32, weight: .bold))
+                            .foregroundColor(.accentColor)
+                        
+                        Text(selectedItem.menuItem.originalName)
+                            .font(.system(size: 24, weight: .bold))
+                            .foregroundColor(.primary)
+                            .lineLimit(2)
+                            .multilineTextAlignment(.leading)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+            
                 }
                 .transition(.scale.combined(with: .opacity))
             } else {

@@ -20,13 +20,14 @@ The app uses a clear separation between **default preferences** and **temporary 
 
 #### Default Preferences (ProfileView only)
 - **Default Dietary Filter**: Automatically applied when the app opens
+- **Default Nutrition Sort Priority**: Controls how items are sorted within each section
 - **Nutrition Tag Display**: Controls which nutrition tags are visible on menu items
 - These settings are persistent and only changeable from the ProfileView
 
 #### Temporary Filters (MenuView)
 - **Category Filter**: Filter by food category (Starter, Main, Dessert, etc.)
 - **Dietary Filter**: Temporarily override the default dietary preference
-- **Nutrition Filters**: Filter items by nutritional properties (High Protein, Low Fat, Low Carbs)
+- **Nutrition Sort Priority**: Temporarily override the default sorting priority
 - **Search**: Text-based search in dish names and ingredients
 - These filters reset to default values when the app restarts
 
@@ -38,15 +39,22 @@ The app uses a clear separation between **default preferences** and **temporary 
    - Changing filters in MenuView does NOT affect this default
    - Only way to change: ProfileView settings
 
-2. **Nutrition Tag Display**:
+2. **Default Nutrition Sort Priority**:
+   - Set in ProfileView → Settings → Default Nutrition Sort Priority
+   - Controls how menu items are sorted within each category section
+   - Options: No Priority, Protein Priority, Low Fat Priority, Low Carbs Priority
+   - Can be temporarily overridden in MenuView without affecting the default
+   - Automatically applied when opening the app
+
+3. **Nutrition Tag Display**:
    - Toggles in ProfileView control which tags are shown on menu items
    - These are display preferences, NOT filters
    - Tags show nutritional properties: High Protein, Low Fat, Low Carbs
 
-3. **MenuView Filters**:
+4. **MenuView Filters**:
    - All filters are temporary and session-based
    - Start with default dietary preference applied
-   - Nutrition filters start empty (no filtering)
+   - Start with default nutrition sort priority applied
    - Can be changed freely without affecting defaults
    - Reset when app restarts
 
@@ -57,18 +65,23 @@ The app uses a clear separation between **default preferences** and **temporary 
 - **Suggestions**: Intelligent suggestions based on available ingredients
 - **Real-time**: Search results update as you type
 
-### Filters
+### Filters & Sorting
 
 - **Categories**: All, Starter, Main Course, Dessert
 - **Diets**: Vegetarian, Vegan, Gluten-Free, Dairy-Free (temporary override of default)
-- **Nutrition**: High Protein, Low Fat, Low Carbs (temporary filtering)
-  - *Adaptive: Only visible if corresponding tags are enabled in preferences*
+- **Nutrition Sorting**: Sort items within each section by nutritional priority
+  - **No Priority**: Items appear in their original order
+  - **Protein Priority**: Items with higher protein content appear first
+  - **Low Fat Priority**: Items with lower fat content appear first  
+  - **Low Carbs Priority**: Items with lower carbs content appear first
+  - *Adaptive interface: Button shows corresponding nutrition tag icon and color when active*
+  - *Simplified menu: Text-only options with checkmarks for selection*
 
 ### Interface States
 - **Loading**: During OCR/API processing
 - **Error**: With retry capability
 - **Empty**: When no results match filters
-- **Success**: Structured menu display
+- **Success**: Structured menu display with intelligent sorting
 
 ## 🏗️ Architecture
 
@@ -159,10 +172,14 @@ struct MenuItem: Identifiable, Codable {
 - **Advanced OCR**: Text extraction with multilingual support (FR/EN)
 - **Smart Search**: Search in dish names AND ingredients with suggestions
 - **Multiple Filters**: By category, diet, and nutrition
+- **Intelligent Sorting**: Sort menu items by nutritional priorities (protein, fat, carbs)
+- **Persistent Preferences**: Default dietary filters and nutrition sort priorities
+- **Adaptive UI**: Nutrition options adapt based on user display preferences
 - **Modern Interface**: SwiftUI design with smooth animations and gradients
 - **Complete State Management**: Loading, processing, success, and error states
 - **MVVM Architecture**: Clear separation of responsibilities
 - **Seamless Navigation**: Smooth transitions between camera and menu views
+- **Server-Readable Selection**: Original names displayed in large, multi-line format for easy server reading
 
 ### 🚧 Ready for API
 - **API Service**: Complete structure for ChatGPT integration
@@ -187,16 +204,20 @@ struct MenuItem: Identifiable, Codable {
 // - Real-time highlighting of search terms in results
 ```
 
-### Filters
+### Filters & Sorting
 - **Categories**: All, Starter, Main Course, Dessert
 - **Diets**: Vegetarian, Vegan, Gluten-Free, Dairy-Free (temporary override of default)
-- **Nutrition**: High Protein, Low Fat, Low Carbs (temporary filtering)
+- **Nutrition Sorting**: Sort by protein, fat, or carbs priority within each section
+  - Protein Priority: Higher protein items first
+  - Low Fat Priority: Lower fat items first
+  - Low Carbs Priority: Lower carbs items first
 
-### Interface States
-- **Loading**: During OCR/API processing
-- **Error**: With retry capability
-- **Empty**: When no results match filters
-- **Success**: Structured menu display
+### User Preferences
+- **Default Dietary Filter**: Persistent setting applied on app launch
+- **Default Nutrition Sort Priority**: Persistent sorting preference for menu items within sections
+- **Nutrition Tag Display**: Controls visibility of nutrition tags (not filtering)
+- **Temporary Filters**: Session-based, reset on app restart
+- **Temporary Sort Override**: Can temporarily change sorting without affecting default preference
 
 ## 🔧 API Integration
 
@@ -283,8 +304,10 @@ let mockService = MockMenuService()
 
 ### User Preferences
 - **Default Dietary Filter**: Persistent setting applied on app launch
+- **Default Nutrition Sort Priority**: Persistent sorting preference for menu items within sections
 - **Nutrition Tag Display**: Controls visibility of nutrition tags (not filtering)
 - **Temporary Filters**: Session-based, reset on app restart
+- **Temporary Sort Override**: Can temporarily change sorting without affecting default preference
 
 ---
 

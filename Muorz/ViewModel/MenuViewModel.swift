@@ -22,7 +22,7 @@ class MenuViewModel: ObservableObject {
     
     // MARK: - Temporary Filter Properties (reset on each app launch)
     @Published var selectedDietaryPreference: String?
-    @Published var selectedNutritionPreferences: Set<String> = []
+    @Published var selectedNutritionSortPriority: String = "none"
     
     // MARK: - Constants
     
@@ -55,24 +55,23 @@ class MenuViewModel: ObservableObject {
                 // Dietary preference filter
                 item.matchesDietaryPreference(selectedDietaryPreference)
             }
-            .filter { item in
-                // Nutrition preference filter
-                item.matchesNutritionPreferences(
-                    selectedNutritionPreferences,
-                    highProteinThreshold: highProteinThreshold,
-                    lowFatThreshold: lowFatThreshold,
-                    lowCarbsThreshold: lowCarbsThreshold
-                )
-            }
         
-        return Dictionary(grouping: filtered) { $0.categoryEn }
+        // Group by category and sort within each category
+        let grouped = Dictionary(grouping: filtered) { $0.categoryEn }
+        
+        // Apply sorting within each category based on nutrition priority
+        var sortedGrouped: [String: [MenuItem]] = [:]
+        for (category, items) in grouped {
+            sortedGrouped[category] = sortItemsByNutritionPriority(items, priority: selectedNutritionSortPriority)
+        }
+        
+        return sortedGrouped
     }
     
     var hasActiveFilters: Bool {
         return !searchText.isEmpty ||
                selectedCategory != "all" ||
-               selectedDietaryPreference != nil ||
-               !selectedNutritionPreferences.isEmpty
+               selectedDietaryPreference != nil
     }
     
     var filteredItemsCount: Int {
@@ -113,7 +112,7 @@ class MenuViewModel: ObservableObject {
         searchText = ""
         selectedCategory = "all"
         selectedDietaryPreference = nil
-        selectedNutritionPreferences.removeAll()
+        // Note: We don't reset selectedNutritionSortPriority here as it's more of a preference than a filter
     }
     
     func clearSearch() {
@@ -131,16 +130,23 @@ class MenuViewModel: ObservableObject {
         selectedDietaryPreference = preference
     }
     
-    func toggleNutritionPreference(_ preference: String) {
-        if selectedNutritionPreferences.contains(preference) {
-            selectedNutritionPreferences.remove(preference)
-        } else {
-            selectedNutritionPreferences.insert(preference)
-        }
+    func updateNutritionSortPriority(_ priority: String) {
+        selectedNutritionSortPriority = priority
     }
     
-    func clearNutritionPreferences() {
-        selectedNutritionPreferences.removeAll()
+    // MARK: - Sorting Methods
+    
+    private func sortItemsByNutritionPriority(_ items: [MenuItem], priority: String) -> [MenuItem] {
+        switch priority {
+        case "protein":
+            return items.sorted { $0.nutritionScores.protein > $1.nutritionScores.protein }
+        case "fat":
+            return items.sorted { $0.nutritionScores.fat < $1.nutritionScores.fat }
+        case "carbs":
+            return items.sorted { $0.nutritionScores.carbs < $1.nutritionScores.carbs }
+        default:
+            return items // No sorting for "none"
+        }
     }
     
     // MARK: - Initialization from User Preferences
@@ -148,7 +154,7 @@ class MenuViewModel: ObservableObject {
     func initializeWithDefaults(from preferences: UserPreferences) {
         // Initialize temporary filters with default values
         selectedDietaryPreference = preferences.defaultDietaryPreference
-        selectedNutritionPreferences.removeAll() // Nutrition filters start empty
+        selectedNutritionSortPriority = preferences.defaultNutritionSortPriority
     }
     
     // MARK: - Search Methods

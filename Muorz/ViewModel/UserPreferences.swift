@@ -15,6 +15,12 @@ class UserPreferences: ObservableObject {
         }
     }
     
+    @Published var defaultNutritionSortPriority: String {
+        didSet {
+            saveNutritionSortPriority()
+        }
+    }
+    
     // MARK: - Display Preferences (toggles for showing/hiding tags)
     @Published var showHighProteinTag: Bool {
         didSet {
@@ -49,11 +55,21 @@ class UserPreferences: ObservableObject {
         PreferenceOption(id: "carbs", name: "Low Carbs", icon: "chart.line.downtrend.xyaxis")
     ]
     
+    static let nutritionSortOptions = [
+        PreferenceOption(id: "none", name: "No Priority", icon: "equal.circle"),
+        PreferenceOption(id: "protein", name: "Protein Priority", icon: "figure.strengthtraining.traditional"),
+        PreferenceOption(id: "fat", name: "Low Fat Priority", icon: "leaf.fill"),
+        PreferenceOption(id: "carbs", name: "Low Carbs Priority", icon: "chart.line.downtrend.xyaxis")
+    ]
+    
     init() {
         let defaults = UserDefaults.standard
         
         // Load default dietary preference
         self.defaultDietaryPreference = defaults.string(forKey: "defaultDietaryPreference")
+        
+        // Load default nutrition sort priority
+        self.defaultNutritionSortPriority = defaults.string(forKey: "defaultNutritionSortPriority") ?? "none"
         
         // Load display preferences (default to true for better UX)
         self.showHighProteinTag = defaults.object(forKey: "showHighProteinTag") as? Bool ?? true
@@ -72,6 +88,10 @@ class UserPreferences: ObservableObject {
         } else {
             UserDefaults.standard.removeObject(forKey: "defaultDietaryPreference")
         }
+    }
+    
+    private func saveNutritionSortPriority() {
+        UserDefaults.standard.set(defaultNutritionSortPriority, forKey: "defaultNutritionSortPriority")
     }
     
     private func saveDisplayPreferences() {

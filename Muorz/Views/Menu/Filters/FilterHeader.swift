@@ -58,7 +58,7 @@ struct FilterButton: View {
 struct FilterHeader: View {
     @Binding var selectedCategory: String
     @Binding var selectedDietTag: String?
-    @Binding var selectedNutritionTags: Set<String>
+    @Binding var selectedNutritionSortPriority: String
     @Binding var searchText: String
     @Binding var isSearching: Bool
     let categories: [String]
@@ -78,27 +78,46 @@ struct FilterHeader: View {
         UserPreferences.dietaryOptions.first { $0.id == selectedDietTag }
     }
 
-    private var selectedNutritionLabel: String {
-        switch selectedNutritionTags.count {
-        case 0: return "Nutrition"
-        case 1: return "1 Filter"
-        default: return "\(selectedNutritionTags.count) Filters"
+    private var selectedSortOption: PreferenceOption? {
+        UserPreferences.nutritionSortOptions.first { $0.id == selectedNutritionSortPriority }
+    }
+    
+    private var nutritionButtonIcon: String {
+        if selectedNutritionSortPriority == "none" {
+            return "arrow.up.arrow.down"
+        } else {
+            return selectedSortOption?.icon ?? "arrow.up.arrow.down"
         }
     }
     
-    private var availableNutritionOptions: [PreferenceOption] {
-        UserPreferences.nutritionDisplayOptions.filter { option in
-            switch option.id {
-            case "protein": return showHighProteinTag
-            case "fat": return showLowFatTag
-            case "carbs": return showLowCarbsTag
-            default: return false
-            }
+    private var nutritionButtonColor: Color {
+        switch selectedNutritionSortPriority {
+        case "protein":
+            return .blue
+        case "fat":
+            return .green
+        case "carbs":
+            return .orange
+        default:
+            return .clear
+        }
+    }
+    
+    private var nutritionButtonLabel: String {
+        switch selectedNutritionSortPriority {
+        case "protein":
+            return "High Protein"
+        case "fat":
+            return "Low Fat"
+        case "carbs":
+            return "Low Carbs"
+        default:
+            return "Nutrition"
         }
     }
     
     private var shouldShowNutritionButton: Bool {
-        return !availableNutritionOptions.isEmpty
+        return showHighProteinTag || showLowFatTag || showLowCarbsTag
     }
 
     var body: some View {
@@ -224,7 +243,7 @@ struct FilterHeader: View {
         } label: {
             FilterButton(
                 title: selectedDietOption?.name ?? "Diet",
-                icon: "fork.knife", // Icône constante
+                icon: "fork.knife",
                 isSelected: selectedDietOption != nil
             )
         }
@@ -233,41 +252,42 @@ struct FilterHeader: View {
     @ViewBuilder
     private func nutritionMenu() -> some View {
         Menu {
-            ForEach(availableNutritionOptions) { option in
+            ForEach(UserPreferences.nutritionSortOptions) { option in
                 Button {
                     withAnimation {
-                        if selectedNutritionTags.contains(option.id) {
-                            selectedNutritionTags.remove(option.id)
-                        } else {
-                            selectedNutritionTags.insert(option.id)
-                        }
+                        selectedNutritionSortPriority = option.id
                     }
                 } label: {
                     HStack {
                         Text(option.name)
-                        if selectedNutritionTags.contains(option.id) {
+                        if selectedNutritionSortPriority == option.id {
                             Spacer()
                             Image(systemName: "checkmark")
                         }
                     }
                 }
             }
-
-            if !selectedNutritionTags.isEmpty {
-                Divider()
-                Button(role: .destructive) {
-                    withAnimation {
-                        selectedNutritionTags.removeAll()
-                    }
-                } label: {
-                    Label("Clear All", systemImage: "xmark.circle.fill")
-                }
-            }
         } label: {
-            FilterButton(
-                title: selectedNutritionLabel,
-                icon: "tag.fill",
-                isSelected: !selectedNutritionTags.isEmpty
+            HStack {
+                Image(systemName: nutritionButtonIcon)
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(.black)
+                
+                Text(nutritionButtonLabel)
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(.black)
+                    .fixedSize()
+            }
+            .padding(.horizontal, 16)
+            .frame(height: 36)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(nutritionButtonColor.opacity(0.2))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(.accent, lineWidth: 1)
+                    .padding(0.5)
             )
         }
     }

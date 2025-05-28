@@ -23,6 +23,14 @@ struct ProfileView: View {
                 ) {
                     DietaryPreferencePicker(selectedPreference: $preferences.defaultDietaryPreference)
                 }
+                
+                // Default Nutrition Sort Priority
+                Section(
+                    header: Text("Default Nutrition Sort Priority"),
+                    footer: Text("Items within each section will be sorted according to this nutritional priority. This can be temporarily changed in the menu filters.")
+                ) {
+                    NutritionSortPicker(selectedSortPriority: $preferences.defaultNutritionSortPriority)
+                }
                
                 // Nutrition Tag Display Settings
                 Section(
