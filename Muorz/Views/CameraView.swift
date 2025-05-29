@@ -7,15 +7,15 @@
 
 import SwiftUI
 import AVFoundation
+import VisionKit
 
 struct CameraView: View {
     @StateObject private var ocrViewModel = OCRViewModel()
     @StateObject private var menuViewModel = MenuViewModel()
     @ObservedObject var preferences: UserPreferences
     
-    @State private var showImagePicker = false
+    @State private var showDocumentScanner = false
     @State private var showMenuView = false
-    @State private var selectedImage: UIImage?
     @State private var hasProcessedMenu = false
     
     var body: some View {
@@ -43,22 +43,22 @@ struct CameraView: View {
                             onCancel: {
                                 print("🚫 Processing cancelled, resetting states...")
                                 ocrViewModel.clearResults()
-                                selectedImage = nil
                             }
                         )
                     } else if let errorMessage = ocrViewModel.errorMessage {
                         ErrorStateView(
                             message: errorMessage,
                             onRetry: {
-                                if let image = selectedImage {
-                                    print("🔄 Retrying with current image...")
-                                    ocrViewModel.processImage(image)
+                                if !ocrViewModel.capturedImages.isEmpty {
+                                    print("🔄 Retrying with captured images...")
+                                    ocrViewModel.processAllImages()
+                                } else {
+                                    print("🔄 No images to retry with - user needs to scan again")
                                 }
                             },
                             onStartOver: {
                                 print("🔄 Starting over, resetting all states...")
                                 ocrViewModel.clearResults()
-                                selectedImage = nil
                             }
                         )
                     } else if let processedMenu = ocrViewModel.processedMenu {
@@ -74,8 +74,7 @@ struct CameraView: View {
                     } else {
                         // Initial state - Camera interface
                         CameraInterfaceView(
-                            selectedImage: $selectedImage,
-                            showImagePicker: $showImagePicker,
+                            showDocumentScanner: $showDocumentScanner,
                             hasProcessedMenu: hasProcessedMenu,
                             hasMenuData: !menuViewModel.menuItems.isEmpty,
                             onViewLastMenu: {
@@ -88,8 +87,20 @@ struct CameraView: View {
                 }
             }
             .navigationBarHidden(true)
-            .sheet(isPresented: $showImagePicker) {
-                ImagePicker(selectedImage: $selectedImage)
+            .sheet(isPresented: $showDocumentScanner) {
+                DocumentScannerView { scannedImages in
+                    // Directly process scanned images without showing MultiPhotoView
+                    print("📄 Received \(scannedImages.count) scanned images, processing directly...")
+                    
+                    // Clear any previous images and add new ones
+                    ocrViewModel.clearResults()
+                    for image in scannedImages {
+                        ocrViewModel.addImage(image)
+                    }
+                    
+                    // Start processing immediately
+                    ocrViewModel.processAllImages()
+                }
             }
             .fullScreenCover(isPresented: $showMenuView) {
                 MenuView(viewModel: menuViewModel, preferences: preferences)
@@ -118,16 +129,6 @@ struct CameraView: View {
                 // Initialize MenuViewModel with default preferences
                 print("🔧 Initializing MenuViewModel with default preferences")
                 menuViewModel.initializeWithDefaults(from: preferences)
-            }
-            .onChange(of: selectedImage) { newImage in
-                if let image = newImage {
-                    print("📸 New image selected, starting OCR processing...")
-                    print("   Image size: \(image.size)")
-                    print("   OCR current state: isProcessing=\(ocrViewModel.isProcessing), hasError=\(ocrViewModel.errorMessage != nil)")
-                    ocrViewModel.processImage(image)
-                } else {
-                    print("📸 Image selection cleared")
-                }
             }
             .onChange(of: ocrViewModel.processedMenu) { processedMenu in
                 if processedMenu != nil {
@@ -159,8 +160,7 @@ struct HeaderView: View {
 // MARK: - Camera Interface View
 
 struct CameraInterfaceView: View {
-    @Binding var selectedImage: UIImage?
-    @Binding var showImagePicker: Bool
+    @Binding var showDocumentScanner: Bool
     let hasProcessedMenu: Bool
     let hasMenuData: Bool
     let onViewLastMenu: () -> Void
@@ -168,15 +168,28 @@ struct CameraInterfaceView: View {
     var body: some View {
         VStack(spacing: 40) {
             // Camera preview placeholder
-            CameraPreviewPlaceholder(selectedImage: selectedImage)
+            VStack(spacing: 16) {
+                Image(systemName: "camera.viewfinder")
+                    .font(.system(size: 64))
+                    .foregroundColor(.secondary)
+                
+                Text("Ready to Scan")
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundColor(.secondary)
+            }
+            .frame(height: 300)
+            .frame(maxWidth: .infinity)
+            .background(Color(.systemGray6))
+            .cornerRadius(20)
+            .padding(.horizontal, 24)
             
             // Instructions
             VStack(spacing: 16) {
-                Text("Point your camera at a menu")
+                Text("Scan Menu Pages")
                     .font(.system(size: 20, weight: .semibold))
                     .foregroundColor(.primary)
                 
-                Text("We'll extract the text and translate it for you")
+                Text("Uses Apple's Document Scanner for professional quality.\nCapture up to 2 pages and proceed to process.")
                     .font(.system(size: 16))
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -187,16 +200,15 @@ struct CameraInterfaceView: View {
             VStack(spacing: 16) {
                 // Main capture button
                 Button {
-                    print("🔘 Scan Menu button tapped")
-                    print("   Current selectedImage: \(selectedImage != nil ? "EXISTS" : "NIL")")
-                    showImagePicker = true
-                    print("   showImagePicker set to: \(showImagePicker)")
+                    print("🔘 Capture Page button tapped")
+                    showDocumentScanner = true
+                    print("   showDocumentScanner set to: \(showDocumentScanner)")
                 } label: {
                     HStack(spacing: 12) {
                         Image(systemName: "camera.fill")
                             .font(.system(size: 20, weight: .semibold))
                         
-                        Text("Scan Menu")
+                        Text("Start Document Scan")
                             .font(.system(size: 18, weight: .semibold))
                     }
                     .foregroundColor(.white)
@@ -228,40 +240,6 @@ struct CameraInterfaceView: View {
                         .foregroundColor(.accentColor)
                         .frame(height: 44)
                     }
-                }
-            }
-        }
-        .padding(.horizontal, 24)
-    }
-}
-
-// MARK: - Camera Preview Placeholder
-
-struct CameraPreviewPlaceholder: View {
-    let selectedImage: UIImage?
-    
-    var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Color(.systemGray5))
-                .frame(height: 300)
-            
-            if let image = selectedImage {
-                Image(uiImage: image)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(height: 300)
-                    .clipped()
-                    .cornerRadius(20)
-            } else {
-                VStack(spacing: 16) {
-                    Image(systemName: "camera.viewfinder")
-                        .font(.system(size: 48))
-                        .foregroundColor(.secondary)
-                    
-                    Text("Camera Preview")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.secondary)
                 }
             }
         }
@@ -419,6 +397,69 @@ struct SuccessView: View {
                 .cornerRadius(12)
             }
             .padding(.horizontal, 32)
+        }
+    }
+}
+
+// MARK: - Document Scanner View (VisionKit) - Limited to 2 pages
+
+struct DocumentScannerView: UIViewControllerRepresentable {
+    let onDocumentsScanned: ([UIImage]) -> Void
+    @Environment(\.presentationMode) var presentationMode
+    
+    func makeUIViewController(context: Context) -> VNDocumentCameraViewController {
+        let scannerViewController = VNDocumentCameraViewController()
+        scannerViewController.delegate = context.coordinator
+        return scannerViewController
+    }
+    
+    func updateUIViewController(_ uiViewController: VNDocumentCameraViewController, context: Context) {
+        // No updates needed
+    }
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    
+    class Coordinator: NSObject, VNDocumentCameraViewControllerDelegate {
+        let parent: DocumentScannerView
+        private let maxPages = 2
+        
+        init(_ parent: DocumentScannerView) {
+            self.parent = parent
+        }
+        
+        func documentCameraViewController(_ controller: VNDocumentCameraViewController, didFinishWith scan: VNDocumentCameraScan) {
+            print("📄 Document scanner finished with \(scan.pageCount) pages")
+            
+            var scannedImages: [UIImage] = []
+            
+            // Limit to maxPages (2)
+            let pagesToProcess = min(scan.pageCount, maxPages)
+            
+            for pageIndex in 0..<pagesToProcess {
+                let image = scan.imageOfPage(at: pageIndex)
+                scannedImages.append(image)
+                print("📸 Added page \(pageIndex + 1) - Size: \(image.size)")
+            }
+            
+            if scan.pageCount > maxPages {
+                print("⚠️ Limited to \(maxPages) pages (original scan had \(scan.pageCount) pages)")
+            }
+            
+            // Pass scanned images to the callback
+            parent.onDocumentsScanned(scannedImages)
+            parent.presentationMode.wrappedValue.dismiss()
+        }
+        
+        func documentCameraViewController(_ controller: VNDocumentCameraViewController, didFailWithError error: Error) {
+            print("❌ Document scanner failed: \(error.localizedDescription)")
+            parent.presentationMode.wrappedValue.dismiss()
+        }
+        
+        func documentCameraViewControllerDidCancel(_ controller: VNDocumentCameraViewController) {
+            print("🚫 Document scanner cancelled")
+            parent.presentationMode.wrappedValue.dismiss()
         }
     }
 }

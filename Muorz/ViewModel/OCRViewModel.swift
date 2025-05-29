@@ -17,74 +17,28 @@ class OCRViewModel: ObservableObject {
     @Published var extractedText = ""
     @Published var processedMenu: MenuResponse?
     
+    // MARK: - Multi-Photo Support
+    @Published var capturedImages: [UIImage] = []
+    @Published var combinedOCRText = ""
+    @Published var currentProcessingIndex = 0
+    @Published var individualOCRResults: [String] = []
+    
     private let menuService: MenuServiceProtocol
     
     init(menuService: MenuServiceProtocol? = nil) {
         self.menuService = menuService ?? APIConfiguration.createMenuService()
     }
 
+    // MARK: - Legacy Single Image Processing (Deprecated - use addImage + processAllImages instead)
+    
     func processImage(_ image: UIImage) {
+        print("⚠️ Using deprecated processImage method - consider using addImage + processAllImages")
         print("🔍 OCRViewModel.processImage called")
         print("   Current state: isProcessing=\(isProcessing), hasError=\(errorMessage != nil)")
         
-        guard let cgImage = image.cgImage else {
-            print("❌ Invalid image format")
-            errorMessage = "Invalid image format"
-            return
-        }
-        
-        print("✅ Starting OCR processing...")
-        isProcessing = true
-        errorMessage = nil
-
-        let requestHandler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-        let request = VNRecognizeTextRequest { [weak self] request, error in
-            guard let self = self else { return }
-            
-            if let error = error {
-                DispatchQueue.main.async {
-                    self.errorMessage = "OCR failed: \(error.localizedDescription)"
-                    self.isProcessing = false
-                }
-                return
-            }
-            
-            guard let observations = request.results as? [VNRecognizedTextObservation] else {
-                DispatchQueue.main.async {
-                    self.errorMessage = "No text found in image"
-                    self.isProcessing = false
-                }
-                return
-            }
-            
-            let extracted = observations.compactMap { $0.topCandidates(1).first?.string }
-            let fullText = extracted.joined(separator: "\n")
-            
-            DispatchQueue.main.async {
-                self.ocrResults = extracted.map { OCRResult(text: $0) }
-                self.extractedText = fullText
-                
-                // Process the extracted text through the API
-                Task {
-                    await self.processExtractedText(fullText)
-                }
-            }
-        }
-
-        request.recognitionLevel = .accurate
-        request.usesLanguageCorrection = true
-        request.recognitionLanguages = ["fr", "en"] // Support French and English
-
-        DispatchQueue.global(qos: .userInitiated).async {
-            do {
-                try requestHandler.perform([request])
-            } catch {
-                DispatchQueue.main.async {
-                    self.errorMessage = "OCR processing failed: \(error.localizedDescription)"
-                    self.isProcessing = false
-                }
-            }
-        }
+        // For backwards compatibility, add image and process immediately
+        addImage(image)
+        processAllImages()
     }
     
     private func processExtractedText(_ text: String) async {
@@ -117,6 +71,14 @@ class OCRViewModel: ObservableObject {
         processedMenu = nil
         errorMessage = nil
         isProcessing = false
+        
+        // Clear multi-photo data
+        capturedImages.removeAll()
+        combinedOCRText = ""
+        currentProcessingIndex = 0
+        individualOCRResults.removeAll()
+        
+        print("🧹 Cleared all OCR results and captured images")
     }
     
     func retryProcessing() {
@@ -125,5 +87,137 @@ class OCRViewModel: ObservableObject {
         Task {
             await processExtractedText(extractedText)
         }
+    }
+    
+    // MARK: - Multi-Photo Methods
+    
+    func addImage(_ image: UIImage) {
+        capturedImages.append(image)
+        print("📸 Added image \(capturedImages.count). Total images: \(capturedImages.count)")
+    }
+    
+    func removeImage(at index: Int) {
+        guard index < capturedImages.count else { return }
+        capturedImages.remove(at: index)
+        
+        // Also remove corresponding OCR result if it exists
+        if index < individualOCRResults.count {
+            individualOCRResults.remove(at: index)
+        }
+        
+        print("🗑️ Removed image at index \(index). Remaining: \(capturedImages.count)")
+        updateCombinedOCRText()
+    }
+    
+    func processAllImages() {
+        guard !capturedImages.isEmpty else {
+            errorMessage = "No images to process"
+            return
+        }
+        
+        print("🔄 Starting processing of \(capturedImages.count) images")
+        isProcessing = true
+        errorMessage = nil
+        currentProcessingIndex = 0
+        individualOCRResults = []
+        
+        Task {
+            await processImagesSequentially()
+        }
+    }
+    
+    private func processImagesSequentially() async {
+        for (index, image) in capturedImages.enumerated() {
+            currentProcessingIndex = index
+            print("🔍 Processing image \(index + 1)/\(capturedImages.count)")
+            
+            await processIndividualImage(image, at: index)
+        }
+        
+        // Combine all OCR results
+        updateCombinedOCRText()
+        
+        // Process combined text through API
+        if !combinedOCRText.isEmpty {
+            await processExtractedText(combinedOCRText)
+        } else {
+            errorMessage = "No text extracted from any images"
+            isProcessing = false
+        }
+    }
+    
+    private func processIndividualImage(_ image: UIImage, at index: Int) async {
+        guard let cgImage = image.cgImage else {
+            print("❌ Invalid image format at index \(index)")
+            individualOCRResults.append("")
+            return
+        }
+        
+        return await withCheckedContinuation { continuation in
+            let requestHandler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+            let request = VNRecognizeTextRequest { [weak self] request, error in
+                guard let self = self else { 
+                    continuation.resume()
+                    return 
+                }
+                
+                if let error = error {
+                    print("❌ OCR failed for image \(index): \(error.localizedDescription)")
+                    DispatchQueue.main.async {
+                        self.individualOCRResults.append("")
+                    }
+                    continuation.resume()
+                    return
+                }
+                
+                guard let observations = request.results as? [VNRecognizedTextObservation] else {
+                    print("❌ No text found in image \(index)")
+                    DispatchQueue.main.async {
+                        self.individualOCRResults.append("")
+                    }
+                    continuation.resume()
+                    return
+                }
+                
+                let extracted = observations.compactMap { $0.topCandidates(1).first?.string }
+                let imageText = extracted.joined(separator: "\n")
+                
+                DispatchQueue.main.async {
+                    self.individualOCRResults.append(imageText)
+                    print("✅ Extracted \(imageText.count) characters from image \(index + 1)")
+                }
+                continuation.resume()
+            }
+            
+            request.recognitionLevel = .accurate
+            request.usesLanguageCorrection = true
+            request.recognitionLanguages = ["fr", "en"]
+            
+            DispatchQueue.global(qos: .userInitiated).async {
+                do {
+                    try requestHandler.perform([request])
+                } catch {
+                    print("❌ OCR processing failed for image \(index): \(error.localizedDescription)")
+                    DispatchQueue.main.async {
+                        self.individualOCRResults.append("")
+                    }
+                    continuation.resume()
+                }
+            }
+        }
+    }
+    
+    private func updateCombinedOCRText() {
+        combinedOCRText = individualOCRResults
+            .enumerated()
+            .map { index, text in
+                guard !text.isEmpty else { return "" }
+                return "=== PAGE \(index + 1) ===\n\(text)\n"
+            }
+            .filter { !$0.isEmpty }
+            .joined(separator: "\n")
+        
+        extractedText = combinedOCRText
+        print("📄 Combined OCR text: \(combinedOCRText.count) characters from \(individualOCRResults.filter { !$0.isEmpty }.count) pages")
     }
 }
