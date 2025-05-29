@@ -1,14 +1,14 @@
 # Muorz 🍽️
 
-> **📱 Application iOS SwiftUI de traitement intelligent de menus avec OCR et IA**
+> **📱 iOS SwiftUI App for Intelligent Menu Processing with OCR and AI**
 
-## 🎉 Statut de Configuration
+## 🎉 Configuration Status
 
-✅ **API Gemini 2.0 Flash configurée et prête**  
-✅ **Flux de données API corrigé** - Les données de l'API s'affichent maintenant correctement  
-📋 **Guide complet :** [CONFIGURATION_COMPLETE.md](CONFIGURATION_COMPLETE.md)  
-🔑 **Votre clé API :** Voir `PRIVATE_API_KEY.txt`  
-🛠️ **Instructions :** [API_CONFIGURATION_GUIDE.md](API_CONFIGURATION_GUIDE.md)
+✅ **Gemini 2.0 Flash API configured and ready**  
+✅ **API data flow fixed** - API data now displays correctly  
+📋 **Complete guide:** [CONFIGURATION_COMPLETE.md](CONFIGURATION_COMPLETE.md)  
+🔑 **Your API key:** See `PRIVATE_API_KEY.txt`  
+🛠️ **Instructions:** [API_CONFIGURATION_GUIDE.md](API_CONFIGURATION_GUIDE.md)
 
 ---
 
@@ -262,20 +262,20 @@ struct MenuItem: Identifiable, Codable {
 
 ## 🛠️ Usage
 
-### API Setup - Configuration Requise
+### API Setup - Required Configuration
 
-#### Configuration dans Xcode
+#### Configuration in Xcode
 1. **Product** → **Scheme** → **Edit Scheme...**
 2. **Run** → **Arguments** → **Environment Variables**
-3. **Ajouter** :
+3. **Add**:
    - Name: `GEMINI_API_KEY`
-   - Value: `[VOTRE_CLE_API_GEMINI]`
+   - Value: `[YOUR_GEMINI_API_KEY]`
 
-#### Vérification
-- Console Xcode devrait afficher : `🚀 Attempting Gemini API call`
-- Si vous voyez `⚠️ No Gemini API key configured`, la config a échoué
+#### Verification
+- Xcode Console should display: `🚀 Attempting Gemini API call`
+- If you see `⚠️ No Gemini API key configured`, the configuration failed
 
-**📋 Guide complet :** Voir [API_CONFIGURATION_GUIDE.md](API_CONFIGURATION_GUIDE.md)
+**📋 Complete guide:** See [API_CONFIGURATION_GUIDE.md](API_CONFIGURATION_GUIDE.md)
 
 ### Camera/Lens View
 - Entry point of the application
@@ -284,4 +284,143 @@ struct MenuItem: Identifiable, Codable {
 - Automatic Gemini API processing
 - Seamless transition to menu view
 
-### Search
+### Search & Filtering
+- **Smart Search**: Search in dish names and ingredients
+- **Category Filters**: All, Starter, Main Course, Dessert
+- **Dietary Filters**: Vegetarian, Vegan, Gluten-Free, Dairy-Free
+- **Nutrition Sorting**: Sort by protein, fat, or carbs content
+- **Real-time Updates**: All filters update instantly
+
+### Menu Display
+- **Categorized Layout**: Items grouped by category
+- **Nutrition Tags**: Visual indicators for nutritional properties
+- **Interactive Selection**: Add items to cart with quantity controls
+- **Search Highlighting**: Search terms highlighted in results
+- **Responsive Design**: Adapts to different screen sizes
+
+## 🔧 Technical Implementation
+
+### API Integration
+- **Service Layer**: Protocol-based architecture for testability
+- **Error Handling**: Comprehensive error handling with user-friendly messages
+- **Retry Logic**: Automatic retries with exponential backoff
+- **Fallback**: Graceful degradation when API is unavailable
+- **Security**: No hardcoded API keys, environment-based configuration
+
+### Data Processing
+- **OCR Pipeline**: Vision framework → Text extraction → API processing
+- **Data Transformation**: Gemini API response → Internal data models
+- **State Management**: Reactive updates using Combine framework
+- **Persistence**: User preferences saved locally
+
+### User Interface
+- **SwiftUI**: Modern declarative UI framework
+- **MVVM Pattern**: Clear separation of concerns
+- **Reactive UI**: Automatic updates based on state changes
+- **Accessibility**: VoiceOver support and accessibility labels
+- **Dark Mode**: Full support for system appearance modes
+
+## 🚧 Known Issues
+
+- **Sample Data Fallback**: App displays hardcoded data when API fails
+- **Menu Persistence**: Menus are not saved between app sessions
+- **Offline Mode**: No offline functionality currently available
+
+## 🔮 Roadmap
+
+### High Priority
+- [ ] Remove hardcoded sample data for production
+- [ ] Implement menu persistence with SwiftData
+- [ ] Add menu history functionality
+- [ ] Improve error handling and user feedback
+
+### Medium Priority
+- [ ] Add offline OCR capabilities
+- [ ] Implement menu sharing functionality
+- [ ] Add favorite dishes feature
+- [ ] Improve camera interface with live preview
+
+### Low Priority
+- [ ] Add social features
+- [ ] Implement restaurant discovery
+- [ ] Add user reviews and ratings
+- [ ] Integrate with food delivery services
+
+## 🤝 Contributing
+
+### Development Setup
+1. Clone the repository
+2. Open `Muorz.xcodeproj` in Xcode 15+
+3. Configure your Gemini API key (see setup instructions)
+4. Build and run on iOS 17+ device or simulator
+
+### Code Standards
+- **SwiftUI**: Use declarative syntax and view composition
+- **MVVM**: Follow Model-View-ViewModel architecture
+- **Combine**: Use reactive programming for data flow
+- **Documentation**: Comment public interfaces and complex logic
+
+### Pull Request Process
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes with clear commit messages
+4. Update documentation if needed
+5. Submit a pull request with detailed description
+
+---
+
+**Muorz - AI-Powered Menu Scanner 🍽️**  
+*Modern interface, intelligent processing, seamless experience*
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- **Xcode 15.0+**
+- **iOS 16.0+** target deployment
+- **Swift 5.9+**
+- **Gemini API Key** from [Google AI Studio](https://makersuite.google.com/app/apikey)
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd Muorz
+   ```
+
+2. **Set up Gemini API Key**
+   
+   #### Method 1: Environment Variable (Recommended for Development)
+   1. In Xcode: **Product** → **Scheme** → **Edit Scheme...**
+   2. Select **"Run"** → **"Arguments"** tab
+   3. Under **"Environment Variables"**, add:
+      - **Name**: `GEMINI_API_KEY`
+      - **Value**: Your actual API key from Google AI Studio
+      - **✅ Check the checkbox to enable**
+   4. Click **"Close"** to save
+   
+   #### Method 2: Info.plist (For Production)
+   1. Open `Info.plist` in Xcode
+   2. Add new key:
+      - **Key**: `GEMINI_API_KEY`
+      - **Type**: String  
+      - **Value**: Your actual API key
+   
+   ⚠️ **Security Note**: Never commit API keys to version control
+
+3. **Build and Run**
+   ```bash
+   # Open in Xcode
+   open Muorz.xcodeproj
+   
+   # Or build from command line
+   xcodebuild -project Muorz.xcodeproj -scheme Muorz build
+   ```
+
+### ✅ API Configuration Status
+- **Gemini API Integration**: ✅ **Working**
+- **OCR Text Processing**: ✅ **Working**  
+- **Menu Item Parsing**: ✅ **Working**
+- **Error Handling**: ✅ **Working**
+- **Sample Data Removed**: ✅ **Complete**

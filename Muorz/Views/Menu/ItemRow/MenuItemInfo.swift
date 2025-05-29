@@ -111,30 +111,72 @@ struct MenuItemInfo: View {
     }
 }
 
-#Preview {
-    VStack(spacing: 20) {
+#Preview("With Highlighting") {
+    VStack {
         MenuItemInfo(
-            item: MenuItem.sampleData[0],
+            item: MenuItem(
+                originalName: "BRUSCHETTA VEGETARIANA",
+                translatedName: "Vegetarian Bruschetta",
+                ingredientsEn: ["tomato", "basil", "mozzarella"],
+                categoryEn: "starter",
+                price: "8,00 €",
+                nutritionScores: NutritionScores(protein: 4, fat: 5, carbs: 7),
+                tags: DietaryTags(vegetarian: true, vegan: false, glutenFree: false, dairyFree: false)
+            ),
             selectionManager: SelectionManager(),
             showHighProtein: true,
             showLowFat: true,
             showLowCarbs: true,
+            isHighProtein: false,
+            isLowFat: true,
+            isLowCarbs: false,
+            searchText: "tomato"
+        )
+    }
+    .padding()
+    .background(Color.gray.opacity(0.1))
+}
+
+#Preview {
+    VStack(spacing: 20) {
+        MenuItemInfo(
+            item: MenuItem(
+                originalName: "PIZZA VEGETARIANA",
+                translatedName: "Vegetarian Pizza",
+                ingredientsEn: ["tomato", "mushrooms", "bell peppers"],
+                categoryEn: "main course",
+                price: "12,00 €",
+                nutritionScores: NutritionScores(protein: 5, fat: 6, carbs: 7),
+                tags: DietaryTags(vegetarian: true, vegan: false, glutenFree: false, dairyFree: false)
+            ),
+            selectionManager: SelectionManager(),
+            showHighProtein: true,
+            showLowFat: true,
+            showLowCarbs: false,
             isHighProtein: true,
             isLowFat: true,
-            isLowCarbs: true,
+            isLowCarbs: false,
             searchText: ""
         )
         .background(Color.white)
         
         MenuItemInfo(
-            item: MenuItem.sampleData[1],
+            item: MenuItem(
+                originalName: "PIZZA VEGETARIANA",
+                translatedName: "Vegetarian Pizza",
+                ingredientsEn: ["tomato", "mushrooms", "bell peppers"],
+                categoryEn: "main course",
+                price: "12,00 €",
+                nutritionScores: NutritionScores(protein: 5, fat: 6, carbs: 7),
+                tags: DietaryTags(vegetarian: true, vegan: false, glutenFree: false, dairyFree: false)
+            ),
             selectionManager: SelectionManager(),
             showHighProtein: true,
             showLowFat: true,
-            showLowCarbs: true,
+            showLowCarbs: false,
             isHighProtein: true,
             isLowFat: true,
-            isLowCarbs: true,
+            isLowCarbs: false,
             searchText: ""
         )
         .background(Color.white)

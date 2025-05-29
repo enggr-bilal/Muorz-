@@ -41,6 +41,7 @@ struct CameraView: View {
                         ProcessingView(
                             extractedText: ocrViewModel.extractedText,
                             onCancel: {
+                                print("🚫 Processing cancelled, resetting states...")
                                 ocrViewModel.clearResults()
                                 selectedImage = nil
                             }
@@ -50,10 +51,12 @@ struct CameraView: View {
                             message: errorMessage,
                             onRetry: {
                                 if let image = selectedImage {
+                                    print("🔄 Retrying with current image...")
                                     ocrViewModel.processImage(image)
                                 }
                             },
                             onStartOver: {
+                                print("🔄 Starting over, resetting all states...")
                                 ocrViewModel.clearResults()
                                 selectedImage = nil
                             }
@@ -66,10 +69,6 @@ struct CameraView: View {
                                 menuViewModel.menuItems = processedMenu.menuItems
                                 menuViewModel.restaurantInfo = processedMenu.restaurantInfo
                                 showMenuView = true
-                            },
-                            onScanAnother: {
-                                ocrViewModel.clearResults()
-                                selectedImage = nil
                             }
                         )
                     } else {
@@ -78,6 +77,7 @@ struct CameraView: View {
                             selectedImage: $selectedImage,
                             showImagePicker: $showImagePicker,
                             hasProcessedMenu: hasProcessedMenu,
+                            hasMenuData: !menuViewModel.menuItems.isEmpty,
                             onViewLastMenu: {
                                 showMenuView = true
                             }
@@ -94,9 +94,39 @@ struct CameraView: View {
             .fullScreenCover(isPresented: $showMenuView) {
                 MenuView(viewModel: menuViewModel, preferences: preferences)
             }
+            .onAppear {
+                // 🔑 Setup API key for standalone launches (one-time setup)
+                APIConfiguration.setAPIKeyForStandaloneUse()
+                
+                // 🔑 DIAGNOSTIC COMPLET API Key - pour debugging redémarrage app
+                print("🔑 === API KEY DIAGNOSTIC COMPLET ===")
+                print("   ProcessInfo environment variables:")
+                let allEnvVars = ProcessInfo.processInfo.environment
+                for (key, value) in allEnvVars {
+                    if key.contains("GEMINI") || key.contains("API") || key.contains("gemini") {
+                        print("     \(key): \(value.prefix(15))...")
+                    }
+                }
+                
+                print("   Environment GEMINI_API_KEY: \(ProcessInfo.processInfo.environment["GEMINI_API_KEY"] ?? "❌ NOT_FOUND")")
+                print("   UserDefaults GEMINI_API_KEY: \(UserDefaults.standard.string(forKey: "GEMINI_API_KEY") ?? "❌ NOT_FOUND")")
+                print("   APIConfiguration.geminiAPIKey: \(APIConfiguration.geminiAPIKey.prefix(15))...")
+                print("   APIConfiguration.isGeminiAPIConfigured: \(APIConfiguration.isGeminiAPIConfigured)")
+                print("   APIConfiguration.useMockService: \(APIConfiguration.useMockService)")
+                print("=================================")
+                
+                // Initialize MenuViewModel with default preferences
+                print("🔧 Initializing MenuViewModel with default preferences")
+                menuViewModel.initializeWithDefaults(from: preferences)
+            }
             .onChange(of: selectedImage) { newImage in
                 if let image = newImage {
+                    print("📸 New image selected, starting OCR processing...")
+                    print("   Image size: \(image.size)")
+                    print("   OCR current state: isProcessing=\(ocrViewModel.isProcessing), hasError=\(ocrViewModel.errorMessage != nil)")
                     ocrViewModel.processImage(image)
+                } else {
+                    print("📸 Image selection cleared")
                 }
             }
             .onChange(of: ocrViewModel.processedMenu) { processedMenu in
@@ -132,6 +162,7 @@ struct CameraInterfaceView: View {
     @Binding var selectedImage: UIImage?
     @Binding var showImagePicker: Bool
     let hasProcessedMenu: Bool
+    let hasMenuData: Bool
     let onViewLastMenu: () -> Void
     
     var body: some View {
@@ -156,7 +187,10 @@ struct CameraInterfaceView: View {
             VStack(spacing: 16) {
                 // Main capture button
                 Button {
+                    print("🔘 Scan Menu button tapped")
+                    print("   Current selectedImage: \(selectedImage != nil ? "EXISTS" : "NIL")")
                     showImagePicker = true
+                    print("   showImagePicker set to: \(showImagePicker)")
                 } label: {
                     HStack(spacing: 12) {
                         Image(systemName: "camera.fill")
@@ -180,7 +214,7 @@ struct CameraInterfaceView: View {
                 .padding(.horizontal, 32)
                 
                 // View last menu button (if available)
-                if hasProcessedMenu {
+                if hasProcessedMenu && hasMenuData {
                     Button {
                         onViewLastMenu()
                     } label: {
@@ -343,7 +377,6 @@ struct ErrorStateView: View {
 struct SuccessView: View {
     let menuResponse: MenuResponse
     let onViewMenu: () -> Void
-    let onScanAnother: () -> Void
     
     var body: some View {
         VStack(spacing: 32) {
@@ -384,13 +417,6 @@ struct SuccessView: View {
                     )
                 )
                 .cornerRadius(12)
-                
-                Button("Scan Another Menu") {
-                    onScanAnother()
-                }
-                .font(.system(size: 16, weight: .medium))
-                .foregroundColor(.accentColor)
-                .frame(height: 44)
             }
             .padding(.horizontal, 32)
         }

@@ -14,6 +14,7 @@ struct MenuView: View {
     @State private var showingSelection = false
     @State private var showingProfile = false
     @State private var isSearching = false
+    @Environment(\.presentationMode) private var presentationMode
     
     // Initializer to accept MenuViewModel
     init(viewModel: MenuViewModel, preferences: UserPreferences) {
@@ -86,7 +87,8 @@ struct MenuView: View {
                             message: errorMessage,
                             onRetry: {
                                 viewModel.clearError()
-                                viewModel.loadSampleData()
+                                // Navigate back to camera to rescan
+                                presentationMode.wrappedValue.dismiss()
                             }
                         )
                     }
@@ -286,5 +288,5 @@ struct MenuListView: View {
 }
 
 #Preview {
-    MenuView(viewModel: MenuViewModel(loadSampleData: true), preferences: UserPreferences())
+    MenuView(viewModel: MenuViewModel(), preferences: UserPreferences())
 }

@@ -138,21 +138,38 @@ struct APIConfiguration {
     /// Gemini API Key - Replace with your actual API key
     /// Get your API key from: https://makersuite.google.com/app/apikey
     static let geminiAPIKey: String = {
-        // First, try to get from environment variable (for development)
+        // First, try to get from environment variable (for development with Xcode)
         if let envKey = ProcessInfo.processInfo.environment["GEMINI_API_KEY"], !envKey.isEmpty {
+            print("✅ Found API key from environment variable (Xcode launch)")
             return envKey
+        }
+        
+        // Then try to get from UserDefaults (for standalone app launch)
+        if let userDefaultsKey = UserDefaults.standard.string(forKey: "GEMINI_API_KEY"), !userDefaultsKey.isEmpty {
+            print("✅ Found API key from UserDefaults (standalone launch)")
+            return userDefaultsKey
         }
         
         // Then try to get from Info.plist (for production)
         if let path = Bundle.main.path(forResource: "Info", ofType: "plist"),
            let plist = NSDictionary(contentsOfFile: path),
            let key = plist["GEMINI_API_KEY"] as? String, !key.isEmpty {
+            print("✅ Found API key from Info.plist")
             return key
         }
         
         // Finally, return placeholder (will use sample data)
+        print("❌ No API key found - using placeholder")
         return "YOUR_GEMINI_API_KEY_HERE"
     }()
+    
+    /// Set API key in UserDefaults for standalone app launches
+    static func setAPIKeyForStandaloneUse() {
+        let apiKey = "AIzaSyAy5T7zHmtCUHtWmIaqbPZZCDUBN13RfRs"
+        UserDefaults.standard.set(apiKey, forKey: "GEMINI_API_KEY")
+        UserDefaults.standard.synchronize()
+        print("🔑 API key saved to UserDefaults for standalone use")
+    }
     
     /// Gemini API Base URL
     static let geminiBaseURL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
@@ -168,12 +185,7 @@ struct APIConfiguration {
     
     /// Get configured MenuService instance
     static func createMenuService() -> MenuServiceProtocol {
-        if isGeminiAPIConfigured {
-            return MenuService(apiKey: geminiAPIKey)
-        } else {
-            print("⚠️ Gemini API not configured, using MockMenuService")
-            return MockMenuService()
-        }
+        return MenuService(apiKey: geminiAPIKey)
     }
     
     // MARK: - Development Configuration

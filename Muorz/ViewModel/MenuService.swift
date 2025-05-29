@@ -12,7 +12,6 @@ import Combine
 
 protocol MenuServiceProtocol {
     func processOCRText(_ text: String) async throws -> MenuResponse
-    func loadSampleMenu() -> [MenuItem]
 }
 
 // MARK: - Gemini API Service Implementation
@@ -41,25 +40,23 @@ class MenuService: MenuServiceProtocol, ObservableObject {
     
     /// Process OCR text through Gemini API to get structured menu data
     func processOCRText(_ text: String) async throws -> MenuResponse {
-        // Check if we should use mock service
+        // Debug logging
+        print("🔍 MenuService.processOCRText called")
+        print("   API Key configured: \(APIConfiguration.isGeminiAPIConfigured)")
+        print("   Use Mock Service: \(APIConfiguration.useMockService)")
+        print("   API Key length: \(apiKey.count) characters")
+        print("   API Key starts with: \(apiKey.prefix(10))...")
+        
+        // Mock service is disabled in production
         if APIConfiguration.useMockService {
-            print("🧪 Using MockMenuService (development mode)")
-            let mockService = MockMenuService()
-            return try await mockService.processOCRText(text)
+            print("⚠️ Mock service is enabled - throwing noAPIKey error")
+            throw MenuServiceError.noAPIKey
         }
         
         guard APIConfiguration.isGeminiAPIConfigured else {
-            // Return sample data if no API key is configured
-            print("⚠️ No Gemini API key configured, using sample data")
-            try await Task.sleep(nanoseconds: 1_000_000_000) // Simulate API delay
-            return MenuResponse(
-                menuItems: MenuItem.sampleData,
-                restaurantInfo: RestaurantInfo(
-                    name: "Sample Restaurant",
-                    cuisine: "Italian",
-                    location: "Sample Location"
-                )
-            )
+            // Throw error instead of returning sample data
+            print("❌ API key validation failed - throwing noAPIKey error")
+            throw MenuServiceError.noAPIKey
         }
         
         var lastError: Error?
@@ -98,11 +95,6 @@ class MenuService: MenuServiceProtocol, ObservableObject {
         }
         
         throw lastError ?? MenuServiceError.networkError(NSError(domain: "MenuService", code: 0, userInfo: [NSLocalizedDescriptionKey: "Unknown error"]))
-    }
-    
-    /// Load sample menu data for development/testing
-    func loadSampleMenu() -> [MenuItem] {
-        return MenuItem.sampleData
     }
     
     // MARK: - Private Gemini API Methods
@@ -251,6 +243,7 @@ enum MenuServiceError: LocalizedError {
     case decodingError(Error)
     case networkError(Error)
     case geminiError(String)
+    case noAPIKey
     
     var errorDescription: String? {
         switch self {
@@ -266,29 +259,8 @@ enum MenuServiceError: LocalizedError {
             return "Network error: \(error.localizedDescription)"
         case .geminiError(let message):
             return "Gemini API error: \(message)"
+        case .noAPIKey:
+            return "No Gemini API key configured. Please set your GEMINI_API_KEY in Xcode environment variables."
         }
-    }
-}
-
-// MARK: - Mock Service for Development
-
-class MockMenuService: MenuServiceProtocol {
-    func processOCRText(_ text: String) async throws -> MenuResponse {
-        // Simulate processing delay
-        try await Task.sleep(nanoseconds: 1_500_000_000) // 1.5 seconds
-        
-        // Simulate API response with sample data
-        return MenuResponse(
-            menuItems: MenuItem.sampleData,
-            restaurantInfo: RestaurantInfo(
-                name: "Mock Restaurant",
-                cuisine: "Italian",
-                location: "Mock Location"
-            )
-        )
-    }
-    
-    func loadSampleMenu() -> [MenuItem] {
-        return MenuItem.sampleData
     }
 } 

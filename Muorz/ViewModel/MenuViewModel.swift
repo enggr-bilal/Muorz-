@@ -80,11 +80,8 @@ class MenuViewModel: ObservableObject {
     
     // MARK: - Initialization
     
-    init(menuService: MenuServiceProtocol = MenuService(), loadSampleData: Bool = false) {
+    init(menuService: MenuServiceProtocol = MenuService()) {
         self.menuService = menuService
-        if loadSampleData {
-            self.loadSampleData()
-        }
         setupSearchDebouncing()
     }
     
@@ -106,10 +103,6 @@ class MenuViewModel: ObservableObject {
         isLoading = false
     }
     
-    func loadSampleData() {
-        menuItems = menuService.loadSampleMenu()
-    }
-    
     func clearAllFilters() {
         searchText = ""
         selectedCategory = "all"
@@ -121,9 +114,16 @@ class MenuViewModel: ObservableObject {
         searchText = ""
     }
     
+    func clearMenuData() {
+        menuItems = []
+        restaurantInfo = nil
+        errorMessage = nil
+    }
+    
     func refreshMenu() async {
-        // For future implementation when we have real data source
-        loadSampleData()
+        // Clear menu data to force new scan
+        clearMenuData()
+        clearError()
     }
     
     // MARK: - Filter Methods (temporary filters, don't affect defaults)

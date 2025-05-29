@@ -24,11 +24,16 @@ class OCRViewModel: ObservableObject {
     }
 
     func processImage(_ image: UIImage) {
+        print("🔍 OCRViewModel.processImage called")
+        print("   Current state: isProcessing=\(isProcessing), hasError=\(errorMessage != nil)")
+        
         guard let cgImage = image.cgImage else {
+            print("❌ Invalid image format")
             errorMessage = "Invalid image format"
             return
         }
         
+        print("✅ Starting OCR processing...")
         isProcessing = true
         errorMessage = nil
 
@@ -83,16 +88,24 @@ class OCRViewModel: ObservableObject {
     }
     
     private func processExtractedText(_ text: String) async {
+        print("🚀 OCRViewModel.processExtractedText called")
+        print("   Text length: \(text.count) characters")
+        print("   First 100 chars: \(text.prefix(100))...")
+        
         guard !text.isEmpty else {
+            print("❌ No text extracted from image")
             errorMessage = "No text extracted from image"
             isProcessing = false
             return
         }
         
         do {
+            print("📡 Calling menuService.processOCRText...")
             processedMenu = try await menuService.processOCRText(text)
+            print("✅ Menu processing completed successfully")
             isProcessing = false
         } catch {
+            print("❌ Menu processing failed: \(error)")
             errorMessage = error.localizedDescription
             isProcessing = false
         }

@@ -293,5 +293,5 @@ struct FilterHeader: View {
     }
 }
 #Preview {
-    MenuView(viewModel: MenuViewModel(loadSampleData: true), preferences: UserPreferences())
+    MenuView(viewModel: MenuViewModel(), preferences: UserPreferences())
 }
