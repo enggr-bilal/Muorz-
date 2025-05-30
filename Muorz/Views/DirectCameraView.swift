@@ -13,7 +13,7 @@ struct DirectCameraView: View {
         ZStack {
             // Full screen camera preview background
             Color.black
-                .ignoresSafeArea()
+                .ignoresSafeArea(.all)
             
             if cameraManager.isCameraReady {
                 CameraPreviewView(cameraManager: cameraManager)
@@ -46,17 +46,21 @@ struct DirectCameraView: View {
                         processImages()
                     }
                 )
-                .padding(.bottom, 40)
+                .padding(.bottom, 50) // Safe area padding
             }
             
-            // Photo stack overlay (bottom left)
+            // Photo stack overlay (bottom left, aligned with capture button)
             PhotoStackOverlay(
                 images: cameraManager.capturedImages,
                 onImageTap: { image, index in
                     showingImageDetail = (image, index)
+                },
+                onRemoveImage: { index in
+                    cameraManager.removeImage(at: index)
                 }
             )
         }
+        .ignoresSafeArea(.all) // This should give true fullscreen
         .onAppear {
             cameraManager.startSession()
         }
@@ -148,21 +152,17 @@ struct CaptureButton: View {
         } label: {
             ZStack {
                 Circle()
-                    .fill(Color.accentColor)
-                    .frame(width: 80, height: 80)
-                
-                Circle()
-                    .stroke(Color.white, lineWidth: 4)
+                    .fill(Color.white)
                     .frame(width: 80, height: 80)
                 
                 if !cameraManager.canTakeMorePhotos {
                     Image(systemName: "xmark")
                         .font(.system(size: 24, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(.accentColor)
                 } else {
                     Image(systemName: "camera.fill")
                         .font(.system(size: 24, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(.accentColor)
                 }
             }
         }
@@ -176,6 +176,7 @@ struct CaptureButton: View {
 struct ProceedButton: View {
     let isVisible: Bool
     let onProceed: () -> Void
+    var isLarge: Bool = false
     
     var body: some View {
         Group {
@@ -184,16 +185,18 @@ struct ProceedButton: View {
                     onProceed()
                 } label: {
                     Image(systemName: "arrow.right")
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundColor(.accentColor)
-                        .frame(width: 50, height: 50)
-                        .background(Color.white)
+                        .font(.system(size: isLarge ? 24 : 18, weight: .bold))
+                        .foregroundColor(.white)
+                        .frame(width: isLarge ? 80 : 55, height: isLarge ? 80 : 55)
+                        .background(Color.accentColor)
                         .clipShape(Circle())
                         .overlay(
                             Circle()
-                                .stroke(Color.accentColor, lineWidth: 2)
+                                .stroke(Color.white, lineWidth: isLarge ? 4 : 2)
                         )
                 }
+                .scaleEffect(isLarge ? 1.0 : 0.8)
+                .animation(.easeInOut(duration: 0.6), value: isLarge)
             } else {
                 Spacer()
             }
@@ -346,7 +349,7 @@ struct BottomControlsOverlay: View {
         VStack(spacing: 20) {
             // Instruction text
             Text(cameraManager.currentInstructionText)
-                .font(.system(size: 16, weight: .medium))
+                .font(.body)
                 .foregroundColor(.white)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
@@ -355,20 +358,46 @@ struct BottomControlsOverlay: View {
                 .cornerRadius(16)
                 .padding(.horizontal, 24)
             
-            // Controls row
-            HStack(spacing: 20) {
-                // Capture button (center)
-                CaptureButton(cameraManager: cameraManager)
+            // Controls with smooth slide animation
+            ZStack {
+                if cameraManager.canTakeMorePhotos {
+                    // Capture button when photos can still be taken
+                    CaptureButton(cameraManager: cameraManager)
+                        .transition(.scale.combined(with: .opacity))
+                }
                 
-                // Proceed button (right)
+                // Proceed button - position and size changes based on state
                 if !cameraManager.capturedImages.isEmpty {
-                    ProceedButton(
-                        isVisible: true,
-                        onProceed: onProceed
-                    )
+                    HStack {
+                        if cameraManager.canTakeMorePhotos {
+                            // When can still take photos: proceed button on the right, small size
+                            Spacer()
+                            Spacer()
+                            
+                            ProceedButton(
+                                isVisible: true,
+                                onProceed: onProceed,
+                                isLarge: false // Small size when on the right
+                            )
+                        } else {
+                            // When max photos reached: proceed button in center, large size
+                            Spacer()
+                            
+                            ProceedButton(
+                                isVisible: true,
+                                onProceed: onProceed,
+                                isLarge: true // Large size when centered
+                            )
+                            
+                            Spacer()
+                        }
+                    }
+                    .padding(.horizontal, 24)
+                    .animation(.easeInOut(duration: 0.6), value: cameraManager.canTakeMorePhotos)
                 }
             }
-            .padding(.horizontal, 24)
+            .animation(.easeInOut(duration: 0.5), value: cameraManager.canTakeMorePhotos)
+            .animation(.easeInOut(duration: 0.5), value: cameraManager.capturedImages.count)
         }
     }
 }
@@ -376,6 +405,7 @@ struct BottomControlsOverlay: View {
 struct PhotoStackOverlay: View {
     let images: [UIImage]
     let onImageTap: (UIImage, Int) -> Void
+    let onRemoveImage: (Int) -> Void
     
     var body: some View {
         VStack {
@@ -386,19 +416,28 @@ struct PhotoStackOverlay: View {
                     ForEach(images.indices, id: \.self) { index in
                         let image = images[index]
                         
-                        Button {
-                            onImageTap(image, index)
-                        } label: {
-                            Image(uiImage: image)
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(width: 70, height: 90)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(Color.white, lineWidth: 3)
-                                )
-                                .zIndex(Double(images.count - index))
+                        ZStack(alignment: .topTrailing) {
+                            Button {
+                                onImageTap(image, index)
+                            } label: {
+                                Image(uiImage: image)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: 70, height: 90)
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                                    .shadow(color: Color.black.opacity(0.3), radius: 4, x: 0, y: 2)
+                                    .zIndex(Double(images.count - index))
+                            }
+                            
+                            // Remove button
+                            Button {
+                                onRemoveImage(index)
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.system(size: 20))
+                                    .foregroundColor(.white)
+                            }
+                            .offset(x: 8, y: -8)
                         }
                     }
                 }
@@ -406,7 +445,7 @@ struct PhotoStackOverlay: View {
                 Spacer()
             }
             .padding(.leading, 24)
-            .padding(.bottom, 180) // Position above bottom controls
+            .padding(.bottom, 200) // Position above the prompt text and controls
         }
     }
 }

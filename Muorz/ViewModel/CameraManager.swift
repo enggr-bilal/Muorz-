@@ -31,13 +31,13 @@ class CameraManager: NSObject, ObservableObject {
     
     var currentInstructionText: String {
         if capturedImages.isEmpty {
-            return "Take a picture of the menu"
-        } else if capturedImages.count == 1 {
-            return "Add more photos or tap 'Proceed'"
-        } else if canTakeMorePhotos {
-            return "Ready for the next capture (\(capturedImages.count)/\(maxPhotoCount))"
+            return "Capture the menu"
+        } else if capturedImages.count == 1 && canTakeMorePhotos {
+            return "Need more? Snap another part"
+        } else if !canTakeMorePhotos {
+            return "Done? Let's process the menu"
         } else {
-            return "Maximum photos reached - tap 'Proceed'"
+            return "Ready for the next capture"
         }
     }
     
