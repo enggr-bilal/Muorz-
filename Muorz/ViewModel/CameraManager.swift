@@ -8,11 +8,17 @@ class CameraManager: NSObject, ObservableObject {
     @Published var isCameraReady = false
     @Published var showingAlert = false
     @Published var alertMessage = ""
+    @Published var zoomFactor: CGFloat = 1.0
     
     // Camera session
     private var captureSession = AVCaptureSession()
     private var photoOutput = AVCapturePhotoOutput()
     private var videoDeviceInput: AVCaptureDeviceInput?
+    
+    // Zoom properties
+    private var maxZoomFactor: CGFloat = 1.0
+    private var minZoomFactor: CGFloat = 1.0
+    private var lastZoomFactor: CGFloat = 1.0
     
     // Configuration
     let maxPhotoCount: Int
@@ -145,6 +151,13 @@ class CameraManager: NSObject, ObservableObject {
                 connection.preferredVideoStabilizationMode = .auto
             }
         }
+        
+        // Configure zoom capabilities
+        minZoomFactor = device.minAvailableVideoZoomFactor
+        maxZoomFactor = min(device.maxAvailableVideoZoomFactor, 6.0) // Limit to 6x for practical use
+        zoomFactor = device.videoZoomFactor
+        
+        print("📷 Zoom capabilities: min=\(minZoomFactor), max=\(maxZoomFactor), current=\(zoomFactor)")
     }
     
     func startSession() {
@@ -196,6 +209,61 @@ class CameraManager: NSObject, ObservableObject {
     func showAlert(_ message: String) {
         alertMessage = message
         showingAlert = true
+    }
+    
+    // MARK: - Zoom Control Methods
+    
+    func setZoom(factor: CGFloat) {
+        guard let device = videoDeviceInput?.device else { return }
+        
+        let clampedZoomFactor = max(minZoomFactor, min(maxZoomFactor, factor))
+        
+        do {
+            try device.lockForConfiguration()
+            device.videoZoomFactor = clampedZoomFactor
+            device.unlockForConfiguration()
+            
+            DispatchQueue.main.async {
+                self.zoomFactor = clampedZoomFactor
+            }
+        } catch {
+            print("❌ Error setting zoom: \(error)")
+        }
+    }
+    
+    func handlePinchGesture(_ gesture: UIPinchGestureRecognizer) {
+        guard let device = videoDeviceInput?.device else { return }
+        
+        switch gesture.state {
+        case .began:
+            lastZoomFactor = zoomFactor
+            
+        case .changed:
+            let velocity = gesture.velocity
+            let newZoomFactor = lastZoomFactor * gesture.scale
+            
+            // Apply some smoothing for better UX
+            let smoothedZoomFactor = max(minZoomFactor, min(maxZoomFactor, newZoomFactor))
+            setZoom(factor: smoothedZoomFactor)
+            
+        case .ended, .cancelled:
+            lastZoomFactor = zoomFactor
+            
+        default:
+            break
+        }
+    }
+    
+    func resetZoom() {
+        setZoom(factor: 1.0)
+    }
+    
+    var zoomRange: ClosedRange<CGFloat> {
+        return minZoomFactor...maxZoomFactor
+    }
+    
+    var isZoomAvailable: Bool {
+        return maxZoomFactor > minZoomFactor && maxZoomFactor > 1.0
     }
     
     // Preview layer

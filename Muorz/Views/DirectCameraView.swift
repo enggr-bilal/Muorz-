@@ -35,6 +35,12 @@ struct DirectCameraView: View {
                 .ignoresSafeArea(.all)
             }
             
+            // Zoom indicator overlay
+            ZoomIndicatorView(
+                zoomFactor: cameraManager.zoomFactor,
+                isZoomAvailable: cameraManager.isZoomAvailable
+            )
+            
             // Overlay UI elements
             VStack(spacing: 0) {
                 Spacer()
