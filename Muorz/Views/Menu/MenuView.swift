@@ -14,7 +14,7 @@ struct MenuView: View {
     @State private var showingSelection = false
     @State private var showingProfile = false
     @State private var isSearching = false
-    @Environment(\.presentationMode) private var presentationMode
+    @Environment(\.dismiss) private var dismiss
     
     // Initializer to accept MenuViewModel
     init(viewModel: MenuViewModel, preferences: UserPreferences) {
@@ -29,28 +29,8 @@ struct MenuView: View {
                     .ignoresSafeArea()
                 
                 VStack(spacing: 0) {
-                    // Header Section - White background
+                    // Filter Header 
                     VStack(spacing: 16) {
-                        // Title
-                        HStack {
-                            Text("Menu")
-                                .font(.system(.largeTitle, design: .serif, weight: .medium))
-                                .foregroundColor(.black)
-                            
-                            Spacer()
-                            
-                            Button {
-                                showingProfile = true
-                            } label: {
-                                Image(systemName: "gear")
-                                    .font(.title2)
-                                    .foregroundColor(.black)
-                            }
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.top, 8)
-                        
-                        // Filter Header with integrated search
                         FilterHeader(
                             selectedCategory: $viewModel.selectedCategory,
                             selectedDietTag: Binding(
@@ -88,7 +68,7 @@ struct MenuView: View {
                             onRetry: {
                                 viewModel.clearError()
                                 // Navigate back to camera to rescan
-                                presentationMode.wrappedValue.dismiss()
+                                dismiss()
                             }
                         )
                     }
@@ -128,7 +108,38 @@ struct MenuView: View {
                     )
                 }
             }
-            .navigationBarHidden(true)
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text("Menu")
+                        .font(.system(.title2, design: .serif))
+                        .foregroundColor(.primary)
+                }
+                
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 16, weight: .medium))
+                            Text("Lens")
+                                .font(.system(size: 17, weight: .regular))
+                        }
+                        .foregroundColor(.accentColor)
+                    }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        showingProfile = true
+                    } label: {
+                        Image(systemName: "slider.horizontal.3")
+                            .foregroundColor(.accentColor)
+                    }
+                }
+            }
             .sheet(isPresented: $showingSelection) {
                 SelectionView(selectionManager: selectionManager)
             }
@@ -246,13 +257,14 @@ struct MenuListView: View {
     
     var body: some View {
         ScrollView {
-            LazyVStack(spacing: 16) {
+            LazyVStack(spacing: 24) {
                 ForEach(filteredItems.keys.sorted(), id: \.self) { category in
-                    VStack(alignment: .leading, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 12) {
                         Text(category.description.capitalized)
-                            .font(.system(size: 24, weight: .regular, design: .serif))
+                            .font(.system(size: 28, weight: .semibold, design: .serif))
                             .foregroundColor(.black)
                             .padding(.horizontal, 16)
+                            .padding(.top, 8)
                         
                         VStack(alignment: .leading, spacing: 0) {
                             ForEach(filteredItems[category] ?? []) { item in
@@ -279,10 +291,7 @@ struct MenuListView: View {
                 }
             }
             .padding(.vertical)
-            .padding(.bottom, 80) // Add padding at the bottom for the floating button
-        }
-        .refreshable {
-            await onRefresh()
+            .padding(.bottom, 80)
         }
     }
 }

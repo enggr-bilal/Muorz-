@@ -6,6 +6,9 @@ struct DirectCameraView: View {
     @ObservedObject var ocrViewModel: OCRViewModel
     @ObservedObject var preferences: UserPreferences
     
+    let hasProcessedMenu: Bool
+    let onViewMenu: () -> Void
+    
     @State private var showingProcessedMenu = false
     @State private var showingImageDetail: (image: UIImage, index: Int)?
     
@@ -50,7 +53,9 @@ struct DirectCameraView: View {
                     cameraManager: cameraManager,
                     onProceed: {
                         processImages()
-                    }
+                    },
+                    hasProcessedMenu: hasProcessedMenu,
+                    onViewMenu: onViewMenu
                 )
                 .padding(.bottom, 50) // Safe area padding
             }
@@ -350,6 +355,8 @@ struct ProcessedMenuView: View {
 struct BottomControlsOverlay: View {
     @ObservedObject var cameraManager: CameraManager
     let onProceed: () -> Void
+    let hasProcessedMenu: Bool
+    let onViewMenu: () -> Void
     
     var body: some View {
         VStack(spacing: 20) {
@@ -400,6 +407,27 @@ struct BottomControlsOverlay: View {
                     }
                     .padding(.horizontal, 24)
                     .animation(.easeInOut(duration: 0.6), value: cameraManager.canTakeMorePhotos)
+                }
+                
+                // View Menu button overlay positioned to the left
+                if hasProcessedMenu && cameraManager.canTakeMorePhotos {
+                    HStack {
+                        Button {
+                            onViewMenu()
+                        } label: {
+                            Image(systemName: "list.bullet.clipboard.fill")
+                                .font(.system(size: 18, weight: .bold))
+                                .foregroundColor(.gray)
+                                .frame(width: 55, height: 55)
+                                .background(Color.white)
+                                .clipShape(Circle())
+                                .shadow(color: Color.black.opacity(0.2), radius: 4, x: 0, y: 2)
+                        }
+                        
+                        Spacer()
+                        Spacer() // Extra space to position properly
+                    }
+                    .padding(.horizontal, 24)
                 }
             }
             .animation(.easeInOut(duration: 0.5), value: cameraManager.canTakeMorePhotos)
@@ -461,6 +489,8 @@ struct PhotoStackOverlay: View {
 #Preview {
     DirectCameraView(
         ocrViewModel: OCRViewModel(),
-        preferences: UserPreferences()
+        preferences: UserPreferences(),
+        hasProcessedMenu: false,
+        onViewMenu: {}
     )
 } 

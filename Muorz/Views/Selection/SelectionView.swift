@@ -51,7 +51,7 @@ struct SelectionView: View {
                                 }
                                 
                                 HStack {
-                                    Text("Total Amount:")
+                                    Text("Estimated Amount:")
                                         .font(.title3)
                                         .fontWeight(.bold)
                                     Spacer()

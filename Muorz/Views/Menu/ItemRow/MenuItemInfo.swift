@@ -43,7 +43,7 @@ struct MenuItemInfo: View {
             }
             
             // Description
-            HStack {
+            HStack(alignment: .top) {
                 HighlightedText(
                     text: item.ingredientsEn.joined(separator: ", "),
                     searchText: searchText,
@@ -53,7 +53,11 @@ struct MenuItemInfo: View {
                 .foregroundColor(.gray)
                 .lineLimit(2)
                 .multilineTextAlignment(.leading)
-                Spacer()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .layoutPriority(1)
+                
+                // Spacer to push ingredients to 3/4 width and leave space for price alignment
+                Spacer(minLength: 80) // Reserve space equivalent to price width
             }
             
             // Tags and Quantity Control row

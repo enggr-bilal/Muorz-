@@ -15,6 +15,7 @@ struct CameraView: View {
     
     @State private var showMenuView = false
     @State private var hasProcessedMenu = false
+    @State private var isReturningFromMenu = false
     
     var body: some View {
         NavigationView {
@@ -22,7 +23,11 @@ struct CameraView: View {
                 // Use the new DirectCameraView for better UX
                 DirectCameraView(
                     ocrViewModel: ocrViewModel,
-                    preferences: preferences
+                    preferences: preferences,
+                    hasProcessedMenu: hasProcessedMenu && !menuViewModel.menuItems.isEmpty,
+                    onViewMenu: {
+                        showMenuView = true
+                    }
                 )
                 .onReceive(ocrViewModel.$processedMenu) { processedMenu in
                     if let menu = processedMenu {
@@ -31,12 +36,26 @@ struct CameraView: View {
                         menuViewModel.restaurantInfo = menu.restaurantInfo
                         hasProcessedMenu = true
                         showMenuView = true
+                        isReturningFromMenu = false
                     }
                 }
             }
             .navigationBarHidden(true)
-            .fullScreenCover(isPresented: $showMenuView) {
+            .fullScreenCover(isPresented: $showMenuView, onDismiss: {
+                // When returning from MenuView, mark that we're returning and clear OCR state
+                isReturningFromMenu = true
+                ocrViewModel.clearResults()
+                print("🔄 Returned from MenuView - OCR state cleared for fresh scan")
+            }) {
                 MenuView(viewModel: menuViewModel, preferences: preferences)
+            }
+            .onAppear {
+                // Reset OCR state when initially appearing or returning from menu
+                if isReturningFromMenu {
+                    ocrViewModel.clearResults()
+                    isReturningFromMenu = false
+                    print("🧹 OCR state reset for new scan session")
+                }
             }
         }
     }
