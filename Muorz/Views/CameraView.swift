@@ -13,100 +13,36 @@ struct CameraView: View {
     @StateObject private var menuViewModel = MenuViewModel()
     @ObservedObject var preferences: UserPreferences
     
-    @State private var showImagePicker = false
     @State private var showMenuView = false
-    @State private var selectedImage: UIImage?
     @State private var hasProcessedMenu = false
     
     var body: some View {
         NavigationView {
             ZStack {
-                // Background gradient
-                LinearGradient(
-                    gradient: Gradient(colors: [
-                        Color(.systemBackground),
-                        Color(.systemGray6)
-                    ]),
-                    startPoint: .top,
-                    endPoint: .bottom
+                // Use the new DirectCameraView for better UX
+                DirectCameraView(
+                    ocrViewModel: ocrViewModel,
+                    preferences: preferences
                 )
-                .ignoresSafeArea()
-                
-                VStack(spacing: 0) {
-                    // Header
-                    HeaderView()
-                    
-                    // Main Content
-                    if ocrViewModel.isProcessing {
-                        ProcessingView(
-                            extractedText: ocrViewModel.extractedText,
-                            onCancel: {
-                                ocrViewModel.clearResults()
-                                selectedImage = nil
-                            }
-                        )
-                    } else if let errorMessage = ocrViewModel.errorMessage {
-                        ErrorStateView(
-                            message: errorMessage,
-                            onRetry: {
-                                if let image = selectedImage {
-                                    ocrViewModel.processImage(image)
-                                }
-                            },
-                            onStartOver: {
-                                ocrViewModel.clearResults()
-                                selectedImage = nil
-                            }
-                        )
-                    } else if let processedMenu = ocrViewModel.processedMenu {
-                        SuccessView(
-                            menuResponse: processedMenu,
-                            onViewMenu: {
-                                // Update MenuViewModel with processed data
-                                menuViewModel.menuItems = processedMenu.menuItems
-                                menuViewModel.restaurantInfo = processedMenu.restaurantInfo
-                                showMenuView = true
-                            },
-                            onScanAnother: {
-                                ocrViewModel.clearResults()
-                                selectedImage = nil
-                            }
-                        )
-                    } else {
-                        // Initial state - Camera interface
-                        CameraInterfaceView(
-                            selectedImage: $selectedImage,
-                            showImagePicker: $showImagePicker,
-                            hasProcessedMenu: hasProcessedMenu,
-                            onViewLastMenu: {
-                                showMenuView = true
-                            }
-                        )
+                .onReceive(ocrViewModel.$processedMenu) { processedMenu in
+                    if let menu = processedMenu {
+                        // Update MenuViewModel with processed data
+                        menuViewModel.menuItems = menu.menuItems
+                        menuViewModel.restaurantInfo = menu.restaurantInfo
+                        hasProcessedMenu = true
+                        showMenuView = true
                     }
-                    
-                    Spacer()
                 }
             }
             .navigationBarHidden(true)
-            .sheet(isPresented: $showImagePicker) {
-                ImagePicker(selectedImage: $selectedImage)
-            }
             .fullScreenCover(isPresented: $showMenuView) {
                 MenuView(viewModel: menuViewModel, preferences: preferences)
-            }
-            .onChange(of: selectedImage) { newImage in
-                if let image = newImage {
-                    ocrViewModel.processImage(image)
-                }
-            }
-            .onChange(of: ocrViewModel.processedMenu) { processedMenu in
-                if processedMenu != nil {
-                    hasProcessedMenu = true
-                }
             }
         }
     }
 }
+
+// MARK: - Legacy Views (kept for reference but not used)
 
 // MARK: - Header View
 
