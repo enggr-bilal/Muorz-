@@ -2,35 +2,67 @@
 //  OCRViewModel.swift
 //  Muorz'
 //
-//  Created by Muhammad Bilal on 12/05/25.
+//  Created by Simon Naud on 26/05/25.
 //
 
 import Vision
 import SwiftUI
 import Foundation
 
+/// ViewModel responsible for managing OCR (Optical Character Recognition) operations
+/// Handles text extraction from images and processing through menu service
 @MainActor
 class OCRViewModel: ObservableObject {
+    
+    // MARK: - Published Properties
+    
+    /// Legacy OCR results (deprecated - use processedMenu instead)
     @Published var ocrResults: [OCRResult] = []
+    
+    /// Indicates if OCR processing is currently in progress
     @Published var isProcessing = false
+    
+    /// Error message from the last failed operation
     @Published var errorMessage: String?
+    
+    /// Raw extracted text from the last OCR operation
     @Published var extractedText = ""
+    
+    /// Processed menu data ready for display
     @Published var processedMenu: MenuResponse?
     
-    // MARK: - Multi-Photo Support
+    // MARK: - Multi-Photo Support Properties
+    
+    /// Array of captured images awaiting processing
     @Published var capturedImages: [UIImage] = []
+    
+    /// Combined OCR text from all processed images
     @Published var combinedOCRText = ""
+    
+    /// Index of currently processing image (for progress tracking)
     @Published var currentProcessingIndex = 0
+    
+    /// Individual OCR results for each processed image
     @Published var individualOCRResults: [String] = []
     
+    // MARK: - Dependencies
+    
+    /// Service responsible for processing OCR text into menu data
     private let menuService: MenuServiceProtocol
     
+    // MARK: - Initialization
+    
+    /// Initializes the OCR view model with optional menu service dependency injection
+    /// - Parameter menuService: Optional menu service (uses default if nil)
     init(menuService: MenuServiceProtocol? = nil) {
         self.menuService = menuService ?? APIConfiguration.createMenuService()
     }
 
-    // MARK: - Legacy Single Image Processing (Deprecated - use addImage + processAllImages instead)
+    // MARK: - Legacy Single Image Processing
     
+    /// Processes a single image for OCR (deprecated method)
+    /// - Parameter image: UIImage to process
+    /// - Note: This method is deprecated. Use addImage() + processAllImages() instead
     func processImage(_ image: UIImage) {
         print("⚠️ Using deprecated processImage method - consider using addImage + processAllImages")
         print("🔍 OCRViewModel.processImage called")
@@ -41,61 +73,17 @@ class OCRViewModel: ObservableObject {
         processAllImages()
     }
     
-    private func processExtractedText(_ text: String) async {
-        print("🚀 OCRViewModel.processExtractedText called")
-        print("   Text length: \(text.count) characters")
-        print("   First 100 chars: \(text.prefix(100))...")
-        
-        guard !text.isEmpty else {
-            print("❌ No text extracted from image")
-            errorMessage = "No text extracted from image"
-            isProcessing = false
-            return
-        }
-        
-        do {
-            print("📡 Calling menuService.processOCRText...")
-            processedMenu = try await menuService.processOCRText(text)
-            print("✅ Menu processing completed successfully")
-            isProcessing = false
-        } catch {
-            print("❌ Menu processing failed: \(error)")
-            errorMessage = error.localizedDescription
-            isProcessing = false
-        }
-    }
+    // MARK: - Multi-Photo Processing Methods
     
-    func clearResults() {
-        ocrResults.removeAll()
-        extractedText = ""
-        processedMenu = nil
-        errorMessage = nil
-        isProcessing = false
-        
-        // Clear multi-photo data
-        capturedImages.removeAll()
-        combinedOCRText = ""
-        currentProcessingIndex = 0
-        individualOCRResults.removeAll()
-        
-        print("🧹 Cleared all OCR results and captured images")
-    }
-    
-    func retryProcessing() {
-        guard !extractedText.isEmpty else { return }
-        
-        Task {
-            await processExtractedText(extractedText)
-        }
-    }
-    
-    // MARK: - Multi-Photo Methods
-    
+    /// Adds an image to the processing queue
+    /// - Parameter image: UIImage to add for processing
     func addImage(_ image: UIImage) {
         capturedImages.append(image)
         print("📸 Added image \(capturedImages.count). Total images: \(capturedImages.count)")
     }
     
+    /// Removes an image from the processing queue
+    /// - Parameter index: Index of the image to remove
     func removeImage(at index: Int) {
         guard index < capturedImages.count else { return }
         capturedImages.remove(at: index)
@@ -109,6 +97,8 @@ class OCRViewModel: ObservableObject {
         updateCombinedOCRText()
     }
     
+    /// Processes all captured images sequentially
+    /// Performs OCR on each image and then processes the combined text through the menu service
     func processAllImages() {
         guard !capturedImages.isEmpty else {
             errorMessage = "No images to process"
@@ -126,6 +116,37 @@ class OCRViewModel: ObservableObject {
         }
     }
     
+    // MARK: - State Management
+    
+    /// Clears all OCR results and resets the view model state
+    func clearResults() {
+        ocrResults.removeAll()
+        extractedText = ""
+        processedMenu = nil
+        errorMessage = nil
+        isProcessing = false
+        
+        // Clear multi-photo data
+        capturedImages.removeAll()
+        combinedOCRText = ""
+        currentProcessingIndex = 0
+        individualOCRResults.removeAll()
+        
+        print("🧹 Cleared all OCR results and captured images")
+    }
+    
+    /// Retries processing with the last extracted text
+    func retryProcessing() {
+        guard !extractedText.isEmpty else { return }
+        
+        Task {
+            await processExtractedText(extractedText)
+        }
+    }
+    
+    // MARK: - Private Processing Methods
+    
+    /// Processes all images sequentially using OCR
     private func processImagesSequentially() async {
         for (index, image) in capturedImages.enumerated() {
             currentProcessingIndex = index
@@ -146,6 +167,10 @@ class OCRViewModel: ObservableObject {
         }
     }
     
+    /// Performs OCR on a single image
+    /// - Parameters:
+    ///   - image: UIImage to process
+    ///   - index: Index of the image in the processing queue
     private func processIndividualImage(_ image: UIImage, at index: Int) async {
         guard let cgImage = image.cgImage else {
             print("❌ Invalid image format at index \(index)")
@@ -189,9 +214,10 @@ class OCRViewModel: ObservableObject {
                 continuation.resume()
             }
             
+            // Configure OCR request for optimal menu text recognition
             request.recognitionLevel = .accurate
             request.usesLanguageCorrection = true
-            request.recognitionLanguages = ["fr", "en"]
+            request.recognitionLanguages = ["fr", "en"] // Support French and English
             
             DispatchQueue.global(qos: .userInitiated).async {
                 do {
@@ -207,6 +233,33 @@ class OCRViewModel: ObservableObject {
         }
     }
     
+    /// Processes extracted text through the menu service
+    /// - Parameter text: Raw OCR text to process
+    private func processExtractedText(_ text: String) async {
+        print("🚀 OCRViewModel.processExtractedText called")
+        print("   Text length: \(text.count) characters")
+        print("   First 100 chars: \(text.prefix(100))...")
+        
+        guard !text.isEmpty else {
+            print("❌ No text extracted from image")
+            errorMessage = "No text extracted from image"
+            isProcessing = false
+            return
+        }
+        
+        do {
+            print("📡 Calling menuService.processOCRText...")
+            processedMenu = try await menuService.processOCRText(text)
+            print("✅ Menu processing completed successfully")
+            isProcessing = false
+        } catch {
+            print("❌ Menu processing failed: \(error)")
+            errorMessage = error.localizedDescription
+            isProcessing = false
+        }
+    }
+    
+    /// Updates the combined OCR text from all individual results
     private func updateCombinedOCRText() {
         combinedOCRText = individualOCRResults
             .enumerated()

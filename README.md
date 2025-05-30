@@ -1,383 +1,59 @@
 # Muorz 🍽️
 
-> **📱 iOS SwiftUI App for Intelligent Menu Processing with OCR and AI**
+> **AI-Powered Menu Scanner for iOS - Transform any menu into an intelligent, searchable experience**
 
-## 🎉 Configuration Status
+[![iOS](https://img.shields.io/badge/iOS-17.0+-blue.svg)](https://developer.apple.com/ios/)
+[![Swift](https://img.shields.io/badge/Swift-5.9+-orange.svg)](https://swift.org/)
+[![SwiftUI](https://img.shields.io/badge/SwiftUI-5.0+-green.svg)](https://developer.apple.com/xcode/swiftui/)
+[![Xcode](https://img.shields.io/badge/Xcode-15.0+-blue.svg)](https://developer.apple.com/xcode/)
 
-✅ **Gemini 2.0 Flash API configured and ready**  
-✅ **API data flow fixed** - API data now displays correctly  
-📋 **Complete guide:** [CONFIGURATION_COMPLETE.md](CONFIGURATION_COMPLETE.md)  
-🔑 **Your API key:** See `PRIVATE_API_KEY.txt`  
-🛠️ **Instructions:** [API_CONFIGURATION_GUIDE.md](API_CONFIGURATION_GUIDE.md)
+## 🌟 Overview
 
----
+Muorz is a modern iOS application that uses advanced OCR and AI technology to scan restaurant menus, extract text, and provide intelligent menu browsing with search, filtering, and nutritional insights. Built with SwiftUI and following MVVM architecture principles.
 
-## 🌟 Features
+## ✨ Key Features
 
 ### 🤖 Intelligent Menu Processing
-- **Gemini 2.0 Flash API** integration for advanced menu analysis
-- **Real-time OCR** using Vision framework
-- **Automatic translation** to English
-- **Nutritional scoring** inference (protein, fat, carbs on 0-10 scale)
-- **Dietary tags** detection (vegetarian, vegan, gluten-free, dairy-free)
-- **Smart categorization** of dishes
-
-### 📸 Advanced OCR
-- **Apple Vision Framework** for high-accuracy text recognition
-- **Multi-language support** for international menus
-- **Real-time processing** with live camera feed
-- **Automatic image optimization** for better OCR results
-
-### 🔍 Smart Search & Filtering
-- **Intelligent search** with ingredient-based suggestions
-- **Real-time highlighting** of search terms
-- **Category filtering** (Starter, Main Course, Dessert)
-- **Dietary filtering** with customizable defaults
-- **Nutritional sorting** with priority-based ordering
-
-### ⚙️ User Preferences
-- **Default dietary preferences** set in ProfileView
-- **Nutrition sort priorities** (Protein, Low Fat, Low Carbs)
-- **Persistent settings** that survive app restarts
-- **Temporary overrides** in MenuView without affecting defaults
-
-## 🎯 Product Vision
-
-The application allows users to:
-- Take photos of restaurant menus
-- Automatically extract text with Apple's OCR
-- Process text via Google's Gemini API to get structured JSON
-- Display the menu in a clear and organized way
-- Filter and search through dishes and ingredients
-- Customize display according to dietary preferences
-
-## 🚀 API Integration
-
-### Gemini API Implementation
-
-The app now uses **Google's Gemini 2.0 Flash** model for intelligent menu processing:
-
-#### Key Features
-- **Advanced AI Processing**: Gemini 2.0 Flash for fast and accurate menu parsing
+- **Advanced OCR**: Apple Vision Framework for high-accuracy text recognition
+- **AI Processing**: Google Gemini 2.0 Flash API for intelligent menu parsing
 - **Multi-language Support**: Processes menus in any language, outputs in English
-- **Structured Data**: Consistent JSON format with nutrition scores and dietary tags
-- **Intelligent Inference**: Automatically infers ingredients and nutritional information
-- **Secure Configuration**: Multiple methods for API key management
+- **Smart Translation**: Automatic translation with ingredient inference
+- **Nutritional Analysis**: AI-powered nutrition scoring (protein, fat, carbs on 0-10 scale)
+- **Dietary Detection**: Automatic identification of vegetarian, vegan, gluten-free, dairy-free options
 
-#### API Response Format
-```json
-[
-  {
-    "ctg": "Starter",
-    "dsh": [
-      {
-        "nme": "BRUSCHETTA VEGETARIANA",
-        "tr_nme": "Vegetarian Bruschetta",
-        "ingr": ["tomato", "basil", "mozzarella", "bread"],
-        "n_scr": [4, 5, 7],
-        "tgs": [1, 0, 0, 0],
-        "prc": "8,00 €"
-      }
-    ]
-  }
-]
-```
-
-#### Setup Instructions
-1. **Get API Key**: Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
-2. **Configure Key**: Use environment variable `GEMINI_API_KEY` or Info.plist
-3. **Test Integration**: App automatically falls back to sample data if no key is configured
-
-For detailed setup instructions, see [GEMINI_API_IMPLEMENTATION.md](GEMINI_API_IMPLEMENTATION.md)
-
-## 🎯 User Preferences & Filtering System
-
-### Architecture Overview
-
-The app uses a clear separation between **default preferences** and **temporary filters**:
-
-#### Default Preferences (ProfileView only)
-- **Default Dietary Filter**: Automatically applied when the app opens
-- **Default Nutrition Sort Priority**: Controls how items are sorted within each section
-- **Nutrition Tag Display**: Controls which nutrition tags are visible on menu items
-- These settings are persistent and only changeable from the ProfileView
-
-#### Temporary Filters (MenuView)
-- **Category Filter**: Filter by food category (Starter, Main, Dessert, etc.)
-- **Dietary Filter**: Temporarily override the default dietary preference
-- **Nutrition Sort Priority**: Temporarily override the default sorting priority
-- **Search**: Text-based search in dish names and ingredients
-- These filters reset to default values when the app restarts
-
-### Key Behaviors
-
-1. **Default Dietary Preference**:
-   - Set in ProfileView → Settings → Default Dietary Filter
-   - Automatically applied when opening the app
-   - Changing filters in MenuView does NOT affect this default
-   - Only way to change: ProfileView settings
-
-2. **Default Nutrition Sort Priority**:
-   - Set in ProfileView → Settings → Default Nutrition Sort Priority
-   - Controls how menu items are sorted within each category section
-   - Options: No Priority, Protein Priority, Low Fat Priority, Low Carbs Priority
-   - Can be temporarily overridden in MenuView without affecting the default
-   - Automatically applied when opening the app
-
-3. **Nutrition Tag Display**:
-   - Toggles in ProfileView control which tags are shown on menu items
-   - These are display preferences, NOT filters
-   - Tags show nutritional properties: High Protein, Low Fat, Low Carbs
-
-4. **MenuView Filters**:
-   - All filters are temporary and session-based
-   - Start with default dietary preference applied
-   - Start with default nutrition sort priority applied
-   - Can be changed freely without affecting defaults
-   - Reset when app restarts
-
-### Search & Highlighting
-
-- **Search Bar**: Hidden by default, accessible via magnifying glass button
-- **Text Highlighting**: Search terms are highlighted in yellow in dish names and ingredients
-- **Suggestions**: Intelligent suggestions based on available ingredients
-- **Real-time**: Search results update as you type
-
-### Filters & Sorting
-
-- **Categories**: All, Starter, Main Course, Dessert
-- **Diets**: Vegetarian, Vegan, Gluten-Free, Dairy-Free (temporary override of default)
-- **Nutrition Sorting**: Sort items within each section by nutritional priority
-  - **No Priority**: Items appear in their original order
-  - **Protein Priority**: Items with higher protein content appear first
-  - **Low Fat Priority**: Items with lower fat content appear first  
-  - **Low Carbs Priority**: Items with lower carbs content appear first
-  - *Adaptive interface: Button shows corresponding nutrition tag icon and color when active*
-  - *Simplified menu: Text-only options with checkmarks for selection*
-
-### Interface States
-- **Loading**: During OCR/API processing
-- **Error**: With retry capability
-- **Empty**: When no results match filters
-- **Success**: Structured menu display with intelligent sorting
-
-## 🏗️ Architecture
-
-### Project Structure
-
-```
-Muorz/
-├── Model/
-│   ├── MenuItem.swift          # Data models with Gemini API support
-│   ├── FilterModels.swift      # Filter models
-│   └── OCRResult.swift         # OCR results
-├── ViewModel/
-│   ├── MenuViewModel.swift     # Main ViewModel with search
-│   ├── MenuService.swift       # Gemini API service
-│   ├── OCRViewModel.swift      # Enhanced OCR processing
-│   ├── SelectionManager.swift  # Cart management
-│   ├── UserPreferences.swift   # User preferences
-│   └── APIConfiguration.swift  # Secure API configuration
-├── Views/
-│   ├── ContentView.swift       # Main view
-│   ├── CameraView.swift        # Camera/Lens view (entry point)
-│   ├── Components/
-│   │   ├── SearchBar.swift     # Search bar with suggestions
-│   │   └── QuantityControl.swift
-│   ├── Menu/
-│   │   ├── MenuView.swift      # Refactored menu view
-│   │   ├── Filters/
-│   │   │   └── FilterHeader.swift
-│   │   └── ItemRow/
-│   │       ├── MenuItemRow.swift
-│   │       ├── MenuItemInfo.swift
-│   │       ├── NutritionTag.swift
-│   │       └── NutritionTagsSection.swift
-│   ├── Selection/
-│   └── Settings/
-└── Assets.xcassets/
-```
-
-### Data Models
-
-#### MenuItem (Internal Format)
-```swift
-struct MenuItem: Identifiable, Codable {
-    let originalName: String        // Original name (any language)
-    let translatedName: String      // Translated name (English)
-    let ingredientsEn: [String]     // Ingredients in English
-    let categoryEn: String          // Category (starter, main course, dessert)
-    let price: String?              // Price (optional)
-    let nutritionScores: NutritionScores
-    let tags: DietaryTags
-}
-```
-
-#### Gemini API Format (Compact)
-```json
-[
-  {
-    "ctg": "Main Course",
-    "dsh": [
-      {
-        "nme": "PIZZA VEGETARIANA",
-        "tr_nme": "Vegetarian Pizza",
-        "ingr": ["tomato", "mozzarella", "vegetables"],
-        "n_scr": [5, 6, 7],
-        "tgs": [1, 0, 0, 0],
-        "prc": "12,00 €"
-      }
-    ]
-  }
-]
-```
-
-## 🔍 Features
-
-### ✅ Implemented
-- **Camera-First Experience**: Modern camera interface as app entry point
-- **Advanced OCR**: Text extraction with multilingual support (FR/EN)
-- **Gemini AI Processing**: Google's Gemini 2.0 Flash for intelligent menu parsing
-- **Smart Search**: Search in dish names AND ingredients with suggestions
-- **Multiple Filters**: By category, diet, and nutrition
-- **Intelligent Sorting**: Sort menu items by nutritional priorities (protein, fat, carbs)
-- **Persistent Preferences**: Default dietary filters and nutrition sort priorities
-- **Adaptive UI**: Nutrition options adapt based on user display preferences
-- **Modern Interface**: SwiftUI design with smooth animations and gradients
-- **Complete State Management**: Loading, processing, success, and error states
-- **MVVM Architecture**: Clear separation of responsibilities
+### 📸 Modern Camera Experience
+- **Camera-First Interface**: Streamlined scanning experience as app entry point
+- **Multi-Photo Support**: Capture and process multiple menu pages
+- **Real-time Processing**: Live feedback during OCR and AI processing
+- **Smart Image Handling**: Automatic optimization for better text recognition
 - **Seamless Navigation**: Smooth transitions between camera and menu views
-- **Server-Readable Selection**: Original names displayed in large, multi-line format for easy server reading
-- **Secure API Configuration**: Multiple methods for API key management
-- **Error Handling & Retries**: Robust network error handling with exponential backoff
-- **Development Tools**: Mock service and detailed logging for development
 
-### 🔧 API Features
-- **Gemini API Integration**: Complete implementation with Google's latest model
-- **Automatic Fallback**: Sample data when API is unavailable
-- **Retry Logic**: Up to 3 attempts with exponential backoff
-- **Secure Configuration**: Environment variables and Info.plist support
-- **Development Mode**: Mock service for testing without API calls
-- **Comprehensive Logging**: Detailed request/response logging in debug mode
+### 🔍 Advanced Search & Filtering
+- **Intelligent Search**: Search across dish names, ingredients, and descriptions
+- **Real-time Highlighting**: Search terms highlighted in yellow for easy identification
+- **Smart Suggestions**: Auto-complete based on available ingredients
+- **Category Filtering**: Filter by meal type (Starter, Main Course, Dessert, Drinks)
+- **Dietary Filtering**: Filter by dietary preferences with persistent defaults
+- **Nutritional Sorting**: Sort by protein, fat, or carb content within categories
 
-## 🛠️ Usage
+### ⚙️ Personalized Preferences
+- **Persistent Settings**: Default dietary preferences and nutrition priorities
+- **Customizable Display**: Toggle nutrition tags visibility
+- **Session Filters**: Temporary filters that don't affect saved preferences
+- **User Profiles**: Personal settings and preferences management
 
-### API Setup - Required Configuration
-
-#### Configuration in Xcode
-1. **Product** → **Scheme** → **Edit Scheme...**
-2. **Run** → **Arguments** → **Environment Variables**
-3. **Add**:
-   - Name: `GEMINI_API_KEY`
-   - Value: `[YOUR_GEMINI_API_KEY]`
-
-#### Verification
-- Xcode Console should display: `🚀 Attempting Gemini API call`
-- If you see `⚠️ No Gemini API key configured`, the configuration failed
-
-**📋 Complete guide:** See [API_CONFIGURATION_GUIDE.md](API_CONFIGURATION_GUIDE.md)
-
-### Camera/Lens View
-- Entry point of the application
-- Camera interface for menu photography
-- Real-time OCR processing with Vision framework
-- Automatic Gemini API processing
-- Seamless transition to menu view
-
-### Search & Filtering
-- **Smart Search**: Search in dish names and ingredients
-- **Category Filters**: All, Starter, Main Course, Dessert
-- **Dietary Filters**: Vegetarian, Vegan, Gluten-Free, Dairy-Free
-- **Nutrition Sorting**: Sort by protein, fat, or carbs content
-- **Real-time Updates**: All filters update instantly
-
-### Menu Display
-- **Categorized Layout**: Items grouped by category
-- **Nutrition Tags**: Visual indicators for nutritional properties
-- **Interactive Selection**: Add items to cart with quantity controls
-- **Search Highlighting**: Search terms highlighted in results
-- **Responsive Design**: Adapts to different screen sizes
-
-## 🔧 Technical Implementation
-
-### API Integration
-- **Service Layer**: Protocol-based architecture for testability
-- **Error Handling**: Comprehensive error handling with user-friendly messages
-- **Retry Logic**: Automatic retries with exponential backoff
-- **Fallback**: Graceful degradation when API is unavailable
-- **Security**: No hardcoded API keys, environment-based configuration
-
-### Data Processing
-- **OCR Pipeline**: Vision framework → Text extraction → API processing
-- **Data Transformation**: Gemini API response → Internal data models
-- **State Management**: Reactive updates using Combine framework
-- **Persistence**: User preferences saved locally
-
-### User Interface
-- **SwiftUI**: Modern declarative UI framework
-- **MVVM Pattern**: Clear separation of concerns
-- **Reactive UI**: Automatic updates based on state changes
-- **Accessibility**: VoiceOver support and accessibility labels
-- **Dark Mode**: Full support for system appearance modes
-
-## 🚧 Known Issues
-
-- **Sample Data Fallback**: App displays hardcoded data when API fails
-- **Menu Persistence**: Menus are not saved between app sessions
-- **Offline Mode**: No offline functionality currently available
-
-## 🔮 Roadmap
-
-### High Priority
-- [ ] Remove hardcoded sample data for production
-- [ ] Implement menu persistence with SwiftData
-- [ ] Add menu history functionality
-- [ ] Improve error handling and user feedback
-
-### Medium Priority
-- [ ] Add offline OCR capabilities
-- [ ] Implement menu sharing functionality
-- [ ] Add favorite dishes feature
-- [ ] Improve camera interface with live preview
-
-### Low Priority
-- [ ] Add social features
-- [ ] Implement restaurant discovery
-- [ ] Add user reviews and ratings
-- [ ] Integrate with food delivery services
-
-## 🤝 Contributing
-
-### Development Setup
-1. Clone the repository
-2. Open `Muorz.xcodeproj` in Xcode 15+
-3. Configure your Gemini API key (see setup instructions)
-4. Build and run on iOS 17+ device or simulator
-
-### Code Standards
-- **SwiftUI**: Use declarative syntax and view composition
-- **MVVM**: Follow Model-View-ViewModel architecture
-- **Combine**: Use reactive programming for data flow
-- **Documentation**: Comment public interfaces and complex logic
-
-### Pull Request Process
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes with clear commit messages
-4. Update documentation if needed
-5. Submit a pull request with detailed description
-
----
-
-**Muorz - AI-Powered Menu Scanner 🍽️**  
-*Modern interface, intelligent processing, seamless experience*
+### 🛒 Selection Management
+- **Smart Cart**: Add items with quantity controls
+- **Price Calculation**: Automatic total calculation with multi-currency support
+- **Selection Summary**: Clear overview of selected items and estimated costs
+- **Server-Friendly Display**: Original names in large format for easy ordering
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
 - **Xcode 15.0+**
-- **iOS 16.0+** target deployment
+- **iOS 17.0+** target deployment
 - **Swift 5.9+**
 - **Gemini API Key** from [Google AI Studio](https://makersuite.google.com/app/apikey)
 
@@ -389,23 +65,22 @@ struct MenuItem: Identifiable, Codable {
    cd Muorz
    ```
 
-2. **Set up Gemini API Key**
+2. **Configure Gemini API Key**
    
-   #### Method 1: Environment Variable (Recommended for Development)
+   #### Method 1: Environment Variable (Recommended)
    1. In Xcode: **Product** → **Scheme** → **Edit Scheme...**
    2. Select **"Run"** → **"Arguments"** tab
    3. Under **"Environment Variables"**, add:
       - **Name**: `GEMINI_API_KEY`
-      - **Value**: Your actual API key from Google AI Studio
+      - **Value**: Your API key from Google AI Studio
       - **✅ Check the checkbox to enable**
-   4. Click **"Close"** to save
    
-   #### Method 2: Info.plist (For Production)
+   #### Method 2: Info.plist (Alternative)
    1. Open `Info.plist` in Xcode
    2. Add new key:
       - **Key**: `GEMINI_API_KEY`
       - **Type**: String  
-      - **Value**: Your actual API key
+      - **Value**: Your API key
    
    ⚠️ **Security Note**: Never commit API keys to version control
 
@@ -414,13 +89,208 @@ struct MenuItem: Identifiable, Codable {
    # Open in Xcode
    open Muorz.xcodeproj
    
-   # Or build from command line
-   xcodebuild -project Muorz.xcodeproj -scheme Muorz build
+   # Build and run on simulator or device
    ```
 
-### ✅ API Configuration Status
-- **Gemini API Integration**: ✅ **Working**
-- **OCR Text Processing**: ✅ **Working**  
-- **Menu Item Parsing**: ✅ **Working**
-- **Error Handling**: ✅ **Working**
-- **Sample Data Removed**: ✅ **Complete**
+### ✅ Verification
+
+After setup, the Xcode console should display:
+- `🚀 Attempting Gemini API call` (successful configuration)
+- `⚠️ No Gemini API key configured` (configuration needed)
+
+## 🏗️ Architecture
+
+### Project Structure
+
+```
+Muorz/
+├── Model/                          # Data Models
+│   ├── MenuItem.swift              # Core menu item model with API support
+│   ├── OCRResult.swift             # OCR processing results
+│   └── FilterModels.swift          # Filter and preference models
+├── ViewModels/                     # Business Logic Layer
+│   ├── OCRViewModel.swift          # OCR processing and multi-photo support
+│   ├── MenuViewModel.swift         # Menu data and filtering logic
+│   ├── UserPreferences.swift       # Persistent user settings
+│   └── SelectionManager.swift      # Cart and selection management
+├── Services/                       # Service Layer
+│   ├── MenuService.swift           # Gemini API integration
+│   └── APIConfiguration.swift      # API configuration and security
+├── Views/                          # User Interface
+│   ├── ContentView.swift           # Main app coordinator
+│   ├── Camera/                     # Camera interface components
+│   │   ├── CameraView.swift        # Main camera view
+│   │   ├── DirectCameraView.swift  # Camera controls and capture
+│   │   └── CameraPreviewView.swift # Camera preview display
+│   ├── Menu/                       # Menu browsing interface
+│   │   ├── MenuView.swift          # Main menu display
+│   │   ├── Filters/                # Filter components
+│   │   └── ItemRow/                # Menu item display components
+│   ├── Selection/                  # Cart and selection views
+│   ├── Settings/                   # User preferences interface
+│   └── Components/                 # Reusable UI components
+└── MuorzApp.swift                  # App entry point
+```
+
+### Design Patterns
+
+- **MVVM Architecture**: Clear separation between Views, ViewModels, and Models
+- **Protocol-Oriented Design**: Service protocols for dependency injection and testing
+- **Reactive Programming**: Combine framework for data flow and state management
+- **Modular Components**: Reusable SwiftUI components with clear responsibilities
+
+## 🔧 Technical Implementation
+
+### Data Flow
+
+1. **Camera Capture**: User captures menu photos using DirectCameraView
+2. **OCR Processing**: Apple Vision Framework extracts text from images
+3. **AI Processing**: Gemini API converts raw text to structured menu data
+4. **Data Transformation**: API response converted to internal MenuItem models
+5. **UI Updates**: Reactive UI updates based on processed data
+6. **User Interaction**: Search, filter, and selection with real-time feedback
+
+### API Integration
+
+#### Gemini API Response Format
+```json
+[
+  {
+    "ctg": "Main Course",
+    "dsh": [
+      {
+        "nme": "PIZZA VEGETARIANA",
+        "tr_nme": "Vegetarian Pizza",
+        "ingr": ["tomato", "mozzarella", "vegetables", "basil"],
+        "n_scr": [5, 6, 7],
+        "tgs": [1, 0, 0, 0],
+        "prc": "12,00 €"
+      }
+    ]
+  }
+]
+```
+
+#### Internal Data Model
+```swift
+struct MenuItem: Identifiable, Codable {
+    let originalName: String        // Original language name
+    let translatedName: String      // English translation
+    let ingredientsEn: [String]     // Ingredients in English
+    let categoryEn: String          // Category (starter, main, dessert)
+    let price: String?              // Price as string
+    let nutritionScores: NutritionScores  // [protein, fat, carbs]
+    let tags: DietaryTags          // [vegetarian, vegan, gluten_free, dairy_free]
+}
+```
+
+### Error Handling
+
+- **Network Errors**: Automatic retry with exponential backoff
+- **API Errors**: User-friendly error messages with retry options
+- **OCR Failures**: Graceful degradation with manual text input option
+- **Configuration Issues**: Clear setup instructions and validation
+
+## 🎯 User Experience
+
+### App Flow
+
+1. **Launch**: App opens to camera interface
+2. **Capture**: User photographs menu pages (supports multiple photos)
+3. **Processing**: Real-time feedback during OCR and AI processing
+4. **Browse**: Intelligent menu display with search and filtering
+5. **Select**: Add items to cart with quantity controls
+6. **Review**: View selection summary with total pricing
+
+### Key Interactions
+
+- **Search**: Tap magnifying glass to reveal search bar with suggestions
+- **Filter**: Use filter buttons for category, dietary, and nutrition filtering
+- **Sort**: Nutrition priority sorting within each category
+- **Select**: Tap items to add to cart, use +/- controls for quantities
+- **Navigate**: Seamless transitions between camera and menu views
+
+## 🔮 Features & Capabilities
+
+### ✅ Implemented Features
+
+- **Camera-First Experience**: Modern camera interface as primary entry point
+- **Multi-Photo OCR**: Process multiple menu pages in sequence
+- **AI Menu Processing**: Google Gemini 2.0 Flash integration
+- **Intelligent Search**: Search across names, ingredients, and descriptions
+- **Advanced Filtering**: Category, dietary, and nutritional filters
+- **Smart Sorting**: Nutrition-based sorting within categories
+- **Persistent Preferences**: User settings that survive app restarts
+- **Selection Management**: Cart functionality with quantity controls
+- **Real-time Highlighting**: Search term highlighting in results
+- **Error Recovery**: Comprehensive error handling with retry mechanisms
+- **Responsive Design**: Adapts to different screen sizes and orientations
+
+### 🚧 Known Limitations
+
+- **API Dependency**: Requires internet connection for menu processing
+- **Language Support**: OCR optimized for French and English menus
+- **Menu Persistence**: Processed menus are not saved between sessions
+
+### 🔮 Future Roadmap
+
+#### High Priority
+- [ ] Menu history and persistence with SwiftData
+- [ ] Offline OCR capabilities for basic text extraction
+- [ ] Enhanced multi-language support
+- [ ] Menu sharing and export functionality
+
+#### Medium Priority
+- [ ] Restaurant discovery and location integration
+- [ ] Social features and menu recommendations
+- [ ] Nutritional information database integration
+- [ ] Voice search and accessibility improvements
+
+#### Low Priority
+- [ ] Integration with food delivery services
+- [ ] User reviews and ratings system
+- [ ] Advanced dietary restriction support
+- [ ] Machine learning for improved accuracy
+
+## 🛠️ Development
+
+### Code Quality Standards
+
+- **SwiftUI Best Practices**: Declarative UI with proper state management
+- **MVVM Architecture**: Clear separation of concerns
+- **Protocol-Oriented Design**: Testable and maintainable code
+- **Comprehensive Documentation**: All public interfaces documented
+- **Error Handling**: Robust error handling throughout the app
+- **Performance Optimization**: Efficient algorithms and memory management
+
+### Testing Strategy
+
+- **Unit Tests**: ViewModels and service layer testing
+- **Integration Tests**: API integration and data flow testing
+- **UI Tests**: Critical user flows and accessibility testing
+- **Performance Tests**: Memory usage and response time validation
+
+### Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Follow the existing code style and architecture patterns
+4. Add comprehensive tests for new functionality
+5. Update documentation as needed
+6. Submit a pull request with detailed description
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🙏 Acknowledgments
+
+- **Apple Vision Framework**: For powerful OCR capabilities
+- **Google Gemini API**: For intelligent menu processing
+- **SwiftUI Community**: For design patterns and best practices
+- **Open Source Contributors**: For inspiration and code examples
+
+---
+
+**Muorz - Transforming Menu Experiences with AI 🍽️**  
+*Modern interface • Intelligent processing • Seamless experience*

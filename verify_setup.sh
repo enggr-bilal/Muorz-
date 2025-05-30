@@ -1,77 +1,103 @@
 #!/bin/bash
 
-# Script de vérification de la configuration Muorz
-echo "🔍 Vérification de la configuration Muorz..."
+# Muorz Configuration Verification Script
+echo "🔍 Verifying Muorz configuration..."
 echo ""
 
-# Vérifier que nous sommes dans le bon répertoire
+# Check that we're in the correct directory
 if [ ! -f "README.md" ] || [ ! -d "Muorz" ]; then
-    echo "❌ Erreur: Ce script doit être exécuté depuis la racine du projet Muorz"
+    echo "❌ Error: This script must be run from the Muorz project root directory"
     exit 1
 fi
 
-echo "✅ Répertoire du projet détecté"
+echo "✅ Project directory detected"
 
-# Vérifier la structure des fichiers
+# Verify file structure
 echo ""
-echo "📁 Vérification de la structure des fichiers..."
+echo "📁 Verifying file structure..."
 
 required_files=(
     "README.md"
-    "API_CONFIGURATION_GUIDE.md"
+    "ARCHITECTURE.md"
+    "CHANGELOG.md"
     ".gitignore"
+    "Muorz/MuorzApp.swift"
     "Muorz/Model/MenuItem.swift"
-    "Muorz/ViewModel/MenuService.swift"
-    "Muorz/ViewModel/APIConfiguration.swift"
+    "Muorz/Model/OCRResult.swift"
+    "Muorz/Model/FilterModels.swift"
+    "Muorz/ViewModels/OCRViewModel.swift"
+    "Muorz/ViewModels/MenuViewModel.swift"
+    "Muorz/ViewModels/UserPreferences.swift"
+    "Muorz/ViewModels/SelectionManager.swift"
+    "Muorz/Services/MenuService.swift"
+    "Muorz/Services/APIConfiguration.swift"
+    "Muorz/Views/ContentView.swift"
+    "Muorz/Views/Camera/CameraView.swift"
+    "Muorz/Views/Camera/DirectCameraView.swift"
 )
 
 for file in "${required_files[@]}"; do
     if [ -f "$file" ]; then
         echo "✅ $file"
     else
-        echo "❌ $file (manquant)"
+        echo "❌ $file (missing)"
     fi
 done
 
-# Vérifier que les clés API ne sont pas dans Git
+# Check that API keys are not in Git
 echo ""
-echo "🔒 Vérification de sécurité..."
+echo "🔒 Security verification..."
 
 if git rev-parse --git-dir > /dev/null 2>&1; then
-    echo "✅ Dépôt Git détecté"
+    echo "✅ Git repository detected"
     
-    # Chercher des clés API potentielles
+    # Search for potential API keys
     api_keys_found=$(git grep -r "AIzaSy" . 2>/dev/null || true)
     
     if [ -z "$api_keys_found" ]; then
-        echo "✅ Aucune clé API trouvée dans Git"
+        echo "✅ No API keys found in Git"
     else
-        echo "⚠️  Clés API potentielles détectées dans Git:"
+        echo "⚠️  Potential API keys detected in Git:"
         echo "$api_keys_found"
         echo ""
-        echo "🚨 ATTENTION: Supprimez ces clés avant de commiter!"
+        echo "🚨 WARNING: Remove these keys before committing!"
     fi
 else
-    echo "⚠️  Pas de dépôt Git détecté"
+    echo "⚠️  No Git repository detected"
 fi
 
-# Vérifier le .gitignore
+# Check .gitignore
 echo ""
-echo "🛡️  Vérification du .gitignore..."
+echo "🛡️  Verifying .gitignore..."
 
-if grep -q "API_SETUP_INSTRUCTIONS.md" .gitignore 2>/dev/null; then
-    echo "✅ Fichiers sensibles protégés dans .gitignore"
+if grep -q "PRIVATE_API_KEY.txt" .gitignore 2>/dev/null; then
+    echo "✅ Sensitive files protected in .gitignore"
 else
-    echo "⚠️  .gitignore pourrait ne pas protéger tous les fichiers sensibles"
+    echo "⚠️  .gitignore might not protect all sensitive files"
 fi
 
-# Instructions finales
+# Check for API configuration
 echo ""
-echo "🎯 Prochaines étapes:"
-echo "1. Ouvrir Xcode avec le projet Muorz"
-echo "2. Configurer la variable d'environnement GEMINI_API_KEY"
-echo "3. Lancer l'app et vérifier la console pour les messages API"
+echo "🔧 API Configuration Check..."
+
+if [ -f "PRIVATE_API_KEY.txt" ]; then
+    echo "✅ Private API key file found"
+    echo "⚠️  Remember: Configure GEMINI_API_KEY environment variable in Xcode"
+else
+    echo "ℹ️  No private API key file found (this is normal for clean setups)"
+fi
+
+# Final instructions
 echo ""
-echo "📖 Guide détaillé: API_CONFIGURATION_GUIDE.md"
+echo "🎯 Next Steps:"
+echo "1. Open Muorz.xcodeproj in Xcode"
+echo "2. Configure GEMINI_API_KEY environment variable:"
+echo "   - Product → Scheme → Edit Scheme..."
+echo "   - Run → Arguments → Environment Variables"
+echo "   - Add: GEMINI_API_KEY = [your_api_key]"
+echo "3. Build and run the app"
+echo "4. Check Xcode console for API connection messages"
 echo ""
-echo "✨ Configuration terminée! Votre app Muorz est prête à utiliser l'API Gemini." 
+echo "📖 For detailed setup: See README.md"
+echo ""
+echo "✨ Configuration complete! Your Muorz app is ready to use the Gemini API." 

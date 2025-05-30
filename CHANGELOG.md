@@ -2,189 +2,125 @@
 
 All notable changes to the Muorz project are documented in this file.
 
-## [2.0.0] - 2024-12-19
+## [3.0.0] - 2024-12-19 - Complete Architecture Refactor
 
-### 🎯 Major Features Added
+### 🏗️ Major Architecture Overhaul
+
+#### Project Structure Reorganization
+- **NEW**: Organized directory structure with clear separation of concerns
+- **MOVED**: Services to dedicated `Services/` directory
+- **MOVED**: ViewModels to `ViewModels/` directory (renamed from ViewModel)
+- **MOVED**: Camera views to `Views/Camera/` subdirectory
+- **RENAMED**: `OCRMenuApp.swift` to `MuorzApp.swift` for better naming
+
+#### Complete Model Layer Refactoring
+- **ENHANCED**: `MenuItem.swift` with comprehensive documentation and improved API support
+- **ENHANCED**: `OCRResult.swift` with confidence levels, timestamps, and image metadata
+- **REWRITTEN**: `FilterModels.swift` with clean, type-safe filter management
+- **REMOVED**: All duplicate and legacy filter code
+
+#### ViewModels Layer Complete Refactoring
+- **ENHANCED**: `OCRViewModel.swift` with improved multi-photo processing and error handling
+- **ENHANCED**: `MenuViewModel.swift` with better filter management and search functionality
+- **REWRITTEN**: `UserPreferences.swift` with comprehensive preference management
+- **ENHANCED**: `SelectionManager.swift` with robust selection state management
+
+#### Services Layer Implementation
+- **REWRITTEN**: `MenuService.swift` with protocol-based architecture and comprehensive error handling
+- **ENHANCED**: `APIConfiguration.swift` with improved security and configuration management
+
+### 🎯 Key Features
 
 #### Camera-First Experience
-- **NEW**: `CameraView` as the main entry point of the application
-- **NEW**: Modern camera interface with gradient backgrounds
-- **NEW**: Real-time processing feedback with extracted text preview
-- **NEW**: Multiple states: Initial, Processing, Success, Error
-- **NEW**: Smooth transitions between camera and menu views
+- **Modern Interface**: Camera view as primary app entry point
+- **Multi-Photo Support**: Capture and process multiple menu pages sequentially
+- **Real-time Feedback**: Live processing status and extracted text preview
+- **Seamless Navigation**: Smooth transitions between camera and menu views
 
-#### Enhanced Search Functionality
-- **NEW**: `SearchBar` component with intelligent suggestions
-- **NEW**: Search in dish names (original and translated)
-- **NEW**: Search in ingredients with auto-complete
-- **NEW**: Debounced search for optimal performance
-- **NEW**: Search results summary with clear filters
+#### Advanced AI Processing
+- **Gemini 2.0 Flash Integration**: Google's latest AI model for intelligent menu parsing
+- **Multi-language Support**: Process menus in any language, output in English
+- **Nutritional Analysis**: AI-powered nutrition scoring (protein, fat, carbs on 0-10 scale)
+- **Dietary Detection**: Automatic identification of vegetarian, vegan, gluten-free, dairy-free options
 
-#### Improved Architecture
-- **NEW**: `MenuService` with protocol-based design
-- **NEW**: `APIConfiguration` for centralized API management
-- **NEW**: Enhanced `MenuViewModel` with search capabilities
-- **NEW**: Improved `OCRViewModel` with better error handling
-- **NEW**: Complete separation of concerns (MVVM)
+#### Intelligent Search & Filtering
+- **Smart Search**: Search across dish names, ingredients, and descriptions
+- **Real-time Highlighting**: Search terms highlighted in yellow for easy identification
+- **Advanced Filtering**: Category, dietary, and nutritional filters with persistent defaults
+- **Adaptive UI**: Filter options adapt based on user display preferences
+
+#### Robust Error Handling
+- **Network Resilience**: Automatic retry with exponential backoff
+- **User-Friendly Messages**: Clear error descriptions with recovery instructions
+- **Graceful Degradation**: App continues to function when API is unavailable
+- **Comprehensive Logging**: Detailed logging for debugging and monitoring
 
 ### 🔧 Technical Improvements
 
-#### API Integration Ready
-- **NEW**: Complete API service structure for ChatGPT integration
-- **NEW**: Mock service for development and testing
-- **NEW**: Comprehensive error handling with retry logic
-- **NEW**: Request/response models with `Codable` support
-- **NEW**: Environment-based configuration (dev/staging/prod)
+#### Code Quality
+- **MVVM Architecture**: Clean separation between Views, ViewModels, and Models
+- **Protocol-Oriented Design**: Service protocols for dependency injection and testing
+- **Comprehensive Documentation**: All public methods, classes, and structs documented
+- **Type Safety**: Enhanced type safety through proper enum usage and validation
+- **Performance Optimization**: Efficient algorithms and memory management
 
-#### Enhanced Data Models
-- **IMPROVED**: `MenuItem` with JSON mapping support
-- **NEW**: `MenuResponse` and `RestaurantInfo` models
-- **NEW**: Search and filter extension methods
-- **NEW**: Nutrition and dietary preference matching
-- **NEW**: Formatted price and ingredients helpers
+#### API Integration
+- **Secure Configuration**: Multiple methods for API key management (environment variables, Info.plist)
+- **Request/Response Models**: Complete Codable support for API communication
+- **Error Recovery**: Intelligent retry logic with exponential backoff
+- **Development Support**: Mock service for testing without API calls
 
 #### State Management
-- **NEW**: Complete loading states across all views
-- **NEW**: Error states with retry mechanisms
-- **NEW**: Empty states with helpful messaging
-- **NEW**: Success states with clear next actions
-- **NEW**: Processing states with real-time feedback
-
-### 🎨 UI/UX Enhancements
-
-#### Modern Design System
-- **NEW**: Gradient backgrounds and modern color scheme
-- **NEW**: Consistent typography with system fonts
-- **NEW**: Smooth animations and transitions
-- **NEW**: Visual hierarchy with clear call-to-actions
-- **NEW**: Responsive design for all screen sizes
-
-#### Component Library
-- **NEW**: `SearchBar` with suggestions dropdown
-- **NEW**: `ProcessingView` with progress indicators
-- **NEW**: `ErrorStateView` with retry options
-- **NEW**: `SuccessView` with celebration messaging
-- **NEW**: `CameraPreviewPlaceholder` for visual feedback
-
-#### Improved Navigation
-- **NEW**: Full-screen camera experience
-- **NEW**: Modal menu presentation
-- **NEW**: Seamless state transitions
-- **NEW**: Intuitive back navigation
-- **NEW**: Context-aware button states
-
-### 📚 Documentation
-
-#### Complete English Documentation
-- **NEW**: `README.md` with comprehensive project overview
-- **NEW**: `API_INTEGRATION_GUIDE.md` for API setup
-- **NEW**: `APP_FLOW_GUIDE.md` for user experience flow
-- **NEW**: Inline code documentation in English
-- **NEW**: Architecture diagrams and flow charts
-
-#### Developer Resources
-- **NEW**: Integration checklist for API setup
-- **NEW**: Troubleshooting guide for common issues
-- **NEW**: Testing strategy documentation
-- **NEW**: Performance optimization guidelines
-- **NEW**: Future enhancement roadmap
-
-### 🔄 Refactored Components
-
-#### MenuView Improvements
-- **REFACTORED**: Complete rewrite with new ViewModel
-- **IMPROVED**: Better filter integration
-- **NEW**: Search functionality integration
-- **IMPROVED**: State management with loading/error/empty states
-- **NEW**: Pull-to-refresh functionality
-
-#### OCR Processing
-- **IMPROVED**: Better error handling and user feedback
-- **NEW**: Real-time text extraction preview
-- **NEW**: Multi-language support (French/English)
-- **IMPROVED**: Processing state management
-- **NEW**: Retry mechanisms for failed processing
-
-### 🚀 Performance Optimizations
-
-#### Search Performance
-- **NEW**: Debounced search input (300ms delay)
-- **NEW**: Efficient filtering algorithms
-- **NEW**: Cached search suggestions
-- **NEW**: Optimized re-rendering with computed properties
-
-#### Memory Management
-- **IMPROVED**: Proper cleanup of OCR results
-- **NEW**: Efficient image handling
-- **NEW**: Optimized state management
-- **NEW**: Reduced memory footprint
-
-### 🧪 Testing & Quality
-
-#### Code Quality
-- **NEW**: Consistent naming conventions
-- **NEW**: Comprehensive error handling
-- **NEW**: Protocol-based architecture for testability
-- **NEW**: Separation of concerns
-- **NEW**: Reusable component design
-
-#### Future-Proof Architecture
-- **NEW**: Easy API integration path
-- **NEW**: Scalable component structure
-- **NEW**: Maintainable codebase
-- **NEW**: Extensible filter system
-- **NEW**: Modular design patterns
+- **Reactive Programming**: Combine framework for clean data flow
+- **Persistent Settings**: User preferences saved to UserDefaults
+- **Session Management**: Temporary filters that don't affect saved preferences
+- **Memory Efficiency**: Proper cleanup and optimized state management
 
 ### 📱 User Experience
 
-#### Streamlined Flow
-1. **Camera Interface**: Immediate access to menu scanning
-2. **Processing Feedback**: Real-time progress updates
-3. **Success Celebration**: Clear completion messaging
-4. **Menu Exploration**: Enhanced search and filtering
-5. **Selection Management**: Improved cart functionality
+#### Streamlined Workflow
+1. **Launch**: App opens directly to camera interface
+2. **Capture**: Photograph menu pages (supports multiple photos)
+3. **Process**: Real-time OCR and AI processing with progress feedback
+4. **Browse**: Intelligent menu display with search and filtering
+5. **Select**: Add items to cart with quantity controls
 
-#### Accessibility
-- **NEW**: VoiceOver support for all components
-- **NEW**: Dynamic Type support
-- **NEW**: High contrast mode compatibility
-- **NEW**: Reduced motion support
-- **NEW**: Keyboard navigation support
+#### Personalization
+- **Default Preferences**: Set dietary preferences and nutrition priorities that persist
+- **Session Filters**: Temporary overrides that don't affect saved settings
+- **Adaptive Interface**: UI adapts based on user preferences and enabled features
+- **Smart Suggestions**: Search suggestions based on available ingredients
 
-### 🔮 Prepared for Future
+### 🚀 Performance & Reliability
 
-#### API Integration
-- **READY**: Complete ChatGPT integration structure
-- **READY**: Error handling for network issues
-- **READY**: Retry logic for failed requests
-- **READY**: Response caching capabilities
-- **READY**: Environment configuration
+#### Optimizations
+- **Debounced Search**: 300ms delay for optimal search performance
+- **Efficient Filtering**: Early termination algorithms for fast results
+- **Memory Management**: Proper cleanup of images and temporary data
+- **Network Efficiency**: Minimal data transfer with compact API format
 
-#### Feature Expansion
-- **READY**: Menu history functionality
-- **READY**: Offline mode capabilities
-- **READY**: Social sharing features
-- **READY**: Recommendation system
-- **READY**: Multi-language support
+#### Reliability
+- **Error Recovery**: Comprehensive error handling throughout the app
+- **State Consistency**: Reliable state management with proper validation
+- **API Resilience**: Robust handling of network issues and API failures
+- **Data Integrity**: Validation and sanitization of all user inputs
 
 ---
 
-## Migration Guide
+## Migration Notes
 
 ### For Developers
-
-1. **Update Entry Point**: The app now starts with `CameraView` instead of `MenuView`
-2. **New Dependencies**: Import the new service and configuration files
-3. **API Integration**: Follow the `API_INTEGRATION_GUIDE.md` for setup
-4. **Testing**: Use the new mock services for development
+- **Updated Entry Point**: App now starts with `CameraView` instead of direct menu access
+- **New Dependencies**: Import updated service and configuration files
+- **API Setup**: Follow updated configuration guide for Gemini API key setup
+- **Testing**: Use new mock services and updated testing patterns
 
 ### For Users
-
-1. **New Flow**: App opens to camera interface instead of menu list
-2. **Enhanced Search**: Search now works across ingredients and dish names
-3. **Better Feedback**: Clear progress indicators during processing
-4. **Improved Navigation**: Smoother transitions between screens
+- **New Flow**: App opens to camera interface for immediate menu scanning
+- **Enhanced Search**: Search now works across all menu content with highlighting
+- **Better Feedback**: Clear progress indicators and error messages throughout
+- **Improved Navigation**: Smoother transitions and more intuitive interface
 
 ---
 
-**This release transforms Muorz into a modern, camera-first menu scanning application with enhanced search capabilities and a robust architecture ready for API integration.** 
+**This release represents a complete transformation of Muorz into a production-ready, AI-powered menu scanning application with enterprise-grade architecture and user experience.** 

@@ -1,174 +1,280 @@
 # Muorz Architecture Documentation
 
-## User Preferences & Filtering System
+## Overview
 
-### Overview
+Muorz follows a clean MVVM (Model-View-ViewModel) architecture with clear separation of concerns. The app is organized into distinct layers: Models for data structures, ViewModels for business logic, Services for external integrations, and Views for user interface components.
 
-The Muorz app implements a sophisticated preference and filtering system that clearly separates **persistent default settings** from **temporary session filters**. This design ensures that user preferences remain stable while allowing flexible filtering during menu browsing.
+## Project Structure
+
+```
+Muorz/
+├── Model/                          # Data Models
+│   ├── MenuItem.swift              # Core menu item model with API support
+│   ├── OCRResult.swift             # OCR processing results and metadata
+│   └── FilterModels.swift          # Filter and preference models
+├── ViewModels/                     # Business Logic Layer
+│   ├── OCRViewModel.swift          # OCR processing and multi-photo support
+│   ├── MenuViewModel.swift         # Menu data and filtering logic
+│   ├── UserPreferences.swift       # Persistent user settings management
+│   └── SelectionManager.swift      # Cart and selection management
+├── Services/                       # Service Layer
+│   ├── MenuService.swift           # Gemini API integration and processing
+│   └── APIConfiguration.swift      # API configuration and security
+├── Views/                          # User Interface Components
+│   ├── ContentView.swift           # Main app coordinator
+│   ├── Camera/                     # Camera interface components
+│   │   ├── CameraView.swift        # Main camera view and navigation
+│   │   ├── DirectCameraView.swift  # Camera controls and capture logic
+│   │   └── CameraPreviewView.swift # Camera preview display
+│   ├── Menu/                       # Menu browsing interface
+│   │   ├── MenuView.swift          # Main menu display and coordination
+│   │   ├── Filters/                # Filter components
+│   │   └── ItemRow/                # Menu item display components
+│   ├── Selection/                  # Cart and selection views
+│   ├── Settings/                   # User preferences interface
+│   └── Components/                 # Reusable UI components
+└── MuorzApp.swift                  # App entry point and configuration
+```
 
 ## Core Components
 
 ### 1. UserPreferences (Persistent Settings)
 
-**Location**: `Muorz/ViewModel/UserPreferences.swift`
+**Location**: `Muorz/ViewModels/UserPreferences.swift`
 
-**Purpose**: Manages persistent user settings that survive app restarts.
+**Purpose**: Manages persistent user settings that survive app restarts using UserDefaults.
 
-**Properties**:
-- `defaultDietaryPreference: String?` - The dietary filter automatically applied on app launch
+**Key Properties**:
+- `defaultDietaryPreference: String?` - Dietary filter automatically applied on app launch
+- `defaultNutritionSortPriority: String` - Default nutrition sorting priority
 - `showHighProteinTag: Bool` - Controls visibility of High Protein nutrition tags
 - `showLowFatTag: Bool` - Controls visibility of Low Fat nutrition tags  
 - `showLowCarbsTag: Bool` - Controls visibility of Low Carbs nutrition tags
 - `userName: String` - User's display name
 
 **Key Behaviors**:
-- All changes are automatically saved to UserDefaults
-- Only modifiable through ProfileView
-- Display preferences default to `true` for better UX
-- Changes do NOT affect active filters in MenuView
+- All changes automatically saved to UserDefaults via property observers
+- Only modifiable through Settings/ProfileView interface
+- Display preferences default to `true` for optimal user experience
+- Changes do NOT affect active session filters in MenuView
 
-### 2. MenuViewModel (Temporary Filters)
+### 2. MenuViewModel (Session Management)
 
-**Location**: `Muorz/ViewModel/MenuViewModel.swift`
+**Location**: `Muorz/ViewModels/MenuViewModel.swift`
 
-**Purpose**: Manages temporary filtering state for the current session.
+**Purpose**: Manages menu data, filtering, and search functionality for the current session.
 
-**Filter Properties**:
-- `selectedDietaryPreference: String?` - Current dietary filter (can override default)
-- `selectedNutritionPreferences: Set<String>` - Active nutrition filters
-- `selectedCategory: String` - Current category filter
+**Key Properties**:
+- `menuItems: [MenuItem]` - Processed menu items from API
 - `searchText: String` - Current search query
+- `selectedCategory: String` - Current category filter
+- `selectedDietaryPreference: String?` - Session dietary filter (can override default)
+- `selectedNutritionSortPriority: String` - Session nutrition sorting priority
 
 **Key Behaviors**:
-- Filters are initialized with default values on app launch via `initializeWithDefaults()`
+- Initializes with default values from UserPreferences on app launch
 - All filter changes are temporary and session-based
+- Provides computed properties for filtered and sorted data
 - Filters reset to defaults when app restarts
 - No automatic synchronization with UserPreferences changes
 
-### 3. ProfileView (Settings Interface)
+### 3. OCRViewModel (Text Processing)
 
-**Location**: `Muorz/Views/Settings/ProfileView.swift`
+**Location**: `Muorz/ViewModels/OCRViewModel.swift`
 
-**Purpose**: Provides interface for managing persistent default settings.
+**Purpose**: Manages OCR text extraction and API processing workflow.
 
-**Sections**:
-- **Default Dietary Filter**: Sets the dietary preference applied on app launch
-- **Nutrition Tag Display**: Controls which nutrition tags are visible on menu items
+**Key Features**:
+- Multi-photo capture and processing support
+- Sequential OCR processing with progress tracking
+- Integration with MenuService for AI processing
+- Comprehensive error handling and retry logic
+- State management for processing workflow
 
-**Key Behaviors**:
-- Changes immediately save to UserDefaults
-- Does NOT affect current session filters
-- Clear separation between defaults and current filters
+### 4. SelectionManager (Cart Management)
 
-### 4. MenuView (Filtering Interface)
+**Location**: `Muorz/ViewModels/SelectionManager.swift`
 
-**Location**: `Muorz/Views/Menu/MenuView.swift`
+**Purpose**: Manages user's menu item selections and cart functionality.
 
-**Purpose**: Provides interface for temporary filtering during menu browsing.
+**Key Features**:
+- Add/remove items with quantity controls
+- Price calculation with multi-currency support
+- Selection summary and totals
+- Validation and bounds checking for quantities
 
-**Filter Controls**:
-- Search button (magnifying glass icon)
-- Category filter (All, Starter, Main, Dessert)
-- Dietary filter (temporary override)
-- Nutrition filters (High Protein, Low Fat, Low Carbs) - **Adaptive based on display preferences**
+### 5. MenuService (API Integration)
 
-**Key Behaviors**:
-- Filters start with default values from UserPreferences
-- All changes are temporary and session-based
-- Search terms are highlighted in real-time
-- Nutrition tag visibility controlled by UserPreferences
-- **Nutrition filter button only appears if at least one nutrition tag is enabled in display preferences**
-- **Nutrition filter menu only shows options for enabled tags**
+**Location**: `Muorz/Services/MenuService.swift`
 
-## Data Flow
+**Purpose**: Handles communication with Google Gemini API for menu processing.
 
-### App Launch
-1. UserPreferences loads saved settings from UserDefaults
-2. MenuViewModel initializes with default dietary preference
-3. Nutrition filters start empty (no filtering)
-4. Menu items display tags based on UserPreferences display settings
-5. **FilterHeader adapts nutrition button visibility based on enabled display tags**
+**Key Features**:
+- Protocol-based design for testability
+- Comprehensive error handling with retry logic
+- Request/response transformation
+- Secure API key management
+- Exponential backoff for failed requests
 
-### Filter Changes in MenuView
-1. User changes filter → MenuViewModel updates
-2. Filtered results update immediately
-3. UserPreferences remain unchanged
-4. Display preferences continue to control tag visibility
-5. **Available nutrition filters adapt to display preferences in real-time**
+## Data Flow Architecture
 
-### Settings Changes in ProfileView
-1. User changes default → UserPreferences updates
-2. Change saves to UserDefaults immediately
-3. Current session filters remain unchanged
-4. New default applies on next app launch
-5. **Nutrition tag display changes immediately affect FilterHeader button visibility**
+### App Launch Sequence
+1. **MuorzApp** initializes and presents ContentView
+2. **ContentView** creates UserPreferences and presents CameraView
+3. **UserPreferences** loads saved settings from UserDefaults
+4. **CameraView** initializes OCRViewModel and MenuViewModel
+5. **MenuViewModel** initializes with default preferences via `initializeWithDefaults()`
 
-## Search System
+### Menu Processing Flow
+1. **User captures photos** in DirectCameraView
+2. **OCRViewModel** processes images sequentially using Vision Framework
+3. **Combined OCR text** sent to MenuService for AI processing
+4. **Gemini API** returns structured menu data
+5. **MenuResponse** converted to MenuItem models
+6. **MenuViewModel** updates with processed data
+7. **UI automatically updates** via reactive bindings
 
-### Search Bar Integration
-- Hidden by default in FilterHeader
-- Accessible via magnifying glass button
-- Replaces filter buttons when active
-- "Done" button returns to filter view
+### Filter and Search Flow
+1. **User interacts** with filter controls in MenuView
+2. **MenuViewModel** updates filter properties
+3. **Computed properties** recalculate filtered results
+4. **UI updates** automatically via @Published properties
+5. **UserPreferences remain unchanged** (session-only changes)
 
-### Text Highlighting
-- Implemented via `HighlightedText` component
-- Highlights search terms in dish names and ingredients
-- Uses yellow background with black text
-- Case-insensitive matching
+### Settings Management Flow
+1. **User changes settings** in ProfileView/Settings
+2. **UserPreferences** updates and saves to UserDefaults
+3. **Current session filters** remain unchanged
+4. **New defaults apply** on next app launch
 
-### Search Suggestions
-- Based on available ingredients in current menu
-- Updates dynamically as user types
-- Limited to 5 suggestions for performance
-- Tappable for quick selection
+## User Preferences & Filtering System
+
+### Persistent vs Session State
+
+**Persistent Settings (UserPreferences)**:
+- Default dietary preference
+- Default nutrition sort priority  
+- Nutrition tag display preferences
+- User profile information
+- Saved to UserDefaults, survive app restarts
+- Only changeable through Settings interface
+
+**Session State (MenuViewModel)**:
+- Current search query
+- Active category filter
+- Active dietary filter (can override default)
+- Active nutrition sort priority (can override default)
+- Reset to defaults on app launch
+- Changeable through MenuView interface
+
+### Filter Adaptation System
+
+The app implements an adaptive filter system where available options change based on user preferences:
+
+**Nutrition Filter Visibility**:
+- Nutrition filter button only appears if at least one nutrition tag is enabled in display preferences
+- Nutrition filter menu only shows options for enabled tags
+- This ensures users only see filters for nutrition information they want to track
+
+**Search and Highlighting**:
+- Real-time search across dish names, ingredients, and descriptions
+- Search terms highlighted in yellow for easy identification
+- Intelligent suggestions based on available ingredients
+- Debounced input for optimal performance
 
 ## Component Relationships
 
 ```
-UserPreferences (Persistent)
+UserPreferences (Persistent Storage)
     ↓ (initialize defaults)
-MenuViewModel (Temporary)
-    ↓ (filter data)
-MenuView (Display)
+MenuViewModel (Session Management)
+    ↓ (filter and sort data)
+MenuView (Display Coordination)
     ↓ (display preferences)
-MenuItemRow (Individual items)
+MenuItemRow (Individual Item Display)
 ```
+
+## Error Handling Strategy
+
+### Network and API Errors
+- Automatic retry with exponential backoff
+- User-friendly error messages
+- Graceful degradation when API unavailable
+- Clear recovery instructions
+
+### OCR Processing Errors
+- Individual image failure handling
+- Partial success processing (some images succeed)
+- Clear feedback on processing status
+- Retry mechanisms for failed operations
+
+### Configuration Errors
+- API key validation and clear setup instructions
+- Environment variable detection
+- Fallback mechanisms for development
+
+## Testing Architecture
+
+### Unit Testing Strategy
+- ViewModels tested in isolation with mock dependencies
+- Service layer tested with mock network responses
+- Model validation and transformation testing
+- Filter and search logic validation
+
+### Integration Testing
+- End-to-end API integration testing
+- OCR processing pipeline testing
+- Data flow validation across components
+- State management consistency testing
+
+## Performance Considerations
+
+### Memory Management
+- Efficient image handling for OCR processing
+- Proper cleanup of temporary data
+- Optimized state management with minimal re-renders
+
+### Search Performance
+- Debounced search input (300ms delay)
+- Efficient filtering algorithms with early termination
+- Cached search suggestions
+- Optimized computed properties
+
+### Network Efficiency
+- Request batching where possible
+- Intelligent retry logic to avoid excessive API calls
+- Response caching for repeated requests
+- Minimal data transfer with compact API format
 
 ## Best Practices
 
-### Adding New Preferences
-1. Add property to UserPreferences with didSet for auto-save
-2. Add UI control in ProfileView
-3. Update documentation
+### Adding New Features
 
-### Adding New Filters
+**New Persistent Preferences**:
+1. Add property to UserPreferences with `didSet` for auto-save
+2. Add UI control in Settings/ProfileView
+3. Update initialization logic in MenuViewModel
+4. Update documentation
+
+**New Session Filters**:
 1. Add property to MenuViewModel
-2. Add filter logic to `filteredItems` computed property
-3. Add UI control in FilterHeader
+2. Add filter logic to computed properties
+3. Add UI control in MenuView filter interface
 4. Update `clearAllFilters()` method
 
-### Modifying Display Logic
-1. Check if change affects defaults (UserPreferences) or session (MenuViewModel)
-2. Update appropriate component
-3. Ensure proper data flow
-4. Test persistence behavior
+**New UI Components**:
+1. Follow SwiftUI best practices with proper state management
+2. Use protocol-oriented design for reusability
+3. Implement proper accessibility support
+4. Add comprehensive documentation
 
-## Testing Considerations
+### Code Quality Standards
 
-### Default Preferences
-- Test persistence across app restarts
-- Verify ProfileView changes save correctly
-- Ensure defaults don't affect current session
+- **Separation of Concerns**: Each component has a single, well-defined responsibility
+- **Protocol-Oriented Design**: Use protocols for dependency injection and testing
+- **Reactive Programming**: Leverage Combine for clean data flow
+- **Error Handling**: Comprehensive error handling with user-friendly messages
+- **Documentation**: All public interfaces thoroughly documented
+- **Testing**: Unit and integration tests for critical functionality
 
-### Temporary Filters
-- Test filter combinations
-- Verify reset behavior on app restart
-- Ensure independence from defaults
-
-### Search & Highlighting
-- Test search suggestions
-- Verify text highlighting accuracy
-- Test transition between search and filters
-
-This architecture ensures a clear separation of concerns while providing a smooth user experience for both persistent preferences and temporary filtering needs. 
+This architecture ensures maintainability, testability, and scalability while providing a smooth user experience across all app features. 
