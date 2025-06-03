@@ -51,10 +51,10 @@ class MuorzManager: ObservableObject {
         saveData()
     }
     
-    /// Activates travel day pass for 24 hours
+    /// Activates travel day pass for 48 hours
     func activateTravelDayPass() {
         hasTravelDayPass = true
-        travelDayPassExpiryDate = Calendar.current.date(byAdding: .hour, value: 24, to: Date())
+        travelDayPassExpiryDate = Calendar.current.date(byAdding: .hour, value: 48, to: Date())
         saveData()
     }
     
@@ -114,12 +114,8 @@ class MuorzManager: ObservableObject {
     
     var refillTimeText: String {
         if hasActiveTravelDayPass {
-            let remainingHours = hoursUntilTravelPassExpiry
-            if remainingHours > 0 {
-                return "Day Pass: \(remainingHours)h left"
-            } else {
-                return "Day Pass expired"
-            }
+            let remainingTime = travelPassRemainingTime
+            return "Travel Pass: \(remainingTime)"
         }
         
         let days = daysUntilRefill
@@ -148,6 +144,20 @@ class MuorzManager: ObservableObject {
         guard let expiryDate = travelDayPassExpiryDate else { return 0 }
         let components = Calendar.current.dateComponents([.hour], from: Date(), to: expiryDate)
         return max(0, components.hour ?? 0)
+    }
+    
+    // MARK: - Travel Pass Time Formatting
+    
+    var travelPassRemainingTime: String {
+        guard let expiryDate = travelDayPassExpiryDate else { return "00:00" }
+        
+        let now = Date()
+        let components = Calendar.current.dateComponents([.hour, .minute], from: now, to: expiryDate)
+        
+        let hours = max(0, components.hour ?? 0)
+        let minutes = max(0, components.minute ?? 0)
+        
+        return String(format: "%02d:%02d", hours, minutes)
     }
     
     // MARK: - Weekly Refill Logic
@@ -203,31 +213,31 @@ class MuorzManager: ObservableObject {
 
 enum MuorzPackage: String, CaseIterable {
     case small = "muorz_10_pack"
-    case medium = "muorz_20_pack"
-    case large = "muorz_30_pack"
-    case travelPass = "travel_day_pass"
+    case medium = "muorz_30_pack"
+    case large = "muorz_50_pack"
+    case travelPass = "travel_2day_pass"
     
     var muorzCount: Int {
         switch self {
         case .small: return 10
-        case .medium: return 20
-        case .large: return 30
-        case .travelPass: return 0 // Unlimited for 24h
+        case .medium: return 30
+        case .large: return 50
+        case .travelPass: return 0 // Unlimited for 48h
         }
     }
     
     var displayName: String {
         switch self {
         case .small: return "10 Muorz"
-        case .medium: return "20 Muorz"
-        case .large: return "30 Muorz"
-        case .travelPass: return "Travel Day Pass"
+        case .medium: return "30 Muorz"
+        case .large: return "50 Muorz"
+        case .travelPass: return "Travel 2 days pass"
         }
     }
     
     var price: String {
         switch self {
-        case .small: return "€1.49"
+        case .small: return "€0.99"
         case .medium: return "€2.49"
         case .large: return "€3.49"
         case .travelPass: return "€1.99"
@@ -239,7 +249,7 @@ enum MuorzPackage: String, CaseIterable {
         case .small, .medium, .large:
             return "\(muorzCount) menu scans"
         case .travelPass:
-            return "Unlimited scans for 24h"
+            return "Unlimited scans for 48h"
         }
     }
     

@@ -86,7 +86,7 @@ struct MuorzCounter: View {
                 }
             }
             
-            // Refill Timer - Only show when no Muorz and no Travel Pass
+            // Refill Timer - Show when no Muorz or when Travel Pass is active
             if shouldShowRefillTimer {
                 Text(muorzManager.refillTimeText)
                     .font(.system(size: 11, weight: .medium))
@@ -258,7 +258,7 @@ struct MuorzCounter: View {
     }
     
     private var shouldShowRefillTimer: Bool {
-        return muorzManager.remainingMuorz == 0 && !muorzManager.hasActiveTravelDayPass
+        return muorzManager.remainingMuorz == 0 || muorzManager.hasActiveTravelDayPass
     }
     
     private var circleBackgroundColor: Color {
@@ -282,28 +282,8 @@ struct MuorzPurchaseSheet: View {
                 VStack(spacing: 24) {
                     // Header
                     VStack(spacing: 12) {
-                        // Stack of circles instead of single icon
-                        ZStack {
-                            HStack(spacing: -4) {
-                                
-                                    
-                                 ZStack{
-                                     Text("M")
-                                         .font(.system(size: 24, weight: .bold))
-                                         .foregroundColor(.white)
-                                     
-                                         .zIndex(4)
-                                     Circle()
-                                         .fill(.yellow)
-                                         .frame(width: 50, height: 50)
-                                         .shadow(color: .black.opacity(0.2), radius: 2, x: 1, y: 1)
-                                         .zIndex(2)
-                                 }
-                                
-                             }
-                             
-                            
-                          }
+                      
+                        
                         
                         Text(headerTitle)
                             .font(.title)
