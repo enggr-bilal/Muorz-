@@ -27,7 +27,7 @@ struct MuorzCounter: View {
                         
                         // Text content
                         Text(currentStatusText)
-                            .font(.subheadline)
+                            .font(.system(.subheadline, design: .serif))
                             .fontWeight(.semibold)
                             .foregroundColor(textColor)
                             .padding(.trailing, 12) // Right padding
@@ -239,7 +239,7 @@ struct MuorzCounter: View {
     
     private var capsuleBackgroundColor: Color {
         if muorzManager.remainingMuorz == 0 {
-            return .accent // Blue background for CTA
+            return .accentColor // Blue background for CTA
         } else {
             return .white
         }
@@ -254,7 +254,7 @@ struct MuorzCounter: View {
     }
     
     private var textColor: Color {
-        return muorzManager.remainingMuorz == 0 ? .white : .accent
+        return muorzManager.remainingMuorz == 0 ? .white : .accentColor
     }
     
     private var shouldShowRefillTimer: Bool {
@@ -263,7 +263,7 @@ struct MuorzCounter: View {
     
     private var circleBackgroundColor: Color {
         if muorzManager.remainingMuorz == 0 {
-            return .accent
+            return .accentColor
         } else {
             return .white
         }
@@ -282,28 +282,48 @@ struct MuorzPurchaseSheet: View {
                 VStack(spacing: 24) {
                     // Header
                     VStack(spacing: 12) {
-                        Image(systemName: "star.circle.fill")
-                            .font(.system(size: 48))
-                            .foregroundColor(.yellow)
+                        // Stack of circles instead of single icon
+                        ZStack {
+                            HStack(spacing: -4) {
+                                
+                                    
+                                 ZStack{
+                                     Text("M")
+                                         .font(.system(size: 24, weight: .bold))
+                                         .foregroundColor(.white)
+                                     
+                                         .zIndex(4)
+                                     Circle()
+                                         .fill(.yellow)
+                                         .frame(width: 50, height: 50)
+                                         .shadow(color: .black.opacity(0.2), radius: 2, x: 1, y: 1)
+                                         .zIndex(2)
+                                 }
+                                
+                             }
+                             
+                            
+                          }
                         
                         Text(headerTitle)
-                            .font(.system(.title, design: .rounded))
+                            .font(.title)
                             .fontWeight(.bold)
+                            .foregroundColor(.accentColor)
                         
                         Text(headerSubtitle)
-                            .font(.system(size: 16))
+                            .font(.subheadline)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal)
                     }
                     .padding(.top, 20)
                     
-                    // Purchase Options
+                    // Purchase Options - Top row: 10 and 30 Muorz
                     LazyVGrid(columns: [
                         GridItem(.flexible()),
                         GridItem(.flexible())
                     ], spacing: 16) {
-                        ForEach(MuorzPackage.allCases, id: \.rawValue) { package in
+                        ForEach([MuorzPackage.small, MuorzPackage.medium], id: \.rawValue) { package in
                             MuorzPackageCard(
                                 package: package,
                                 onPurchase: {
@@ -314,18 +334,27 @@ struct MuorzPurchaseSheet: View {
                     }
                     .padding(.horizontal)
                     
+                    // Travel Pass - Full width
+                    MuorzPackageCard(
+                        package: .travelPass,
+                        onPurchase: {
+                            handlePurchase(.travelPass)
+                        }
+                    )
+                    .padding(.horizontal)
+                    
                     // Features List
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Why Muorz?")
-                            .font(.system(.headline, design: .rounded))
+                        Text("Take a Bite Out of Every Menu")
                             .fontWeight(.semibold)
+                            .foregroundColor(.accentColor)
                             .padding(.horizontal)
                         
                         VStack(spacing: 8) {
-                            FeatureRow(icon: "camera.viewfinder", text: "Scan any menu worldwide")
-                            FeatureRow(icon: "translate", text: "Instant translation & explanations")
-                            FeatureRow(icon: "leaf.fill", text: "Dietary preferences & allergen info")
-                            FeatureRow(icon: "chart.bar.fill", text: "Nutritional insights")
+                            FeatureRow(icon: "fork.knife", text: "Know what you eat")
+                            FeatureRow(icon: "slider.horizontal.3", text: "Fit your diet")
+                            FeatureRow(icon: "face.smiling", text: "Order with ease")
+                           
                         }
                         .padding(.horizontal)
                     }
@@ -336,7 +365,7 @@ struct MuorzPurchaseSheet: View {
                             .padding(.horizontal)
                         
                         Text("🧪 Testing Tools")
-                            .font(.system(.caption, design: .rounded))
+                            .font(.caption)
                             .fontWeight(.semibold)
                             .foregroundColor(.secondary)
                         
@@ -347,7 +376,7 @@ struct MuorzPurchaseSheet: View {
                                 Image(systemName: "arrow.clockwise.circle")
                                     .font(.system(size: 16, weight: .medium))
                                 Text("Reset to 0 Muorz")
-                                    .font(.system(size: 14, weight: .medium))
+                                    .font(.system(size: 14, weight: .medium, design: .serif))
                             }
                             .foregroundColor(.orange)
                             .padding(.horizontal, 16)
@@ -355,7 +384,7 @@ struct MuorzPurchaseSheet: View {
                             .background(
                                 RoundedRectangle(cornerRadius: 20)
                                     .stroke(.orange.opacity(0.3), lineWidth: 1)
-                                    .fill(.orange.opacity(0.1))
+                                    .fill(.white)
                             )
                         }
                     }
@@ -364,27 +393,34 @@ struct MuorzPurchaseSheet: View {
                     Spacer(minLength: 20)
                 }
             }
-            .navigationTitle("Muorz Store")
+            .background(Color.gray.opacity(0.1))
+          
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text("Muorz Store")
+                        .font(.system(.title2, design: .serif))
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Close") {
                         dismiss()
                     }
+                    
+                    .foregroundColor(.accentColor)
                 }
             }
         }
     }
     
     private var headerTitle: String {
-        return muorzManager.remainingMuorz == 0 ? "Get More Muorz" : "Stock Up on Muorz"
+        return muorzManager.remainingMuorz == 0 ? "Time for More Bites" : "Stock Up Your Appetite"
     }
     
     private var headerSubtitle: String {
         if muorzManager.remainingMuorz == 0 {
-            return "Get more Muorz to continue discovering amazing dishes around the world"
+            return "Get more Muorz to continue taking bites out of amazing dishes around the world"
         } else {
-            return "Stock up now and never miss a great dish discovery!"
+            return "Keep your appetite satisfied and never miss a delicious discovery!"
         }
     }
     
@@ -440,29 +476,51 @@ struct MuorzPackageCard: View {
             triggerPurchaseAnimation()
         } label: {
             VStack(spacing: 12) {
-                // Icon with bounce animation
-                Image(systemName: package.icon)
-                    .font(.system(size: 28, weight: .semibold))
-                    .foregroundColor(iconColor)
-                    .scaleEffect(isPressed ? 1.2 : 1.0)
-                    .rotationEffect(.degrees(showSuccessAnimation ? 360 : 0))
-                
-                // Title
-                Text(package.displayName)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.primary)
-                    .multilineTextAlignment(.center)
+                // Title and icon/circle
+                if package == .travelPass {
+                    // Special design for travel pass
+                    VStack(spacing: 8) {
+                        Image(systemName: "airplane.circle.fill")
+                            .font(.system(size: 32, weight: .semibold))
+                            .foregroundColor(.accentColor)
+                            .scaleEffect(isPressed ? 1.2 : 1.0)
+                            .rotationEffect(.degrees(showSuccessAnimation ? 360 : 0))
+                        
+                        Text(package.displayName)
+                            .font(.headline)
+                            .foregroundColor(.accentColor)
+                            .multilineTextAlignment(.center)
+                    }
+                } else {
+                    // Regular packages with circle and Muorz in HStack
+                    HStack(spacing: 8) {
+                        Circle()
+                            .fill(.yellow)
+                            .frame(width: 32, height: 32)
+                            .shadow(color: .black.opacity(0.3), radius: 4, x: 2, y: 2)
+                            .overlay(
+                                Text("\(package.muorzCount)")
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundColor(.white)
+                            )
+                            .scaleEffect(isPressed ? 1.2 : 1.0)
+                        
+                        Text("Muorz")
+                            .font(.system(.headline, design: .serif))
+                            .foregroundColor(.primary)
+                    }
+                }
                 
                 // Description
                 Text(package.description)
-                    .font(.system(size: 12))
+                    .font(.caption)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
                 
                 // Price with highlight animation
                 Text(package.price)
                     .font(.system(size: 18, weight: .bold))
-                    .foregroundColor(.accentColor)
+                    .foregroundColor(package == .travelPass ? .accentColor : .accentColor)
                     .scaleEffect(isPressed ? 1.1 : 1.0)
             }
             .frame(maxWidth: .infinity)
@@ -470,8 +528,8 @@ struct MuorzPackageCard: View {
             .padding(.horizontal, 12)
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(.ultraThinMaterial)
-                    .stroke(strokeColor, lineWidth: isPressed ? 2 : 1)
+                    .fill(.white)
+                    .stroke(strokeColor, lineWidth: package == .travelPass ? 2 : 1)
                     .shadow(color: shadowColor, radius: isPressed ? 8 : 2, x: 0, y: isPressed ? 4 : 2)
             )
             .scaleEffect(isPressed ? 0.98 : 1.0)
@@ -507,25 +565,13 @@ struct MuorzPackageCard: View {
         }
     }
     
-    private var iconColor: Color {
-        if showSuccessAnimation {
-            return .green
-        }
-        switch package {
-        case .small: return .blue
-        case .medium: return .purple
-        case .large: return .orange
-        case .travelPass: return .green
-        }
-    }
-    
     private var strokeColor: Color {
         if showSuccessAnimation {
             return .green.opacity(0.6)
         } else if package == .travelPass {
-            return .orange
+            return .accentColor
         } else {
-            return .gray.opacity(0.3)
+            return .gray.opacity(0.2)
         }
     }
     
@@ -533,7 +579,7 @@ struct MuorzPackageCard: View {
         if showSuccessAnimation {
             return .green.opacity(0.3)
         } else if isPressed {
-            return iconColor.opacity(0.3)
+            return  .accentColor
         } else {
             return .black.opacity(0.1)
         }
@@ -552,7 +598,6 @@ struct FeatureRow: View {
                 .frame(width: 20)
             
             Text(text)
-                .font(.system(size: 14))
                 .foregroundColor(.primary)
             
             Spacer()
