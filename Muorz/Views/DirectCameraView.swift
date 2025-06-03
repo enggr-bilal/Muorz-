@@ -393,16 +393,19 @@ struct BottomControlsOverlay: View {
     
     var body: some View {
         VStack(spacing: 20) {
-            // Instruction text
-            Text(cameraManager.currentInstructionText)
-                .font(.body)
-                .foregroundColor(.white)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
-                .padding(.vertical, 12)
-                .background(Color.black.opacity(0.4))
-                .cornerRadius(16)
-                .padding(.horizontal, 24)
+            // Instruction text - Only show when user can scan
+            if muorzManager.canScan {
+                Text(cameraManager.currentInstructionText)
+                    .font(.body)
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+                    .padding(.vertical, 12)
+                    .background(Color.black.opacity(0.4))
+                    .cornerRadius(16)
+                    .padding(.horizontal, 24)
+                    .transition(.opacity.combined(with: .scale))
+            }
             
             // Controls with smooth slide animation
             ZStack {
@@ -468,6 +471,7 @@ struct BottomControlsOverlay: View {
             .animation(.easeInOut(duration: 0.5), value: cameraManager.canTakeMorePhotos)
             .animation(.easeInOut(duration: 0.5), value: cameraManager.capturedImages.count)
         }
+        .animation(.easeInOut(duration: 0.3), value: muorzManager.canScan) // Animation for instruction text visibility
     }
 }
 

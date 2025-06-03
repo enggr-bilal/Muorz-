@@ -393,7 +393,7 @@ struct MuorzPurchaseSheet: View {
     }
     
     private var headerTitle: String {
-        return muorzManager.remainingMuorz == 0 ? "Time for More Bites" : "Stock Up Your Appetite"
+        return muorzManager.remainingMuorz == 0 ? "Time for more bites" : "Stock Up Your Appetite"
     }
     
     private var headerSubtitle: String {
