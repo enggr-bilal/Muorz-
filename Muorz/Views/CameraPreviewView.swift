@@ -17,6 +17,10 @@ struct CameraPreviewView: UIViewRepresentable {
         let pinchGesture = UIPinchGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handlePinch(_:)))
         view.addGestureRecognizer(pinchGesture)
         
+        // Add tap gesture recognizer for focus
+        let tapGesture = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap(_:)))
+        view.addGestureRecognizer(tapGesture)
+        
         return view
     }
     
@@ -43,6 +47,15 @@ struct CameraPreviewView: UIViewRepresentable {
         @objc func handlePinch(_ gesture: UIPinchGestureRecognizer) {
             Task { @MainActor in
                 cameraManager.handlePinchGesture(gesture)
+            }
+        }
+        
+        @objc func handleTap(_ gesture: UITapGestureRecognizer) {
+            let location = gesture.location(in: gesture.view)
+            let bounds = gesture.view?.bounds ?? .zero
+            
+            Task { @MainActor in
+                cameraManager.setFocusPoint(location, in: bounds)
             }
         }
     }

@@ -45,6 +45,9 @@ struct DirectCameraView: View {
                 isZoomAvailable: cameraManager.isZoomAvailable
             )
             
+            // Focus indicator overlay
+            FocusIndicatorView(cameraManager: cameraManager)
+            
             // 🎯 NEW: Muorz Counter in top-right corner
             VStack {
                 HStack {
@@ -512,6 +515,73 @@ struct PhotoStackOverlay: View {
             }
             .padding(.leading, 24)
             .padding(.bottom, 200) // Position above the prompt text and controls
+        }
+    }
+}
+
+// MARK: - Focus Indicator
+
+struct FocusIndicatorView: View {
+    let cameraManager: CameraManager
+    
+    var body: some View {
+        ZStack {
+            if cameraManager.isFocusing, let focusPoint = cameraManager.focusPoint {
+                FocusReticle()
+                    .position(focusPoint)
+                    .allowsHitTesting(false)
+                    .animation(.easeInOut(duration: 0.2), value: cameraManager.isFocusing)
+                    .animation(.easeInOut(duration: 0.2), value: focusPoint)
+                    .onAppear {
+                        print("🎯 Focus indicator appeared at: \(focusPoint)")
+                    }
+            }
+        }
+        .onReceive(cameraManager.$isFocusing) { isFocusing in
+            print("🎯 isFocusing changed to: \(isFocusing)")
+        }
+        .onReceive(cameraManager.$focusPoint) { focusPoint in
+            print("🎯 focusPoint changed to: \(String(describing: focusPoint))")
+        }
+    }
+}
+
+struct FocusReticle: View {
+    @State private var isAnimating = false
+    
+    var body: some View {
+        ZStack {
+            // Outer square
+            Rectangle()
+                .stroke(Color.yellow, lineWidth: 2)
+                .frame(width: 80, height: 80)
+                .scaleEffect(isAnimating ? 0.8 : 1.0)
+            
+            // Inner crosshairs
+            VStack {
+                Rectangle()
+                    .fill(Color.yellow)
+                    .frame(width: 2, height: 20)
+                Rectangle()
+                    .fill(Color.yellow)
+                    .frame(width: 2, height: 20)
+            }
+            .offset(y: isAnimating ? 0 : -10)
+            
+            HStack {
+                Rectangle()
+                    .fill(Color.yellow)
+                    .frame(width: 20, height: 2)
+                Rectangle()
+                    .fill(Color.yellow)
+                    .frame(width: 20, height: 2)
+            }
+            .offset(x: isAnimating ? 0 : -10)
+        }
+        .onAppear {
+            withAnimation(.easeInOut(duration: 0.6)) {
+                isAnimating = true
+            }
         }
     }
 }

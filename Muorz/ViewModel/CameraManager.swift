@@ -20,6 +20,10 @@ class CameraManager: NSObject, ObservableObject {
     private var minZoomFactor: CGFloat = 1.0
     private var lastZoomFactor: CGFloat = 1.0
     
+    // Focus properties
+    @Published var isFocusing = false
+    @Published var focusPoint: CGPoint?
+    
     // Configuration
     let maxPhotoCount: Int
     
@@ -264,6 +268,86 @@ class CameraManager: NSObject, ObservableObject {
     
     var isZoomAvailable: Bool {
         return maxZoomFactor > minZoomFactor && maxZoomFactor > 1.0
+    }
+    
+    // MARK: - Focus Control Methods
+    
+    func setFocusPoint(_ point: CGPoint, in bounds: CGRect) {
+        guard let device = videoDeviceInput?.device,
+              device.isFocusPointOfInterestSupported else {
+            return
+        }
+        
+        // Convert point to device coordinates (0.0 - 1.0)
+        let devicePoint = CGPoint(
+            x: point.x / bounds.width,
+            y: point.y / bounds.height
+        )
+        
+        do {
+            try device.lockForConfiguration()
+            
+            // Set focus point
+            device.focusPointOfInterest = devicePoint
+            device.focusMode = .autoFocus
+            
+            // Also set exposure point
+            if device.isExposurePointOfInterestSupported {
+                device.exposurePointOfInterest = devicePoint
+                device.exposureMode = .autoExpose
+            }
+            
+            device.unlockForConfiguration()
+            
+            // Update UI
+            DispatchQueue.main.async {
+                self.focusPoint = point
+                self.isFocusing = true
+                
+                // Hide focus indicator after 2 seconds
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                    self.isFocusing = false
+                    self.focusPoint = nil
+                }
+            }
+            
+            // Provide haptic feedback
+            performHapticFeedback(for: .flashToggle) // Light feedback for focus
+            
+        } catch {
+            print("❌ Error setting focus: \(error)")
+        }
+    }
+    
+    func resetToAutoFocus() {
+        guard let device = videoDeviceInput?.device else { return }
+        
+        do {
+            try device.lockForConfiguration()
+            
+            if device.isFocusModeSupported(.continuousAutoFocus) {
+                device.focusMode = .continuousAutoFocus
+            } else if device.isFocusModeSupported(.autoFocus) {
+                device.focusMode = .autoFocus
+            }
+            
+            if device.isExposureModeSupported(.continuousAutoExposure) {
+                device.exposureMode = .continuousAutoExposure
+            } else if device.isExposureModeSupported(.autoExpose) {
+                device.exposureMode = .autoExpose
+            }
+            
+            device.unlockForConfiguration()
+            
+            // Clear UI indicators
+            DispatchQueue.main.async {
+                self.isFocusing = false
+                self.focusPoint = nil
+            }
+            
+        } catch {
+            print("❌ Error resetting focus: \(error)")
+        }
     }
     
     // Preview layer

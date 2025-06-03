@@ -112,7 +112,7 @@ struct FilterHeader: View {
         case "carbs":
             return "Low Carbs"
         default:
-            return "Nutrition"
+            return "Sort"
         }
     }
     
