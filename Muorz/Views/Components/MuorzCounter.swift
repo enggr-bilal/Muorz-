@@ -339,37 +339,6 @@ struct MuorzPurchaseSheet: View {
                         .padding(.horizontal)
                     }
                     
-                    // DEBUG: Testing Button (remove in production)
-                    VStack(spacing: 12) {
-                        Divider()
-                            .padding(.horizontal)
-                        
-                        Text("🧪 Testing Tools")
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.secondary)
-                        
-                        Button {
-                            resetMuorzForTesting()
-                        } label: {
-                            HStack(spacing: 8) {
-                                Image(systemName: "arrow.clockwise.circle")
-                                    .font(.system(size: 16, weight: .medium))
-                                Text("Reset to 0 Muorz")
-                                    .font(.system(size: 14, weight: .medium, design: .serif))
-                            }
-                            .foregroundColor(.orange)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
-                            .background(
-                                RoundedRectangle(cornerRadius: 20)
-                                    .stroke(.orange.opacity(0.3), lineWidth: 1)
-                                    .fill(.white)
-                            )
-                        }
-                    }
-                    .padding(.bottom, 20)
-                    
                     Spacer(minLength: 20)
                 }
             }
@@ -422,24 +391,6 @@ struct MuorzPurchaseSheet: View {
         impactFeedback.impactOccurred()
         
         dismiss()
-    }
-    
-    private func resetMuorzForTesting() {
-        muorzManager.remainingMuorz = 0
-        muorzManager.hasTravelDayPass = false
-        muorzManager.travelDayPassExpiryDate = nil
-        
-        // Save the reset state
-        let defaults = UserDefaults.standard
-        defaults.set(0, forKey: "remainingMuorz")
-        defaults.set(false, forKey: "hasTravelDayPass")
-        defaults.removeObject(forKey: "travelDayPassExpiryDate")
-        
-        // Haptic feedback
-        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-        impactFeedback.impactOccurred()
-        
-        print("🧪 Testing: Muorz reset to 0")
     }
 }
 

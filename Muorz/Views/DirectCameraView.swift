@@ -12,6 +12,7 @@ struct DirectCameraView: View {
     
     @State private var showingProcessedMenu = false
     @State private var showingImageDetail: (image: UIImage, index: Int)?
+    @State private var showingDebugView = false // 🧪 DEBUG STATE
     
     var body: some View {
         ZStack {
@@ -51,6 +52,15 @@ struct DirectCameraView: View {
             // 🎯 NEW: Muorz Counter in top-right corner
             VStack {
                 HStack {
+                    // 🧪 DEBUG: Temporary debug button (remove in production)
+                    Button("🧪") {
+                        showingDebugView = true
+                    }
+                    .font(.title2)
+                    .foregroundColor(.orange)
+                    .padding(.top, 60)
+                    .padding(.leading, 20)
+                    
                     Spacer()
                     MuorzCounter(muorzManager: muorzManager)
                         .padding(.top, 60) // Safe area padding
@@ -126,6 +136,17 @@ struct DirectCameraView: View {
                     showingProcessedMenu = false
                     cameraManager.clearAllImages()
                 }
+            )
+        }
+        .sheet(isPresented: $showingDebugView) {
+            DebugView(
+                onboardingState: {
+                    // Create a temporary OnboardingState for debug purposes
+                    let state = OnboardingState()
+                    return state
+                }(),
+                muorzManager: muorzManager,
+                preferences: preferences
             )
         }
     }
