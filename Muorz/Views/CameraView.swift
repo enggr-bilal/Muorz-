@@ -11,6 +11,7 @@ import AVFoundation
 struct CameraView: View {
     @StateObject private var ocrViewModel = OCRViewModel()
     @StateObject private var menuViewModel = MenuViewModel()
+    @StateObject private var muorzManager = MuorzManager()
     @ObservedObject var preferences: UserPreferences
     
     @State private var showMenuView = false
@@ -23,6 +24,7 @@ struct CameraView: View {
                 // Use the new DirectCameraView for better UX
                 DirectCameraView(
                     ocrViewModel: ocrViewModel,
+                    muorzManager: muorzManager,
                     preferences: preferences,
                     hasProcessedMenu: hasProcessedMenu && !menuViewModel.menuItems.isEmpty,
                     onViewMenu: {
@@ -35,6 +37,15 @@ struct CameraView: View {
                         menuViewModel.menuItems = menu.menuItems
                         menuViewModel.restaurantInfo = menu.restaurantInfo
                         hasProcessedMenu = true
+                        
+                        // 🎯 BUSINESS LOGIC: Deduct Muorz when successfully reaching MenuView with API data
+                        let muorzDeducted = muorzManager.deductMuorz()
+                        if muorzDeducted {
+                            print("💰 Muorz deducted - Menu scan successful")
+                        } else {
+                            print("⚠️ No Muorz available but allowing scan (shouldn't happen if UI is working correctly)")
+                        }
+                        
                         showMenuView = true
                         isReturningFromMenu = false
                     }

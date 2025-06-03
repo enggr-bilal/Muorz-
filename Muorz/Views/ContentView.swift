@@ -14,3 +14,7 @@ struct ContentView: View {
         CameraView(preferences: preferences)
     }
 }
+
+#Preview {
+    ContentView()
+}

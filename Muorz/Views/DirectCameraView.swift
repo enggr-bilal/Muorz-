@@ -4,6 +4,7 @@ import AVFoundation
 struct DirectCameraView: View {
     @StateObject private var cameraManager = CameraManager(maxPhotoCount: 2)
     @ObservedObject var ocrViewModel: OCRViewModel
+    @ObservedObject var muorzManager: MuorzManager
     @ObservedObject var preferences: UserPreferences
     
     let hasProcessedMenu: Bool
@@ -44,6 +45,17 @@ struct DirectCameraView: View {
                 isZoomAvailable: cameraManager.isZoomAvailable
             )
             
+            // 🎯 NEW: Muorz Counter in top-right corner
+            VStack {
+                HStack {
+                    Spacer()
+                    MuorzCounter(muorzManager: muorzManager)
+                        .padding(.top, 60) // Safe area padding
+                        .padding(.trailing, 20)
+                }
+                Spacer()
+            }
+            
             // Overlay UI elements
             VStack(spacing: 0) {
                 Spacer()
@@ -51,6 +63,7 @@ struct DirectCameraView: View {
                 // Bottom controls area
                 BottomControlsOverlay(
                     cameraManager: cameraManager,
+                    muorzManager: muorzManager,
                     onProceed: {
                         processImages()
                     },
@@ -115,6 +128,13 @@ struct DirectCameraView: View {
     }
     
     private func processImages() {
+        // 🎯 BUSINESS LOGIC: Check if user can scan before processing
+        guard muorzManager.canScan else {
+            cameraManager.performHapticFeedback(for: .warning)
+            cameraManager.showAlert("No Muorz available. Purchase more to continue scanning.")
+            return
+        }
+        
         guard !cameraManager.capturedImages.isEmpty else { return }
         
         // Optimize images if needed to manage memory
@@ -156,20 +176,27 @@ struct DirectCameraView: View {
 
 struct CaptureButton: View {
     @ObservedObject var cameraManager: CameraManager
+    @ObservedObject var muorzManager: MuorzManager
     
     var body: some View {
         Button {
-            cameraManager.capturePhoto()
+            if muorzManager.canScan {
+                cameraManager.capturePhoto()
+            }
         } label: {
             ZStack {
                 Circle()
-                    .fill(Color.white)
+                    .fill(muorzManager.canScan ? Color.white : Color.gray.opacity(0.5))
                     .frame(width: 80, height: 80)
                 
                 if !cameraManager.canTakeMorePhotos {
                     Image(systemName: "xmark")
                         .font(.system(size: 24, weight: .bold))
                         .foregroundColor(.accentColor)
+                } else if !muorzManager.canScan {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundColor(.white)
                 } else {
                     Image(systemName: "camera.fill")
                         .font(.system(size: 24, weight: .bold))
@@ -177,15 +204,17 @@ struct CaptureButton: View {
                 }
             }
         }
-        .disabled(!cameraManager.canTakeMorePhotos)
-        .opacity(cameraManager.canTakeMorePhotos ? 1.0 : 0.6)
-        .scaleEffect(cameraManager.canTakeMorePhotos ? 1.0 : 0.9)
+        .disabled(!cameraManager.canTakeMorePhotos || !muorzManager.canScan)
+        .opacity((cameraManager.canTakeMorePhotos && muorzManager.canScan) ? 1.0 : 0.6)
+        .scaleEffect((cameraManager.canTakeMorePhotos && muorzManager.canScan) ? 1.0 : 0.9)
         .animation(.easeInOut(duration: 0.2), value: cameraManager.canTakeMorePhotos)
+        .animation(.easeInOut(duration: 0.2), value: muorzManager.canScan)
     }
 }
 
 struct ProceedButton: View {
     let isVisible: Bool
+    let canProceed: Bool
     let onProceed: () -> Void
     var isLarge: Bool = false
     
@@ -193,23 +222,23 @@ struct ProceedButton: View {
         Group {
             if isVisible {
                 Button {
-                    onProceed()
+                    if canProceed {
+                        onProceed()
+                    }
                 } label: {
-                    Image(systemName: "arrow.right")
+                    Image(systemName: canProceed ? "arrow.right" : "lock.fill")
                         .font(.system(size: isLarge ? 24 : 18, weight: .bold))
                         .foregroundColor(.white)
-                        .frame(width: isLarge ? 80 : 55, height: isLarge ? 80 : 55)
-                        .background(Color.accentColor)
+                        .frame(width: isLarge ? 80 : 60, height: isLarge ? 80 : 60)
+                        .background(canProceed ? Color.accentColor : Color.gray)
                         .clipShape(Circle())
-                        .overlay(
-                            Circle()
-                                .stroke(Color.white, lineWidth: isLarge ? 4 : 2)
-                        )
+                        .shadow(color: Color.black.opacity(0.3), radius: 4, x: 0, y: 2)
                 }
-                .scaleEffect(isLarge ? 1.0 : 0.8)
-                .animation(.easeInOut(duration: 0.6), value: isLarge)
-            } else {
-                Spacer()
+                .disabled(!canProceed)
+                .opacity(canProceed ? 1.0 : 0.6)
+                .scaleEffect(canProceed ? 1.0 : 0.9)
+                .animation(.easeInOut(duration: 0.2), value: canProceed)
+                .transition(.scale.combined(with: .opacity))
             }
         }
     }
@@ -354,6 +383,7 @@ struct ProcessedMenuView: View {
 
 struct BottomControlsOverlay: View {
     @ObservedObject var cameraManager: CameraManager
+    @ObservedObject var muorzManager: MuorzManager
     let onProceed: () -> Void
     let hasProcessedMenu: Bool
     let onViewMenu: () -> Void
@@ -375,7 +405,7 @@ struct BottomControlsOverlay: View {
             ZStack {
                 if cameraManager.canTakeMorePhotos {
                     // Capture button when photos can still be taken
-                    CaptureButton(cameraManager: cameraManager)
+                    CaptureButton(cameraManager: cameraManager, muorzManager: muorzManager)
                         .transition(.scale.combined(with: .opacity))
                 }
                 
@@ -389,6 +419,7 @@ struct BottomControlsOverlay: View {
                             
                             ProceedButton(
                                 isVisible: true,
+                                canProceed: muorzManager.canScan,
                                 onProceed: onProceed,
                                 isLarge: false // Small size when on the right
                             )
@@ -398,6 +429,7 @@ struct BottomControlsOverlay: View {
                             
                             ProceedButton(
                                 isVisible: true,
+                                canProceed: muorzManager.canScan,
                                 onProceed: onProceed,
                                 isLarge: true // Large size when centered
                             )
@@ -489,6 +521,7 @@ struct PhotoStackOverlay: View {
 #Preview {
     DirectCameraView(
         ocrViewModel: OCRViewModel(),
+        muorzManager: MuorzManager(),
         preferences: UserPreferences(),
         hasProcessedMenu: false,
         onViewMenu: {}
