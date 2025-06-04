@@ -695,7 +695,12 @@ struct PrivacyScreen: View {
                             .multilineTextAlignment(.leading)
                         
                         
-                        Text("Menu scans are sent to an OCR service to process text — but your dietary preferences never leave your device.\n\nWe don't store, track, or sell anything. Ever.")
+                        Text("We scan menus locally on your phone. Then, a smart language model helps structure the text — without ever linking it to you.")
+                            .font(.body)
+                            .multilineTextAlignment(.leading)
+                            .foregroundColor(.secondary)
+                            .lineSpacing(4)
+                        Text("Your diet preferences stay on your device. We don’t track, store, or sell anything. Ever.")
                             .font(.body)
                             .multilineTextAlignment(.leading)
                             .foregroundColor(.secondary)
