@@ -277,40 +277,47 @@ struct WelcomeScreen: View {
     
     var body: some View {
         ZStack {
-            Color(.systemBackground)
+            // Background image
+            Image("Onboarding")
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .ignoresSafeArea()
+            
+            // Semi-transparent overlay to ensure text readability
+            Color.black.opacity(0.3)
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
-                OnboardingProgressBar(currentStep: 1)
-                
                 Spacer()
                 
-                VStack() {
-                    
+                VStack(alignment: .leading, spacing: 40) {
                     Spacer()
                     
-                    VStack(spacing: 40) {
+                    VStack(alignment: .leading, spacing: 40) {
                         Text("Muorz")
-                            .font(.system(size: 40, weight: .semibold, design: .serif))
-                            .foregroundColor(.primary)
+                            .font(.system(size: 48, weight: .semibold, design: .serif))
+                            .foregroundColor(.white)
+                            .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
+                            .multilineTextAlignment(.leading)
                            
-                        Spacer()
-                        
-                        Text("Scan menus. Choose smarter. Eat freely.")
-                            .font(.system(.title2, design: .serif))
-                            .foregroundColor(.primary)
-                        
-                        Text("Discover local dishes, understand what you're ordering — and find what fits your diet. No stress. No guesswork.")
-                            .font(.body)
-                            .foregroundColor(.secondary)
-                            .padding(.horizontal, 8)
-                        
-                       
-                        Spacer()
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Scan menus. Choose smarter. Eat freely.")
+                                .font(.system(.title2, design: .serif))
+                                .foregroundColor(.white)
+                                .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
+                                .multilineTextAlignment(.leading)
+                            
+                            Text("Discover local dishes, understand what you're ordering — and find what fits your diet. No stress. No guesswork.")
+                                .font(.body)
+                                .foregroundColor(.white.opacity(0.9))
+                                .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
+                                .multilineTextAlignment(.leading)
+                        }
                     }
-                    //.padding()
+                    
+                    Spacer()
                 }
-               // .padding()
+                .padding(.horizontal, 32)
                 
                 Spacer()
                 
@@ -323,13 +330,14 @@ struct WelcomeScreen: View {
                     
                     Text("Curious about the name? *Muorz* means 'bite' in Neapolitan.")
                         .font(.caption)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
+                        .foregroundColor(.white.opacity(0.8))
+                        .multilineTextAlignment(.leading)
+                        .shadow(color: .black.opacity(0.3), radius: 1, x: 0, y: 1)
                 }
-               // .padding(.horizontal)
+                .padding(.horizontal, 32)
                 .padding(.bottom, 50)
             }
-            .padding(.horizontal)
+            .padding()
         }
     }
 }
@@ -342,26 +350,26 @@ struct DietPreferencesScreen: View {
     
     var body: some View {
         ZStack {
-            Color(.systemBackground)
+            Color(.systemGray6)
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
                 OnboardingProgressBar(currentStep: 2)
                 
-                Spacer()
+                // Reduced top spacer
+                Spacer().frame(height: 40)
                 
-                VStack(spacing: 32) {
+                VStack(alignment: .leading, spacing: 32) {
                     VStack(alignment: .leading, spacing: 16) {
                         Text("Do you follow a specific diet?")
                             .font(.system(.title2, design: .serif))
                             .foregroundColor(.primary)
-                           // .multilineTextAlignment(.leading)
+                            .multilineTextAlignment(.leading)
                         
                         Text("We'll personalize results based on your choices.")
                             .font(.body)
-                           // .multilineTextAlignment(.leading)
+                            .multilineTextAlignment(.leading)
                             .foregroundColor(.secondary)
-                            
                     }
                     
                     VStack(spacing: 12) {
@@ -370,22 +378,21 @@ struct DietPreferencesScreen: View {
                                 preference: preference,
                                 isSelected: onboardingManager.selectedDietPreferences.contains(preference),
                                 onTap: {
-                                    if preference == .none {
-                                        onboardingManager.selectedDietPreferences = [.none]
+                                    // Exclusive selection - only one diet can be selected at a time
+                                    if onboardingManager.selectedDietPreferences.contains(preference) {
+                                        // If already selected, deselect it (clear selection)
+                                        onboardingManager.selectedDietPreferences.removeAll()
                                     } else {
-                                        onboardingManager.selectedDietPreferences.remove(.none)
-                                        if onboardingManager.selectedDietPreferences.contains(preference) {
-                                            onboardingManager.selectedDietPreferences.remove(preference)
-                                        } else {
-                                            onboardingManager.selectedDietPreferences.insert(preference)
-                                        }
+                                        // Select only this preference (clear others first)
+                                        onboardingManager.selectedDietPreferences.removeAll()
+                                        onboardingManager.selectedDietPreferences.insert(preference)
                                     }
                                 }
                             )
                         }
                     }
                 }
-                .padding()
+                .padding(.horizontal, 32)
                 
                 Spacer()
                 
@@ -394,7 +401,7 @@ struct DietPreferencesScreen: View {
                     style: .primary,
                     action: onContinue
                 )
-                .padding(.horizontal)
+                .padding(.horizontal, 32)
                 .padding(.bottom, 50)
             }
         }
@@ -441,8 +448,9 @@ struct DietPreferenceRow: View {
             .padding(16)
             .background(
                 RoundedRectangle(cornerRadius: 20)
-                    .fill(Color(.systemGray6))
+                    .fill(Color.white)
                     .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
+                    .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
             )
         }
         .buttonStyle(PlainButtonStyle())
@@ -457,25 +465,26 @@ struct SmartTagsScreen: View {
     
     var body: some View {
         ZStack {
-            Color(.systemBackground)
+            Color(.systemGray6)
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
                 OnboardingProgressBar(currentStep: 3)
                 
-                Spacer()
+                // Reduced top spacer
+                Spacer().frame(height: 40)
                 
-                VStack( alignment: .leading, spacing: 32) {
-                    VStack(spacing: 16) {
+                VStack(alignment: .leading, spacing: 32) {
+                    VStack(alignment: .leading, spacing: 16) {
                         Text("Want extra info on your dishes?")
                             .font(.system(.title2, design: .serif))
                             .foregroundColor(.primary)
                             .multilineTextAlignment(.leading)
-           
                         
                         Text("We can highlight meals that are rich in protein, light in fat, or low in carbs.")
                             .font(.body)
                             .foregroundColor(.secondary)
+                            .multilineTextAlignment(.leading)
                     }
                     
                     VStack(spacing: 16) {
@@ -494,7 +503,7 @@ struct SmartTagsScreen: View {
                         }
                     }
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, 32)
                 
                 Spacer()
                 
@@ -503,7 +512,7 @@ struct SmartTagsScreen: View {
                     style: .primary,
                     action: onContinue
                 )
-                .padding(.horizontal)
+                .padding(.horizontal, 32)
                 .padding(.bottom, 50)
             }
         }
@@ -515,14 +524,27 @@ struct SmartTagToggle: View {
     let isEnabled: Bool
     let onToggle: () -> Void
     
+    private var nutritionTagData: (systemName: String, color: Color) {
+        switch tag {
+        case .highProtein:
+            return ("figure.strengthtraining.traditional", .blue)
+        case .lowFat:
+            return ("leaf.fill", .green)
+        case .lowCarbs:
+            return ("chart.line.downtrend.xyaxis", .orange)
+        }
+    }
+    
     var body: some View {
         HStack(spacing: 16) {
-            
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text(tag.title)
-                    .font(.headline)
-                    .foregroundColor(.primary)
+            VStack(alignment: .leading, spacing: 8) {
+                // NutritionTag component
+                NutritionTag(
+                    systemName: nutritionTagData.systemName,
+                    label: tag.title,
+                    color: nutritionTagData.color
+                )
+                .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
                 
                 Text(tag.description)
                     .font(.caption)
@@ -540,7 +562,8 @@ struct SmartTagToggle: View {
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 20)
-                .fill(Color(.systemGray6))
+                .fill(Color.white)
+                .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
         )
     }
 }
@@ -552,40 +575,43 @@ struct HowItWorksScreen: View {
     
     var body: some View {
         ZStack {
-            Color(.systemBackground)
+            Color(.systemGray6)
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
                 OnboardingProgressBar(currentStep: 4)
                 
-                Spacer()
+                // Reduced top spacer
+                Spacer().frame(height: 40)
                 
-                VStack(spacing: 32) {
+                VStack(alignment: .leading, spacing: 32) {
                     Text("Scan. Understand. Order.")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .multilineTextAlignment(.center)
+                        .font(.system(.title2, design: .serif))
                         .foregroundColor(.primary)
+                        .multilineTextAlignment(.leading)
+                      
                     
-                    VStack(spacing: 24) {
+                    VStack(alignment: .leading, spacing: 16) {
+                       
                         HowItWorksStep(
-                            icon: "📸",
+                            icon: "camera.fill",
                             title: "Scan any menu",
-                            step: 1
+                            step: "Snap a photo — we'll handle the language and layout."
                         )
-                        
+                        Spacer()
                         HowItWorksStep(
-                            icon: "🌐",
-                            title: "See translation + dietary match",
-                            step: 2
-                        )
-                        
+                            icon: "translate",
+                            title: "Explore your options",
+                            step: "See what matches your diet, with tags and filters that make sense to you."                        )
+                        Spacer()
                         HowItWorksStep(
-                            icon: "💬",
-                            title: "Get a localized summary to order easily",
-                            step: 3
+                            icon: "list.bullet",
+                            title: "Order with confidence",
+                            step: "Show the dish name in the original language — no guesswork, no surprises."
                         )
+                        Spacer()
                     }
+                    Spacer()
                 }
                 .padding(.horizontal, 32)
                 
@@ -606,32 +632,40 @@ struct HowItWorksScreen: View {
 struct HowItWorksStep: View {
     let icon: String
     let title: String
-    let step: Int
+    let step: String
     
     var body: some View {
         HStack(spacing: 16) {
-            ZStack {
+
+            ZStack{
+               
                 Circle()
-                    .fill(Color.accentColor.opacity(0.1))
                     .frame(width: 60, height: 60)
-                
-                Text(icon)
+                    .foregroundStyle(.white)
+                Image(
+                    systemName: icon)
                     .font(.title)
+                    .foregroundStyle(.accent)
             }
             
             VStack(alignment: .leading, spacing: 4) {
-                Text("\(step). \(title)")
-                    .font(.headline)
+                Text("\(title)")
+                    .font(.system(size: 20, design: .serif))
                     .foregroundColor(.primary)
+                Text("\(step)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                
             }
             
-            Spacer()
+            
         }
-        .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.systemGray6))
-        )
+        
+       // .background(
+        //    RoundedRectangle(cornerRadius: 12)
+        //        .fill(Color.white)
+        //        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+      //  )
     }
 }
 
@@ -642,32 +676,38 @@ struct PrivacyScreen: View {
     
     var body: some View {
         ZStack {
-            Color(.systemBackground)
+            Color(.systemGray6)
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
                 OnboardingProgressBar(currentStep: 5)
                 
-                Spacer()
+                // Reduced top spacer
+                Spacer().frame(height: 40)
                 
-                VStack(spacing: 32) {
-                    Image(systemName: "lock.shield.fill")
-                        .font(.system(size: 80))
-                        .foregroundColor(.accentColor)
+                VStack(alignment: .leading, spacing: 32) {
+                   
                     
-                    VStack(spacing: 16) {
+                    VStack(alignment: .leading, spacing: 16) {
                         Text("Your data stays yours.")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .multilineTextAlignment(.center)
+                            .font(.system(.title2, design: .serif))
                             .foregroundColor(.primary)
+                            .multilineTextAlignment(.leading)
+                        
                         
                         Text("Menu scans are sent to an OCR service to process text — but your dietary preferences never leave your device.\n\nWe don't store, track, or sell anything. Ever.")
                             .font(.body)
-                            .multilineTextAlignment(.center)
+                            .multilineTextAlignment(.leading)
                             .foregroundColor(.secondary)
                             .lineSpacing(4)
                     }
+                    Spacer()
+                    Image(systemName: "lock.shield.fill")
+                        .font(.system(size: 150))
+                        .foregroundColor(.accentColor)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                    Spacer()
+                    Spacer()
                 }
                 .padding(.horizontal, 32)
                 
@@ -691,48 +731,81 @@ struct PricingModelScreen: View {
     @ObservedObject var muorzManager: MuorzManager
     let onContinue: () -> Void
     
+    @State private var animatedMuorzCount: Int = 3
+    @State private var circleScale: CGFloat = 1.0
+    @State private var hasStartedAnimation = false
+    @State private var isPulseMode = false
+    
     var body: some View {
         ZStack {
-            Color(.systemBackground)
+            Color(.systemGray6)
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
                 OnboardingProgressBar(currentStep: 6)
                 
-                Spacer()
+                // Reduced top spacer
+                Spacer().frame(height: 40)
                 
-                VStack(spacing: 32) {
-                    VStack(spacing: 16) {
-                        Text("Your first 3 scans are on the house.")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .multilineTextAlignment(.center)
+                VStack(alignment: .leading, spacing: 32) {
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Just enough to get you started")
+                            .font(.system(.title2, design: .serif))
                             .foregroundColor(.primary)
                         
-                        Text("3 scans/week for free")
+                        Text("You get 3 free Muorz every week — no sign-up, no stress. And as a welcome gift, here's 2 extra on us.")
+                            .font(.body)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.leading)
+                    }
+                    
+                    // Large Muorz Counter
+                    HStack {
+                        Spacer()
+                        
+                        ZStack {
+                            // Large circle background - no stroke, just shadow
+                            Circle()
+                                .fill(.white)
+                                .frame(width: 90, height: 90)
+                                .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
+                            
+                            // Muorz count with SF Symbol
+                            if animatedMuorzCount <= 50 {
+                                Image(systemName: "\(animatedMuorzCount).circle.fill")
+                                    .font(.system(size: 120, weight: .bold))
+                                    .foregroundColor(.yellow)
+                            } else {
+                                Image(systemName: "star.circle.fill")
+                                    .font(.system(size: 90, weight: .bold))
+                                    .foregroundColor(.yellow)
+                            }
+                        }
+                        .scaleEffect(circleScale)
+                        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: circleScale)
+                        .scaleEffect(isPulseMode ? 1.10 : 1.0)
+                        .animation(
+                            isPulseMode ? 
+                            Animation.easeInOut(duration: 1.0).repeatForever(autoreverses: true) : 
+                            .default, 
+                            value: isPulseMode
+                        )
+                        
+                        Spacer()
+                    }
+                    
+                    // Description text
+                    VStack(alignment: .center, spacing: 14) {
+                        Text("Muorz")
+                            .font(.system(.title, design: .serif))
+                            .fontWeight(.semibold)
+                            .foregroundColor(.primary)
+                        
+                        Text("As a welcome gift, here's 2 extra on us.")
                             .font(.body)
                             .foregroundColor(.secondary)
                     }
-                    
-                    VStack(spacing: 12) {
-                        PricingOption(
-                            title: "10 scans",
-                            price: "€0.99",
-                            isRecommended: false
-                        )
-                        
-                        PricingOption(
-                            title: "30 scans",
-                            price: "€2.49",
-                            isRecommended: true
-                        )
-                        
-                        PricingOption(
-                            title: "Unlimited 48h pass",
-                            price: "€1.99",
-                            isRecommended: false
-                        )
-                    }
+                    .frame(maxWidth: .infinity)
                 }
                 .padding(.horizontal, 32)
                 
@@ -745,16 +818,59 @@ struct PricingModelScreen: View {
                         action: onContinue
                     )
                     
-                    OnboardingButton(
-                        title: "See Scan Packs",
-                        style: .secondary,
-                        action: {
-                            // Open store
-                        }
-                    )
+                  
                 }
                 .padding(.horizontal, 32)
                 .padding(.bottom, 50)
+            }
+        }
+        .onAppear {
+            // Start animation after 1 second
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                startWelcomeBonusAnimation()
+            }
+        }
+    }
+    
+    private func startWelcomeBonusAnimation() {
+        guard !hasStartedAnimation else { return }
+        hasStartedAnimation = true
+        
+        // First animation: 3 → 4
+        animateToNextMuorz(from: 3, to: 4) {
+            // Second animation: 4 → 5 (after 0.5 seconds)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                self.animateToNextMuorz(from: 4, to: 5) {
+                    // Start pulse mode after final animation
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        self.isPulseMode = true
+                    }
+                }
+            }
+        }
+    }
+    
+    private func animateToNextMuorz(from: Int, to: Int, completion: @escaping () -> Void) {
+        // Haptic feedback
+        let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+        impactFeedback.impactOccurred()
+        
+        // Scale up animation
+        withAnimation(.spring(response: 0.2, dampingFraction: 0.7)) {
+            circleScale = 1.3
+        }
+        
+        // Change number and scale down
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            animatedMuorzCount = to
+            
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                circleScale = 1.0
+            }
+            
+            // Call completion after animation finishes
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                completion()
             }
         }
     }
@@ -783,8 +899,9 @@ struct PricingOption: View {
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(isRecommended ? Color.accentColor.opacity(0.1) : Color(.systemGray6))
+                .fill(isRecommended ? Color.accentColor.opacity(0.1) : Color.white)
                 .stroke(isRecommended ? Color.accentColor : Color.clear, lineWidth: 2)
+                .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
         )
         .overlay(
             isRecommended ? 
@@ -817,31 +934,37 @@ struct ReadyScreen: View {
     
     var body: some View {
         ZStack {
-            Color(.systemBackground)
+            Color(.systemGray6)
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
                 OnboardingProgressBar(currentStep: 7)
                 
-                Spacer()
+                // Reduced top spacer
+                Spacer().frame(height: 40)
                 
-                VStack(spacing: 32) {
-                    Image(systemName: "camera.fill")
-                        .font(.system(size: 80))
-                        .foregroundColor(.accentColor)
+                VStack(alignment: .leading, spacing: 32) {
                     
-                    VStack(spacing: 16) {
+                    
+                    VStack(alignment: .leading, spacing: 16) {
                         Text("Let's scan your first menu.")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .multilineTextAlignment(.center)
+                            .font(.system(.title2, design: .serif))
                             .foregroundColor(.primary)
+                            .multilineTextAlignment(.leading)
+                        
                         
                         Text("We'll need access to your camera to start. Or you can try with a demo.")
                             .font(.body)
-                            .multilineTextAlignment(.center)
+                            .multilineTextAlignment(.leading)
                             .foregroundColor(.secondary)
                     }
+                    Spacer()
+                    Image(systemName: "camera.fill")
+                        .font(.system(size: 100))
+                        .foregroundColor(.accentColor)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                    Spacer()
+                    Spacer()
                 }
                 .padding(.horizontal, 32)
                 
@@ -857,15 +980,7 @@ struct ReadyScreen: View {
                         }
                     )
                     
-                    OnboardingButton(
-                        title: "Try Demo Menu",
-                        style: .secondary,
-                        action: {
-                            onboardingManager.savePreferences(to: preferences)
-                            // Show demo
-                            onComplete()
-                        }
-                    )
+               
                 }
                 .padding(.horizontal, 32)
                 .padding(.bottom, 50)
