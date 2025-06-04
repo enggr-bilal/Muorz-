@@ -108,11 +108,11 @@ class OnboardingManager: ObservableObject {
         
         var emoji: String {
             switch self {
-            case .vegetarian: return "🥦"
-            case .vegan: return "🌱"
-            case .glutenFree: return "🌾"
-            case .dairyFree: return "🥛"
-            case .none: return "❌"
+            case .vegetarian: return ""
+            case .vegan: return ""
+            case .glutenFree: return ""
+            case .dairyFree: return ""
+            case .none: return ""
             }
         }
         
@@ -146,9 +146,9 @@ class OnboardingManager: ObservableObject {
         
         var emoji: String {
             switch self {
-            case .highProtein: return "🏋️"
-            case .lowFat: return "🌿"
-            case .lowCarbs: return "🍞"
+            case .highProtein: return ""
+            case .lowFat: return ""
+            case .lowCarbs: return ""
             }
         }
         
@@ -262,7 +262,7 @@ struct OnboardingButton: View {
                 .frame(maxWidth: .infinity)
                 .frame(height: 56)
                 .background(
-                    RoundedRectangle(cornerRadius: 16)
+                    Capsule()
                         .fill(style == .primary ? Color.accentColor : Color.clear)
                         .stroke(Color.accentColor, lineWidth: style == .secondary ? 2 : 0)
                 )
@@ -285,34 +285,32 @@ struct WelcomeScreen: View {
                 
                 Spacer()
                 
-                VStack(spacing: 32) {
-                    // Icon
-                    ZStack {
-                        Circle()
-                            .fill(.yellow)
-                            .frame(width: 120, height: 120)
-                            .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
-                        
-                        Text("M")
-                            .font(.system(size: 48, weight: .bold))
-                            .foregroundColor(.white)
-                    }
+                VStack() {
                     
-                    VStack(spacing: 16) {
+                    Spacer()
+                    
+                    VStack(spacing: 40) {
+                        Text("Muorz")
+                            .font(.system(size: 40, weight: .semibold, design: .serif))
+                            .foregroundColor(.primary)
+                           
+                        Spacer()
+                        
                         Text("Scan menus. Choose smarter. Eat freely.")
-                            .font(.title)
-                            .fontWeight(.bold)
-                            .multilineTextAlignment(.center)
+                            .font(.system(.title2, design: .serif))
                             .foregroundColor(.primary)
                         
                         Text("Discover local dishes, understand what you're ordering — and find what fits your diet. No stress. No guesswork.")
                             .font(.body)
-                            .multilineTextAlignment(.center)
                             .foregroundColor(.secondary)
                             .padding(.horizontal, 8)
+                        
+                       
+                        Spacer()
                     }
+                    //.padding()
                 }
-                .padding(.horizontal, 32)
+               // .padding()
                 
                 Spacer()
                 
@@ -328,9 +326,10 @@ struct WelcomeScreen: View {
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
                 }
-                .padding(.horizontal, 32)
+               // .padding(.horizontal)
                 .padding(.bottom, 50)
             }
+            .padding(.horizontal)
         }
     }
 }
@@ -352,17 +351,17 @@ struct DietPreferencesScreen: View {
                 Spacer()
                 
                 VStack(spacing: 32) {
-                    VStack(spacing: 16) {
+                    VStack(alignment: .leading, spacing: 16) {
                         Text("Do you follow a specific diet?")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .multilineTextAlignment(.center)
+                            .font(.system(.title2, design: .serif))
                             .foregroundColor(.primary)
+                           // .multilineTextAlignment(.leading)
                         
                         Text("We'll personalize results based on your choices.")
                             .font(.body)
-                            .multilineTextAlignment(.center)
+                           // .multilineTextAlignment(.leading)
                             .foregroundColor(.secondary)
+                            
                     }
                     
                     VStack(spacing: 12) {
@@ -386,7 +385,7 @@ struct DietPreferencesScreen: View {
                         }
                     }
                 }
-                .padding(.horizontal, 32)
+                .padding()
                 
                 Spacer()
                 
@@ -395,7 +394,7 @@ struct DietPreferencesScreen: View {
                     style: .primary,
                     action: onContinue
                 )
-                .padding(.horizontal, 32)
+                .padding(.horizontal)
                 .padding(.bottom, 50)
             }
         }
@@ -410,12 +409,12 @@ struct DietPreferenceRow: View {
     var body: some View {
         Button(action: onTap) {
             HStack(spacing: 16) {
-                Text(preference.emoji)
-                    .font(.title2)
                 
-                VStack(alignment: .leading, spacing: 4) {
+                
+                VStack(alignment: .leading) {
                     Text(preference.title)
-                        .font(.headline)
+                        .font(.system(size: 20, design: .serif))
+             
                         .foregroundColor(.primary)
                     
                     if !preference.description.isEmpty {
@@ -428,21 +427,21 @@ struct DietPreferenceRow: View {
                 Spacer()
                 
                 ZStack {
-                    Circle()
-                        .stroke(Color.accentColor, lineWidth: 2)
-                        .frame(width: 24, height: 24)
+                    Image(systemName: "circle")
+                        .foregroundStyle(Color.accentColor)
+                        .font(.title2)
                     
                     if isSelected {
-                        Circle()
-                            .fill(Color.accentColor)
-                            .frame(width: 16, height: 16)
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(Color.accentColor)
+                            .font(.title2)
                     }
                 }
             }
             .padding(16)
             .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(isSelected ? Color.accentColor.opacity(0.1) : Color(.systemGray6))
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(Color(.systemGray6))
                     .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
             )
         }
@@ -466,17 +465,16 @@ struct SmartTagsScreen: View {
                 
                 Spacer()
                 
-                VStack(spacing: 32) {
+                VStack( alignment: .leading, spacing: 32) {
                     VStack(spacing: 16) {
                         Text("Want extra info on your dishes?")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .multilineTextAlignment(.center)
+                            .font(.system(.title2, design: .serif))
                             .foregroundColor(.primary)
+                            .multilineTextAlignment(.leading)
+           
                         
                         Text("We can highlight meals that are rich in protein, light in fat, or low in carbs.")
                             .font(.body)
-                            .multilineTextAlignment(.center)
                             .foregroundColor(.secondary)
                     }
                     
@@ -496,7 +494,7 @@ struct SmartTagsScreen: View {
                         }
                     }
                 }
-                .padding(.horizontal, 32)
+                .padding(.horizontal)
                 
                 Spacer()
                 
@@ -505,7 +503,7 @@ struct SmartTagsScreen: View {
                     style: .primary,
                     action: onContinue
                 )
-                .padding(.horizontal, 32)
+                .padding(.horizontal)
                 .padding(.bottom, 50)
             }
         }
@@ -519,8 +517,7 @@ struct SmartTagToggle: View {
     
     var body: some View {
         HStack(spacing: 16) {
-            Text(tag.emoji)
-                .font(.title2)
+            
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(tag.title)
@@ -542,7 +539,7 @@ struct SmartTagToggle: View {
         }
         .padding(16)
         .background(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: 20)
                 .fill(Color(.systemGray6))
         )
     }

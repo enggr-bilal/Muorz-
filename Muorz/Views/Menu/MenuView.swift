@@ -262,7 +262,7 @@ struct MenuListView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         Text(category.description.capitalized)
                             .font(.system(size: 28, weight: .semibold, design: .serif))
-                            .foregroundColor(.black)
+                            .foregroundColor(.primary)
                             .padding(.horizontal, 16)
                             .padding(.top, 8)
                         
