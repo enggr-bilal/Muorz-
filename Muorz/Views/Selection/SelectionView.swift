@@ -9,6 +9,7 @@ import SwiftUI
 
 struct SelectionView: View {
     @ObservedObject var selectionManager: SelectionManager
+    let currency: String?
     @Environment(\.dismiss) private var dismiss
     @State private var showTranslation = false
     @State private var showingWarningAlert = false
@@ -20,6 +21,7 @@ struct SelectionView: View {
                     ForEach(selectionManager.selectedItems) { selectedItem in
                         SelectedItemRow(
                             selectedItem: selectedItem,
+                            currency: currency,
                             showTranslation: showTranslation,
                             onIncrement: { selectionManager.addItem(selectedItem.menuItem) },
                             onDecrement: { selectionManager.removeItem(selectedItem.menuItem) }
@@ -50,15 +52,17 @@ struct SelectionView: View {
                                         .font(.headline)
                                 }
                                 
-                                HStack {
-                                    Text("Estimated Amount:")
-                                        .font(.title3)
-                                        .fontWeight(.bold)
-                                    Spacer()
-                                    Text(String(format: "%.2f €", selectionManager.totalPrice))
-                                        .font(.title)
-                                        .fontWeight(.bold)
-                                        .foregroundColor(.accentColor)
+                                if let currency = currency, selectionManager.hasItemsWithPrices {
+                                    HStack {
+                                        Text("Estimated Amount:")
+                                            .font(.title3)
+                                            .fontWeight(.bold)
+                                        Spacer()
+                                        Text("\(currency)\(String(format: "%.2f", selectionManager.totalPrice))")
+                                            .font(.title)
+                                            .fontWeight(.bold)
+                                            .foregroundColor(.accentColor)
+                                    }
                                 }
                             }
                             .padding(.horizontal)

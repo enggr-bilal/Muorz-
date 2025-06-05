@@ -9,49 +9,56 @@ import Foundation
 
 // MARK: - API Response Models (Gemini API Format)
 
-/// Root response structure from Gemini API
+/// Root response structure from Gemini API (NEW FORMAT)
 struct GeminiMenuResponse: Codable {
+    let currency: String?
     let categories: [MenuCategory]
     
-    // Custom decoder to handle array directly
+    // Custom decoder to handle the new structure
     init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        self.categories = try container.decode([MenuCategory].self)
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.currency = try container.decodeIfPresent(String.self, forKey: .currency)
+        self.categories = try container.decode([MenuCategory].self, forKey: .categories)
     }
     
     func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(categories)
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(currency, forKey: .currency)
+        try container.encode(categories, forKey: .categories)
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case currency, categories
     }
 }
 
-/// Menu category from API
+/// Menu category from API (NEW FORMAT)
 struct MenuCategory: Codable {
     let categoryName: String
     let dishes: [APIDish]
     
     enum CodingKeys: String, CodingKey {
-        case categoryName = "ctg"
-        case dishes = "dsh"
+        case categoryName = "name"
+        case dishes = "dishes"
     }
 }
 
-/// Dish structure from API (compact format)
+/// Dish structure from API (NEW FORMAT)
 struct APIDish: Codable {
     let originalName: String
     let translatedName: String
     let ingredients: [String]
-    let nutritionScores: [Int] // [protein, fat, carbs]
-    let tags: [Int] // [vegetarian, vegan, gluten_free, dairy_free] as 0/1
-    let price: String
+    let price: Double?
+    let nutritionScores: [Int]? // Made optional to handle null from API
+    let dietaryTags: [Int] // [vegetarian, vegan, gluten_free, dairy_free] as 0/1
     
     enum CodingKeys: String, CodingKey {
-        case originalName = "nme"
-        case translatedName = "tr_nme"
-        case ingredients = "ingr"
-        case nutritionScores = "n_scr"
-        case tags = "tgs"
-        case price = "prc"
+        case originalName = "original_name"
+        case translatedName = "translated_name"
+        case ingredients = "ingredients_en"
+        case price = "price"
+        case nutritionScores = "nutrition_scores"
+        case dietaryTags = "dietary_tags"
     }
 }
 
@@ -96,18 +103,33 @@ struct MenuItem: Identifiable, Codable, Equatable {
         self.translatedName = apiDish.translatedName
         self.ingredientsEn = apiDish.ingredients
         self.categoryEn = category.lowercased()
-        self.price = apiDish.price.isEmpty ? nil : apiDish.price
+        
+        // Convert Double price to String for internal storage, or nil if no price
+        if let priceValue = apiDish.price {
+            // Format the price as string for internal storage (we'll handle currency in views)
+            self.price = String(format: "%.2f", priceValue)
+        } else {
+            self.price = nil
+        }
         
         // Convert nutrition scores array to struct
-        let scores = apiDish.nutritionScores
-        self.nutritionScores = NutritionScores(
-            protein: scores.count > 0 ? scores[0] : 0,
-            fat: scores.count > 1 ? scores[1] : 0,
-            carbs: scores.count > 2 ? scores[2] : 0
-        )
+        if let scores = apiDish.nutritionScores, scores.count >= 3 {
+            self.nutritionScores = NutritionScores(
+                protein: scores[0],
+                fat: scores[1],
+                carbs: scores[2]
+            )
+        } else {
+            // Default nutrition scores when API doesn't provide them
+            self.nutritionScores = NutritionScores(
+                protein: 5, // Default middle value
+                fat: 5,
+                carbs: 5
+            )
+        }
         
         // Convert tags array to struct
-        let tagArray = apiDish.tags
+        let tagArray = apiDish.dietaryTags
         self.tags = DietaryTags(
             vegetarian: tagArray.count > 0 ? tagArray[0] == 1 : false,
             vegan: tagArray.count > 1 ? tagArray[1] == 1 : false,
@@ -153,10 +175,12 @@ struct DietaryTags: Codable, Equatable {
 struct MenuResponse: Codable, Equatable {
     let menuItems: [MenuItem]
     let restaurantInfo: RestaurantInfo?
+    let currency: String?
     
     enum CodingKeys: String, CodingKey {
         case menuItems = "menu_items"
         case restaurantInfo = "restaurant_info"
+        case currency
     }
     
     // Initializer from Gemini API response
@@ -172,12 +196,14 @@ struct MenuResponse: Codable, Equatable {
         
         self.menuItems = items
         self.restaurantInfo = restaurantInfo
+        self.currency = geminiResponse.currency
     }
     
     // Standard initializer
-    init(menuItems: [MenuItem], restaurantInfo: RestaurantInfo?) {
+    init(menuItems: [MenuItem], restaurantInfo: RestaurantInfo?, currency: String? = nil) {
         self.menuItems = menuItems
         self.restaurantInfo = restaurantInfo
+        self.currency = currency
     }
 }
 
@@ -250,6 +276,30 @@ extension MenuItem {
     /// Get formatted price string
     var formattedPrice: String {
         return price ?? "N/A"
+    }
+    
+    /// Get formatted price with currency symbol
+    func formattedPrice(with currency: String?) -> String {
+        guard let price = price, let priceValue = Double(price) else {
+            return ""
+        }
+        
+        if let currency = currency {
+            return "\(currency)\(String(format: "%.2f", priceValue))"
+        } else {
+            return String(format: "%.2f", priceValue)
+        }
+    }
+    
+    /// Get price as Double value
+    var priceValue: Double? {
+        guard let price = price else { return nil }
+        return Double(price)
+    }
+    
+    /// Check if item has price information
+    var hasPrice: Bool {
+        return price != nil
     }
     
     /// Get ingredients as comma-separated string

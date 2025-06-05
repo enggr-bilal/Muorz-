@@ -133,4 +133,8 @@ Icon
 .AppleDesktop
 Network Trash Folder
 Temporary Items
-.apdisk 
+.apdisk
+
+# CUSTOM: Config files with API keys
+Muorz/Config.plist
+Config.plist 

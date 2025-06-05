@@ -38,7 +38,7 @@ struct MenuView: View {
                                 set: { viewModel.updateDietaryPreference($0) }
                             ),
                             selectedNutritionSortPriority: Binding(
-                                get: { viewModel.selectedNutritionSortPriority },
+                                get: { viewModel.selectedNutritionSortPriority ?? "none" },
                                 set: { viewModel.updateNutritionSortPriority($0) }
                             ),
                             searchText: $viewModel.searchText,
@@ -54,6 +54,7 @@ struct MenuView: View {
                         )
                     }
                     .background(Color.white)
+                   
                   
                     
                     // Content Section
@@ -86,6 +87,7 @@ struct MenuView: View {
                     else {
                         MenuListView(
                             filteredItems: viewModel.filteredItems,
+                            currency: viewModel.currency,
                             selectionManager: selectionManager,
                             searchText: viewModel.searchText,
                             showHighProteinTag: preferences.showHighProteinTag,
@@ -141,7 +143,7 @@ struct MenuView: View {
                 }
             }
             .sheet(isPresented: $showingSelection) {
-                SelectionView(selectionManager: selectionManager)
+                SelectionView(selectionManager: selectionManager, currency: viewModel.currency)
             }
             .sheet(isPresented: $showingProfile) {
                 ProfileView(preferences: preferences)
@@ -248,6 +250,7 @@ struct EmptyStateView: View {
 
 struct MenuListView: View {
     let filteredItems: [String: [MenuItem]]
+    let currency: String?
     let selectionManager: SelectionManager
     let searchText: String
     let showHighProteinTag: Bool
@@ -255,10 +258,29 @@ struct MenuListView: View {
     let showLowCarbsTag: Bool
     let onRefresh: () async -> Void
     
+    // Helper function to sort categories in logical menu order
+    private func sortedCategories() -> [String] {
+        let categoryOrder = ["starter", "main course", "dessert", "drink", "other"]
+        let availableCategories = Array(filteredItems.keys)
+        
+        // Sort based on logical order, then alphabetically for any unknown categories
+        return availableCategories.sorted { first, second in
+            let firstIndex = categoryOrder.firstIndex(of: first.lowercased()) ?? categoryOrder.count
+            let secondIndex = categoryOrder.firstIndex(of: second.lowercased()) ?? categoryOrder.count
+            
+            if firstIndex != secondIndex {
+                return firstIndex < secondIndex
+            } else {
+                // If both are unknown categories, sort alphabetically
+                return first < second
+            }
+        }
+    }
+    
     var body: some View {
         ScrollView {
             LazyVStack(spacing: 24) {
-                ForEach(filteredItems.keys.sorted(), id: \.self) { category in
+                ForEach(sortedCategories(), id: \.self) { category in
                     VStack(alignment: .leading, spacing: 12) {
                         Text(category.description.capitalized)
                             .font(.system(size: 28, weight: .semibold, design: .serif))
@@ -270,6 +292,7 @@ struct MenuListView: View {
                             ForEach(filteredItems[category] ?? []) { item in
                                 MenuItemRow(
                                     item: item,
+                                    currency: currency,
                                     showHighProtein: showHighProteinTag,
                                     showLowFat: showLowFatTag,
                                     showLowCarbs: showLowCarbsTag,
@@ -284,7 +307,7 @@ struct MenuListView: View {
                             }
                         }
                         .background(Color.white)
-                        .cornerRadius(12)
+                        .cornerRadius(18)
                         .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
                     }
                     .padding(.horizontal)

@@ -14,15 +14,16 @@ class MenuViewModel: ObservableObject {
     // MARK: - Published Properties
     
     @Published var menuItems: [MenuItem] = []
+    @Published var restaurantInfo: RestaurantInfo?
+    @Published var currency: String?
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var searchText = ""
     @Published var selectedCategory = "all"
-    @Published var restaurantInfo: RestaurantInfo?
+    @Published var selectedDietaryPreference: String?
+    @Published var selectedNutritionSortPriority: String?
     
     // MARK: - Temporary Filter Properties (reset on each app launch)
-    @Published var selectedDietaryPreference: String?
-    @Published var selectedNutritionSortPriority: String = "none"
     
     // MARK: - Constants
     
@@ -62,7 +63,7 @@ class MenuViewModel: ObservableObject {
         // Apply sorting within each category based on nutrition priority
         var sortedGrouped: [String: [MenuItem]] = [:]
         for (category, items) in grouped {
-            sortedGrouped[category] = sortItemsByNutritionPriority(items, priority: selectedNutritionSortPriority)
+            sortedGrouped[category] = sortItemsByNutritionPriority(items, priority: selectedNutritionSortPriority ?? "none")
         }
         
         return sortedGrouped
@@ -76,6 +77,11 @@ class MenuViewModel: ObservableObject {
     
     var filteredItemsCount: Int {
         return filteredItems.values.flatMap { $0 }.count
+    }
+    
+    /// Check if menu has pricing information
+    var hasPricing: Bool {
+        return currency != nil && menuItems.contains { $0.hasPrice }
     }
     
     // MARK: - Initialization
@@ -95,6 +101,7 @@ class MenuViewModel: ObservableObject {
             let response = try await menuService.processOCRText(text)
             menuItems = response.menuItems
             restaurantInfo = response.restaurantInfo
+            currency = response.currency
         } catch {
             errorMessage = error.localizedDescription
             print("Error processing OCR text: \(error)")

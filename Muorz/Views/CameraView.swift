@@ -36,6 +36,7 @@ struct CameraView: View {
                         // Update MenuViewModel with processed data
                         menuViewModel.menuItems = menu.menuItems
                         menuViewModel.restaurantInfo = menu.restaurantInfo
+                        menuViewModel.currency = menu.currency
                         hasProcessedMenu = true
                         
                         // 🎯 BUSINESS LOGIC: Deduct Muorz when successfully reaching MenuView with API data

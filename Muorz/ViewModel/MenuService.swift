@@ -180,22 +180,49 @@ class MenuService: MenuServiceProtocol, ObservableObject {
     }
     
     private func buildMenuParsingPrompt(ocrText: String) -> String {
+        // Get device language (for future localization, defaulting to English for now)
+        let deviceLanguage = "en" // Locale.current.languageCode ?? "en"
+        
         return """
         I will provide you with OCR text from a restaurant menu in any language.
-        Parse it and return a JSON array of dish categories.
-        Sort categories in a meaningful meal order (e.g. starter, main course, dessert, drinks, etc.).
-        Each category object must have:
-        "ctg": the category name in English
-        "dsh": a list of dish objects
-        Each dish object must contain:
-        "nme": name in original language
-        "tr_nme": name in English
-        "ingr": list of 3–6 ingredients in English (inferred if needed)
-        "n_scr": list of 3 integers [protein, fat, carbs] on a 0–10 scale
-        "tgs": list of 4 booleans (0 or 1) in order [vegetarian, vegan, gluten_free, dairy_free]
-        "prc": price as written in the original menu
-        Return compact JSON only, with no extra text or explanations.
-        Use consistent field order and avoid repeating field names inside arrays.
+        Parse it and return a JSON object with the following structure.
+        
+        IMPORTANT REQUIREMENTS:
+        1. Sort categories in logical meal order: "starter", "main course", "dessert", "drink", "other"
+        2. If a currency symbol (€, $, £, etc.) is visible on the menu, extract it ONCE at the top level
+        3. Convert all prices to Double values (remove currency symbols, use dots for decimals)
+        4. If no prices are found on the menu, omit "currency" and set all "price" to null
+        5. Return results in English (target language: \(deviceLanguage))
+        6. For nutrition_scores: if you can reasonably estimate nutritional content, provide [protein, fat, carbs] on 0-10 scale. If not possible (like for drinks, wines, simple items), set to null
+        
+        Expected JSON format:
+        {
+          "currency": "€" or null,
+          "categories": [
+            {
+              "name": "starter",
+              "dishes": [
+                {
+                  "original_name": "name in original language",
+                  "translated_name": "name in English", 
+                  "ingredients_en": ["ingredient1", "ingredient2"],
+                  "price": 12.50 or null,
+                  "nutrition_scores": [7, 5, 6] or null,
+                  "dietary_tags": [1, 0, 0, 1]
+                }
+              ]
+            }
+          ]
+        }
+        
+        CRITICAL: 
+        - Categories must be in this exact order when present: "starter" → "main course" → "dessert" → "drink" → "other"
+        - Prices must be Double numbers without currency symbols  
+        - Currency should be extracted once at the top level if visible
+        - nutrition_scores: [protein, fat, carbs] on 0-10 scale OR null if cannot estimate
+        - dietary_tags: [vegetarian, vegan, gluten_free, dairy_free] as 0/1
+        
+        Return compact JSON only, no explanations.
 
         OCR Text:
         \(ocrText)

@@ -10,6 +10,7 @@ import SwiftUI
 struct MenuItemInfo: View {
     let item: MenuItem
     @ObservedObject var selectionManager: SelectionManager
+    let currency: String?
     let showHighProtein: Bool
     let showLowFat: Bool
     let showLowCarbs: Bool
@@ -37,9 +38,11 @@ struct MenuItemInfo: View {
                 
                 Spacer()
                 
-                Text(item.price ?? "N/A")
-                    .font(.system(size: 18, weight: .regular))
-                    .foregroundColor(.black)
+                if let currency = currency, item.hasPrice {
+                    Text(item.formattedPrice(with: currency))
+                        .font(.system(size: 18, weight: .regular))
+                        .foregroundColor(.black)
+                }
             }
             
             // Description
@@ -128,6 +131,7 @@ struct MenuItemInfo: View {
                 tags: DietaryTags(vegetarian: true, vegan: false, glutenFree: false, dairyFree: false)
             ),
             selectionManager: SelectionManager(),
+            currency: "€",
             showHighProtein: true,
             showLowFat: true,
             showLowCarbs: true,
@@ -154,6 +158,7 @@ struct MenuItemInfo: View {
                 tags: DietaryTags(vegetarian: true, vegan: false, glutenFree: false, dairyFree: false)
             ),
             selectionManager: SelectionManager(),
+            currency: "€",
             showHighProtein: true,
             showLowFat: true,
             showLowCarbs: false,
@@ -175,6 +180,7 @@ struct MenuItemInfo: View {
                 tags: DietaryTags(vegetarian: true, vegan: false, glutenFree: false, dairyFree: false)
             ),
             selectionManager: SelectionManager(),
+            currency: "€",
             showHighProtein: true,
             showLowFat: true,
             showLowCarbs: false,

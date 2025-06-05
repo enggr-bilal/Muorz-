@@ -9,6 +9,7 @@ import SwiftUI
 
 struct MenuItemRow: View {
     let item: MenuItem
+    let currency: String?
     let showHighProtein: Bool
     let showLowFat: Bool
     let showLowCarbs: Bool
@@ -36,6 +37,7 @@ struct MenuItemRow: View {
         MenuItemInfo(
             item: item,
             selectionManager: selectionManager,
+            currency: currency,
             showHighProtein: showHighProtein,
             showLowFat: showLowFat,
             showLowCarbs: showLowCarbs,
@@ -59,6 +61,7 @@ struct MenuItemRow: View {
                 nutritionScores: NutritionScores(protein: 5, fat: 6, carbs: 7),
                 tags: DietaryTags(vegetarian: true, vegan: false, glutenFree: false, dairyFree: false)
             ),
+            currency: "€",
             showHighProtein: true,
             showLowFat: true,
             showLowCarbs: false,
@@ -76,6 +79,7 @@ struct MenuItemRow: View {
                 nutritionScores: NutritionScores(protein: 4, fat: 5, carbs: 7),
                 tags: DietaryTags(vegetarian: true, vegan: false, glutenFree: false, dairyFree: false)
             ),
+            currency: "€",
             showHighProtein: true,
             showLowFat: true,
             showLowCarbs: true,

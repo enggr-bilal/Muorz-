@@ -9,6 +9,7 @@ import SwiftUI
 
 struct SelectedItemRow: View {
     let selectedItem: SelectedItem
+    let currency: String?
     let showTranslation: Bool
     let onIncrement: () -> Void
     let onDecrement: () -> Void
@@ -35,8 +36,9 @@ struct SelectedItemRow: View {
                 VStack(alignment: .leading) {
                     Text(selectedItem.menuItem.translatedName)
                         .font(.system(size: 18, design: .serif))
-                    if let price = selectedItem.menuItem.price {
-                        Text("\(price)")
+                    
+                    if let currency = currency, selectedItem.menuItem.hasPrice {
+                        Text(selectedItem.menuItem.formattedPrice(with: currency))
                             .font(.subheadline)
                             .foregroundColor(.accentColor)
                     }

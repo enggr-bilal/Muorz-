@@ -85,16 +85,36 @@ struct APIConfiguration {
         case DELETE = "DELETE"
     }
     
-    // MARK: - API Keys (configure according to environment)
+    // MARK: - API Keys (loaded from Config.plist)
     
-    var apiKey: String {
-        // TODO: Retrieve from secure configuration file
-        // or from environment variables
-        return Bundle.main.object(forInfoDictionaryKey: "API_KEY") as? String ?? ""
+    private static func loadConfigValue(for key: String) -> String? {
+        guard let path = Bundle.main.path(forResource: "Config", ofType: "plist"),
+              let plist = NSDictionary(contentsOfFile: path),
+              let value = plist[key] as? String,
+              !value.contains("YOUR_ACTUAL") // Check if it's still the placeholder
+        else {
+            print("⚠️ Warning: Could not load \(key) from Config.plist or it contains placeholder value")
+            return nil
+        }
+        return value
     }
     
-    var openAIKey: String {
-        return Bundle.main.object(forInfoDictionaryKey: "OPENAI_API_KEY") as? String ?? ""
+    static var geminiAPIKey: String {
+        if let key = loadConfigValue(for: "GEMINI_API_KEY") {
+            return key
+        }
+        // Fallback for development (you should remove this in production)
+        print("🔧 Using fallback API key for development")
+        return "AIzaSyBHUDOcZs5LGfEv95ov9qFmNHdRmCMdWaY" // Your current key
+    }
+    
+    static var chatGPTAPIKey: String {
+        if let key = loadConfigValue(for: "CHATGPT_API_KEY") {
+            return key
+        }
+        // Fallback for development  
+        print("🔧 Using fallback ChatGPT API key for development")
+        return "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" // Your current key
     }
     
     // MARK: - Request Configuration
@@ -120,8 +140,8 @@ struct APIConfiguration {
             "User-Agent": "Muorz-iOS/\(appVersion())"
         ]
         
-        if !apiKey.isEmpty {
-            headers["Authorization"] = "Bearer \(apiKey)"
+        if !APIConfiguration.geminiAPIKey.isEmpty {
+            headers["Authorization"] = "Bearer \(APIConfiguration.geminiAPIKey)"
         }
         
         return headers
@@ -134,42 +154,6 @@ struct APIConfiguration {
     }
     
     // MARK: - Gemini API Configuration
-    
-    /// Gemini API Key - Replace with your actual API key
-    /// Get your API key from: https://makersuite.google.com/app/apikey
-    static let geminiAPIKey: String = {
-        // First, try to get from environment variable (for development with Xcode)
-        if let envKey = ProcessInfo.processInfo.environment["GEMINI_API_KEY"], !envKey.isEmpty {
-            print("✅ Found API key from environment variable (Xcode launch)")
-            return envKey
-        }
-        
-        // Then try to get from UserDefaults (for standalone app launch)
-        if let userDefaultsKey = UserDefaults.standard.string(forKey: "GEMINI_API_KEY"), !userDefaultsKey.isEmpty {
-            print("✅ Found API key from UserDefaults (standalone launch)")
-            return userDefaultsKey
-        }
-        
-        // Then try to get from Info.plist (for production)
-        if let path = Bundle.main.path(forResource: "Info", ofType: "plist"),
-           let plist = NSDictionary(contentsOfFile: path),
-           let key = plist["GEMINI_API_KEY"] as? String, !key.isEmpty {
-            print("✅ Found API key from Info.plist")
-            return key
-        }
-        
-        // Finally, return placeholder (will use sample data)
-        print("❌ No API key found - using placeholder")
-        return "YOUR_GEMINI_API_KEY_HERE"
-    }()
-    
-    /// Set API key in UserDefaults for standalone app launches
-    static func setAPIKeyForStandaloneUse() {
-        let apiKey = "AIzaSyAy5T7zHmtCUHtWmIaqbPZZCDUBN13RfRs"
-        UserDefaults.standard.set(apiKey, forKey: "GEMINI_API_KEY")
-        UserDefaults.standard.synchronize()
-        print("🔑 API key saved to UserDefaults for standalone use")
-    }
     
     /// Gemini API Base URL
     static let geminiBaseURL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
@@ -291,14 +275,16 @@ extension APIConfiguration {
         static let systemPrompt = """
         You are a menu processing assistant. Your task is to analyze OCR text from restaurant menus and convert it into structured JSON format.
 
-        Requirements:
-        1. Extract menu items with their original names (usually in French)
-        2. Provide English translations for dish names
-        3. List ingredients in English
-        4. Categorize items (starter, main course, dessert, drink)
-        5. Extract prices when available
-        6. Assign nutrition scores (1-10 scale) for protein, fat, and carbs
-        7. Add dietary tags (vegetarian, vegan, gluten_free, dairy_free)
+        IMPORTANT REQUIREMENTS:
+        1. Sort categories in logical meal order: "starter", "main course", "dessert", "drink", "other"
+        2. If a currency symbol (€, $, £, etc.) is visible on the menu, extract it ONCE at the top level
+        3. Convert all prices to Double values (remove currency symbols from individual prices)
+        4. If no currency is visible, set currency to null and prices to null
+        5. Extract menu items with their original names 
+        6. Provide English translations for dish names
+        7. List ingredients in English
+        8. Assign nutrition scores (1-10 scale) for protein, fat, and carbs
+        9. Add dietary tags (vegetarian, vegan, gluten_free, dairy_free)
 
         If the input text does not contain recognizable menu items or is not a restaurant menu, return a valid JSON in the specified format but with no items included.
 
@@ -306,40 +292,49 @@ extension APIConfiguration {
         """
         
         static func buildPrompt(with ocrText: String) -> String {
+            // Get device language (for future localization, defaulting to English for now)
+            let deviceLanguage = "en" // Locale.current.languageCode ?? "en"
+            
             return """
             \(systemPrompt)
+            
+            I will provide you with OCR text from a restaurant menu in any language.
+            Parse it and return a JSON object with the following structure.
+            
+            IMPORTANT REQUIREMENTS:
+            1. Sort categories in logical meal order: "starter", "main course", "dessert", "drink", "other"
+            2. If a currency symbol (€, $, £, etc.) is visible on the menu, extract it ONCE at the top level
+            3. Convert all prices to Double values (remove currency symbols from individual prices)
+            4. If no currency is visible, set currency to null and prices to null
+            5. Extract restaurant info if visible (name, cuisine type, location)
+            6. Process language: \(deviceLanguage)
             
             OCR Text to process:
             \(ocrText)
             
             Expected JSON format:
             {
-              "menu_items": [
+              "currency": "€" or null,
+              "categories": [
                 {
-                  "original_name": "string",
-                  "translated_name": "string",
-                  "ingredients_en": ["string"],
-                  "category_en": "starter|main course|dessert|drink",
-                  "price": "string or null",
-                  "nutrition_scores": {
-                    "protein": number,
-                    "fat": number,
-                    "carbs": number
-                  },
-                  "tags": {
-                    "vegetarian": boolean,
-                    "vegan": boolean,
-                    "gluten_free": boolean,
-                    "dairy_free": boolean
-                  }
+                  "category_name": "starter",
+                  "dishes": [
+                    {
+                      "original_name": "string",
+                      "translated_name": "string",
+                      "ingredients": ["string"],
+                      "price": 12.50 or null,
+                      "nutrition_scores": [6, 4, 7],
+                      "tags": ["vegetarian"]
+                    }
+                  ]
                 }
-              ],
-              "restaurant_info": {
-                "name": "string or null",
-                "cuisine": "string or null",
-                "location": "string or null"
-              }
+              ]
             }
+            
+            CRITICAL: Categories must be in this exact order when present: "starter", "main course", "dessert", "drink", "other"
+            CRITICAL: Prices must be Double numbers without currency symbols
+            CRITICAL: Currency should be extracted once at the top level if visible
             """
         }
     }

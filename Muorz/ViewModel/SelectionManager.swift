@@ -1,6 +1,6 @@
 //
 //  TEST.swift
-//  Muorz’
+//  Muorz'
 //
 //  Created by Simon Naud on 26/05/25.
 //
@@ -92,16 +92,17 @@ class SelectionManager: ObservableObject {
     
     var totalPrice: Double {
         selectedItems.reduce(0.0) { total, selectedItem in
-            let itemPrice = selectedItem.menuItem.price?
-                .replacingOccurrences(of: "€", with: "")
-                .trimmingCharacters(in: .whitespaces)
-                .replacingOccurrences(of: ",", with: ".")
-            
-            if let price = itemPrice.flatMap(Double.init) {
-                return total + (price * Double(selectedItem.quantity))
+            // Use the new priceValue property that converts String to Double
+            if let priceValue = selectedItem.menuItem.priceValue {
+                return total + (priceValue * Double(selectedItem.quantity))
             }
             return total
         }
+    }
+    
+    /// Check if any selected items have prices
+    var hasItemsWithPrices: Bool {
+        selectedItems.contains { $0.menuItem.hasPrice }
     }
     
     func clearSelection() {
