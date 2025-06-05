@@ -105,7 +105,7 @@ struct APIConfiguration {
         }
         // Fallback for development (you should remove this in production)
         print("🔧 Using fallback API key for development")
-        return "AIzaSyBHUDOcZs5LGfEv95ov9qFmNHdRmCMdWaY" // Your current key
+        return "DEVELOPMENT_FALLBACK_KEY_REPLACE_WITH_REAL_KEY" // Safe placeholder
     }
     
     static var chatGPTAPIKey: String {
@@ -114,7 +114,7 @@ struct APIConfiguration {
         }
         // Fallback for development  
         print("🔧 Using fallback ChatGPT API key for development")
-        return "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" // Your current key
+        return "DEVELOPMENT_FALLBACK_KEY_REPLACE_WITH_REAL_KEY" // Safe placeholder
     }
     
     // MARK: - Request Configuration
