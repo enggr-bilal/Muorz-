@@ -290,7 +290,7 @@ extension APIConfiguration {
         
         static let systemPrompt = """
         You are a menu processing assistant. Your task is to analyze OCR text from restaurant menus and convert it into structured JSON format.
-        
+
         Requirements:
         1. Extract menu items with their original names (usually in French)
         2. Provide English translations for dish names
@@ -299,7 +299,9 @@ extension APIConfiguration {
         5. Extract prices when available
         6. Assign nutrition scores (1-10 scale) for protein, fat, and carbs
         7. Add dietary tags (vegetarian, vegan, gluten_free, dairy_free)
-        
+
+        If the input text does not contain recognizable menu items or is not a restaurant menu, return a valid JSON in the specified format but with no items included.
+
         Return only valid JSON in the specified format. Do not include any explanations or additional text.
         """
         

@@ -318,86 +318,320 @@ struct ImageDetailView: View {
     }
 }
 
+// MARK: - NEW Professional Menu Processing View
+
 struct ProcessedMenuView: View {
     @ObservedObject var ocrViewModel: OCRViewModel
     @ObservedObject var preferences: UserPreferences
     let onDismiss: () -> Void
     
+    @State private var currentPhraseIndex = 0
+    @State private var displayedText = ""
+    @State private var isTyping = false
+    @State private var showDebugInfo = false // For debug mode
+    @State private var typewriterTimer: Timer?
+    
+    private let loadingPhrases = [
+        "Unfolding your menu like a local…",
+        "Checking what's cooking behind the scenes…",
+        "Matching dishes to your preferences…",
+        "Finding what's safe — and delicious…",
+        "Dusting off some hidden gems from the menu…",
+        "Almost ready to order with confidence…"
+    ]
+    
+    private var isDebugModeEnabled: Bool {
+        UserDefaults.standard.bool(forKey: "showDebugDuringProcessing")
+    }
+    
     var body: some View {
         NavigationView {
-            VStack {
+            ZStack {
+                // Same background as rest of app
+                Color(.systemGray6)
+                    .ignoresSafeArea()
+                
                 if ocrViewModel.isProcessing {
-                    VStack(spacing: 20) {
-                        ProgressView()
-                            .scaleEffect(1.5)
-                        
-                        Text("Processing menu...")
-                            .font(.title2)
-                        
-                        if !ocrViewModel.extractedText.isEmpty {
-                            Text("Extracted text:")
-                                .font(.headline)
-                                .padding(.top)
-                            
-                            ScrollView {
-                                Text(ocrViewModel.extractedText)
-                                    .padding()
-                            }
-                            .frame(maxHeight: 200)
-                            .background(Color(.systemGray6))
-                            .cornerRadius(12)
-                            .padding()
-                        }
-                    }
-                    .padding()
+                    loadingStateView
                 } else if let error = ocrViewModel.errorMessage {
-                    VStack(spacing: 20) {
-                        Image(systemName: "exclamationmark.triangle")
-                            .font(.system(size: 48))
-                            .foregroundColor(.orange)
-                        
-                        Text("Processing failed")
-                            .font(.title2)
-                        
-                        Text(error)
-                            .multilineTextAlignment(.center)
-                            .padding()
-                        
-                        Button("Try Again") {
-                            ocrViewModel.retryProcessing()
-                        }
-                        .buttonStyle(.borderedProminent)
-                    }
-                    .padding()
+                    errorStateView(message: error)
                 } else if let menu = ocrViewModel.processedMenu {
-                    VStack(spacing: 20) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 48))
-                            .foregroundColor(.green)
-                        
-                        Text("Menu processed successfully!")
-                            .font(.title2)
-                        
-                        Text("\(menu.menuItems.count) items found")
-                        
-                        Button("View Menu") {
-                            // Navigate to MenuView - you'll need to implement this navigation
-                            onDismiss()
-                        }
-                        .buttonStyle(.borderedProminent)
+                    // Check if menu has items, otherwise show error
+                    if menu.menuItems.isEmpty {
+                        errorStateView(message: "empty_menu")
+                    } else {
+                        successStateView
                     }
-                    .padding()
                 }
             }
-            .navigationTitle("Processing")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
+            .navigationBarHidden(true)
+        }
+        .onAppear {
+            if ocrViewModel.isProcessing {
+                startTypewriterAnimation()
+            }
+        }
+        .onDisappear {
+            stopTypewriterAnimation()
+        }
+    }
+    
+    // MARK: - Loading State
+    
+    private var loadingStateView: some View {
+        VStack(spacing: 40) {
+            Spacer()
+            
+            // App Title
+            Text("Muorz")
+                .font(.system(size: 30, design: .serif))
+                .fontWeight(.semibold)
+                .foregroundColor(.primary)
+            
+            // Typewriter Animation Area
+            VStack(spacing: 20) {
+                Text(displayedText)
+                    .font(.system(size: 18))
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .frame(height: 25) // Fixed height to prevent jumping
+                    .animation(.none, value: displayedText) // Disable animation on text changes
+                
+                // Subtle progress indicator
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle(tint: .accentColor))
+                    .scaleEffect(0.8)
+            }
+            
+            Spacer()
+            
+            // Debug toggle (only show when debug mode is enabled)
+            if isDebugModeEnabled && showDebugInfo && !ocrViewModel.extractedText.isEmpty {
+                debugInfoView
+            }
+            
+            // Cancel button
+            Button("Cancel") {
+                stopTypewriterAnimation()
+                ocrViewModel.clearResults()
+                onDismiss()
+            }
+            .font(.system(size: 16))
+            .foregroundColor(.secondary)
+            .padding(.bottom, 50)
+        }
+        .padding(.horizontal, 32)
+        .onTapGesture(count: 3) {
+            // Triple tap to show debug info (only if debug mode is enabled)
+            if isDebugModeEnabled {
+                showDebugInfo.toggle()
+            }
+        }
+    }
+    
+    // MARK: - Success State
+    
+    private var successStateView: some View {
+        VStack(spacing: 40) {
+            Spacer()
+            
+            // Success animation
+            VStack(spacing: 24) {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 64))
+                    .foregroundColor(.accent)
+                
+                Text("Buon appetito!")
+                    .font(.system(.title, design: .serif))
+                    .fontWeight(.regular)
+                    .foregroundColor(.primary)
+                
+                if let menu = ocrViewModel.processedMenu {
+                    Text("\(menu.menuItems.count) delicious options discovered")
+                        .font(.system(size: 18))
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                
+                
+            }
+            
+            Spacer()
+            
+            // Action button
+            Button {
+                onDismiss()
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "fork.knife")
+                        .font(.system(size: 16, weight: .semibold))
+                    
+                    Text("Explore the menu")
+                        .font(.system(size: 18, weight: .semibold))
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .frame(height: 56)
+                .background(Color.accentColor)
+                .cornerRadius(26)
+            }
+            .padding(.horizontal, 32)
+            .padding(.bottom, 50)
+        }
+        .padding(.horizontal, 32)
+    }
+    
+    // MARK: - Error State
+    
+    private func errorStateView(message: String) -> some View {
+        VStack(spacing: 40) {
+            Spacer()
+            
+            VStack(spacing: 24) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 64))
+                    .foregroundColor(.orange)
+                
+                
+                VStack(spacing: 12) {
+                    Text(message == "empty_menu" ? "This menu seems to be hiding its secrets" : "Something went wrong")
+                        .font(.system(.title, design: .serif))
+                        .fontWeight(.regular)
+                        .multilineTextAlignment(.center)
+                        .foregroundColor(.primary)
+                    
+                    Text(message == "empty_menu" ? 
+                         "We couldn't find any dishes in this image. Try capturing a clearer photo of the menu, or make sure the text is visible and well-lit." :
+                         "Don't worry — even the best chefs have kitchen mishaps. Let's give it another go.")
+                        .font(.system(size: 16))
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(2)
+                }
+            }
+            
+            Spacer()
+            
+            // Action buttons
+            VStack(spacing: 16) {
+                Button {
+                    if message == "empty_menu" {
+                        // For empty menu, go back to camera to retake photo
+                        ocrViewModel.clearResults()
+                        onDismiss()
+                    } else {
+                        // For other errors, retry processing
+                        ocrViewModel.retryProcessing()
+                    }
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: message == "empty_menu" ? "camera.fill" : "arrow.clockwise")
+                            .font(.system(size: 16, weight: .medium))
+                        Text(message == "empty_menu" ? "Take New Photo" : "Try Again")
+                            .font(.system(size: 18, weight: .semibold))
+                    }
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .background(Color.accentColor)
+                    .cornerRadius(26)
+                }
+                if message != "empty_menu" {
+                    Button("Start Over") {
                         ocrViewModel.clearResults()
                         onDismiss()
                     }
+                    .font(.system(size: 16))
+                    .foregroundColor(.secondary)
                 }
+            }
+            .padding(.horizontal, 32)
+            .padding(.bottom, 50)
+        }
+        .padding(.horizontal, 32)
+    }
+    
+    // MARK: - Debug Info View
+    
+    private var debugInfoView: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("🧪 Debug Info:")
+                .font(.caption)
+                .fontWeight(.semibold)
+                .foregroundColor(.orange)
+            
+            ScrollView {
+                Text(ocrViewModel.extractedText)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .frame(maxHeight: 120)
+            .padding(12)
+            .background(Color(.systemGray5))
+            .cornerRadius(8)
+        }
+        .padding(.horizontal, 32)
+    }
+    
+    // MARK: - Typewriter Animation
+    
+    private func startTypewriterAnimation() {
+        currentPhraseIndex = 0
+        displayedText = ""
+        isTyping = true
+        typeNextCharacter()
+    }
+    
+    private func stopTypewriterAnimation() {
+        isTyping = false
+        typewriterTimer?.invalidate()
+        typewriterTimer = nil
+    }
+    
+    private func updateTypewriterText() {
+        guard isTyping else { return }
+        // This is handled by the typeNextCharacter method
+    }
+    
+    private func typeNextCharacter() {
+        guard isTyping && currentPhraseIndex < loadingPhrases.count else { return }
+        
+        let currentPhrase = loadingPhrases[currentPhraseIndex]
+        
+        if displayedText.count < currentPhrase.count {
+            // Continue typing current phrase
+            let nextIndex = currentPhrase.index(currentPhrase.startIndex, offsetBy: displayedText.count)
+            displayedText += String(currentPhrase[nextIndex])
+            
+            typewriterTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: false) { _ in
+                typeNextCharacter()
+            }
+        } else {
+            // Finished current phrase, wait then move to next
+            typewriterTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: false) { _ in
+                moveToNextPhrase()
+            }
+        }
+    }
+    
+    private func moveToNextPhrase() {
+        guard isTyping else { return }
+        
+        currentPhraseIndex += 1
+        
+        if currentPhraseIndex < loadingPhrases.count {
+            // Move to next phrase
+            displayedText = ""
+            typewriterTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { _ in
+                typeNextCharacter()
+            }
+        } else {
+            // All phrases done, cycle back to first
+            currentPhraseIndex = 0
+            displayedText = ""
+            typewriterTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { _ in
+                typeNextCharacter()
             }
         }
     }

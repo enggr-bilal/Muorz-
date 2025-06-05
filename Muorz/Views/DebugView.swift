@@ -5,6 +5,7 @@ struct DebugView: View {
     @ObservedObject var muorzManager: MuorzManager
     @ObservedObject var preferences: UserPreferences
     @State private var showingDemoMenu = false
+    @State private var showDebugDuringProcessing = UserDefaults.standard.bool(forKey: "showDebugDuringProcessing")
     
     var body: some View {
         NavigationView {
@@ -37,6 +38,18 @@ struct DebugView: View {
                         clearAllPreferences()
                     }
                     .foregroundColor(.red)
+                }
+                
+                Section("🔧 Debug Options") {
+                    Toggle("Show Debug Info During Processing", isOn: $showDebugDuringProcessing)
+                        .onChange(of: showDebugDuringProcessing) { newValue in
+                            UserDefaults.standard.set(newValue, forKey: "showDebugDuringProcessing")
+                            print("🧪 Debug during processing: \(newValue ? "ON" : "OFF")")
+                        }
+                    
+                    Text("When enabled, triple-tap during menu processing to see extracted text and logs")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
                 
                 Section("📊 Current State") {

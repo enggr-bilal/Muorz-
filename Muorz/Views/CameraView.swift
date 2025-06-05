@@ -32,7 +32,7 @@ struct CameraView: View {
                     }
                 )
                 .onReceive(ocrViewModel.$processedMenu) { processedMenu in
-                    if let menu = processedMenu {
+                    if let menu = processedMenu, !menu.menuItems.isEmpty {
                         // Update MenuViewModel with processed data
                         menuViewModel.menuItems = menu.menuItems
                         menuViewModel.restaurantInfo = menu.restaurantInfo
@@ -48,6 +48,9 @@ struct CameraView: View {
                         
                         showMenuView = true
                         isReturningFromMenu = false
+                    } else if let menu = processedMenu, menu.menuItems.isEmpty {
+                        // Menu exists but is empty - don't show MenuView, let ProcessedMenuView handle the error
+                        print("📝 Processed menu is empty - staying in ProcessedMenuView for error handling")
                     }
                 }
             }
