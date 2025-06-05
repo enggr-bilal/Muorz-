@@ -413,13 +413,13 @@ struct MuorzPackageCard: View {
                     VStack(spacing: 8) {
                         Image(systemName: "airplane.circle.fill")
                             .font(.system(size: 32, weight: .semibold))
-                            .foregroundColor(.accentColor)
+                            .foregroundColor(.white)
                             .scaleEffect(isPressed ? 1.2 : 1.0)
                             .rotationEffect(.degrees(showSuccessAnimation ? 360 : 0))
                         
                         Text(package.displayName)
                             .font(.headline)
-                            .foregroundColor(.accentColor)
+                            .foregroundColor(package == .travelPass ? .white : .accent)
                             .multilineTextAlignment(.center)
                     }
                 } else {
@@ -445,13 +445,13 @@ struct MuorzPackageCard: View {
                 // Description
                 Text(package.description)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(package == .travelPass ? .white : .secondary)
                     .multilineTextAlignment(.center)
                 
                 // Price with highlight animation
                 Text(package.price)
                     .font(.system(size: 18, weight: .bold))
-                    .foregroundColor(package == .travelPass ? .accentColor : .accentColor)
+                    .foregroundColor(package == .travelPass ?  .white : .accentColor)
                     .scaleEffect(isPressed ? 1.1 : 1.0)
             }
             .frame(maxWidth: .infinity)
@@ -459,8 +459,8 @@ struct MuorzPackageCard: View {
             .padding(.horizontal, 12)
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(.white)
-                    .stroke(strokeColor, lineWidth: package == .travelPass ? 2 : 1)
+                    .fill(package == .travelPass ? .accent : .white)
+                   // .stroke(strokeColor, lineWidth: )
                     .shadow(color: shadowColor, radius: isPressed ? 8 : 2, x: 0, y: isPressed ? 4 : 2)
             )
             .scaleEffect(isPressed ? 0.98 : 1.0)

@@ -26,15 +26,19 @@ struct MenuItemInfo: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             // Title and Price row
-            HStack {
+            HStack(alignment: .top) {
                 HighlightedText(
                     text: item.translatedName,
                     searchText: searchText,
-                    font: .system(size: 20, weight: .regular, design: .serif),
+                    font: .system(.title3, design: .serif),
                     highlightColor: .yellow.opacity(0.6)
                 )
+                .fontWeight(.semibold)
                 .foregroundColor(.black)
-                .lineLimit(1)
+                .fixedSize(horizontal: false, vertical: true)
+                .lineLimit(nil)
+                .minimumScaleFactor(0.9)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 
                 Spacer()
                 
@@ -42,6 +46,7 @@ struct MenuItemInfo: View {
                     Text(item.formattedPrice(with: currency))
                         .font(.system(size: 18, weight: .regular))
                         .foregroundColor(.black)
+                        .fixedSize()
                 }
             }
             
@@ -54,7 +59,8 @@ struct MenuItemInfo: View {
                     highlightColor: .yellow.opacity(0.6)
                 )
                 .foregroundColor(.gray)
-                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+                .lineLimit(nil)
                 .multilineTextAlignment(.leading)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .layoutPriority(1)
@@ -112,7 +118,6 @@ struct MenuItemInfo: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .frame(height: 130)
         .background(Color(UIColor.systemBackground))
         .animation(.spring(response: 0.2), value: quantity)
     }

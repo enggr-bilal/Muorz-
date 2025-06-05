@@ -35,7 +35,7 @@ struct SelectedItemRow: View {
             } else {
                 VStack(alignment: .leading) {
                     Text(selectedItem.menuItem.translatedName)
-                        .font(.system(size: 18, design: .serif))
+                        .font(.system(.title3, design: .serif))
                     
                     if let currency = currency, selectedItem.menuItem.hasPrice {
                         Text(selectedItem.menuItem.formattedPrice(with: currency))

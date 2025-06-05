@@ -645,7 +645,8 @@ struct HowItWorksStep: View {
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(.system(size: 18, weight: .semibold, design: .serif))
+                    .font(.system(.title3, design: .serif))
+                    .fontWeight(.semibold)
                     .foregroundColor(.primary)
                 
                 Text(step)

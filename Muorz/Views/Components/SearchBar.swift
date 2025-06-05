@@ -201,6 +201,7 @@ struct HighlightedText: View {
     let text: String
     let searchText: String
     let font: Font
+ 
     let highlightColor: Color
     
     init(text: String, searchText: String, font: Font = .body, highlightColor: Color = .yellow) {

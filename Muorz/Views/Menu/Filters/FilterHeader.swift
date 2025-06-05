@@ -218,7 +218,7 @@ struct FilterHeader: View {
                 selectedDietTag = nil
             } label: {
                 HStack {
-                    Text("No Preference")
+                    Text("None")
                     if selectedDietTag == nil {
                         Spacer()
                         Image(systemName: "checkmark")

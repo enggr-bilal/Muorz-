@@ -231,7 +231,7 @@ enum MuorzPackage: String, CaseIterable {
         case .small: return "10 Muorz"
         case .medium: return "30 Muorz"
         case .large: return "50 Muorz"
-        case .travelPass: return "Travel 2 days pass"
+        case .travelPass: return "2 days travel pass"
         }
     }
     

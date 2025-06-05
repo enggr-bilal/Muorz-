@@ -283,10 +283,14 @@ struct MenuListView: View {
                 ForEach(sortedCategories(), id: \.self) { category in
                     VStack(alignment: .leading, spacing: 12) {
                         Text(category.description.capitalized)
-                            .font(.system(size: 28, weight: .semibold, design: .serif))
+                            .font(.system(.largeTitle, design: .serif))
+                            .fontWeight(.semibold)
                             .foregroundColor(.primary)
                             .padding(.horizontal, 16)
                             .padding(.top, 8)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .lineLimit(nil)
+                            .minimumScaleFactor(0.8)
                         
                         VStack(alignment: .leading, spacing: 0) {
                             ForEach(filteredItems[category] ?? []) { item in
