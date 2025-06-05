@@ -16,10 +16,10 @@ struct MenuItemRow: View {
     let searchText: String
     @ObservedObject var selectionManager: SelectionManager
     
-    // Thresholds for nutritional tags
-    private let highProteinThreshold = 6
-    private let lowFatThreshold = 5
-    private let lowCarbsThreshold = 4
+    // Thresholds for nutritional tags (more strict for meaningful tags)
+    private let highProteinThreshold = 7  // Was 6, now requires 7+
+    private let lowFatThreshold = 3       // Was 5, now requires 3 or less
+    private let lowCarbsThreshold = 3     // Was 4, now requires 3 or less
     
     private var isHighProtein: Bool {
         item.nutritionScores.protein >= highProteinThreshold

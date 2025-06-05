@@ -188,7 +188,7 @@ class MenuService: MenuServiceProtocol, ObservableObject {
         Parse it and return a JSON object with the following structure.
         
         IMPORTANT REQUIREMENTS:
-        1. Sort categories in logical meal order: "starter", "main course", "dessert", "drink", "other"
+        1. Sort categories in logical meal order: "starter", "pizza", "pasta", "main courses", "dessert", "drink", "other". you can create other categories
         2. If a currency symbol (€, $, £, etc.) is visible on the menu, extract it ONCE at the top level
         3. Convert all prices to Double values (remove currency symbols, use dots for decimals)
         4. If no prices are found on the menu, omit "currency" and set all "price" to null
@@ -216,7 +216,6 @@ class MenuService: MenuServiceProtocol, ObservableObject {
         }
         
         CRITICAL: 
-        - Categories must be in this exact order when present: "starter" → "main course" → "dessert" → "drink" → "other"
         - Prices must be Double numbers without currency symbols  
         - Currency should be extracted once at the top level if visible
         - nutrition_scores: [protein, fat, carbs] on 0-10 scale OR null if cannot estimate

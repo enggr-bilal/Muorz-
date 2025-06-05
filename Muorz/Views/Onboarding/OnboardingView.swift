@@ -590,26 +590,22 @@ struct HowItWorksScreen: View {
                         .foregroundColor(.primary)
                         .multilineTextAlignment(.leading)
                       
-                    
-                    VStack(alignment: .leading, spacing: 16) {
-                       
+                    VStack(alignment: .leading, spacing: 32) {
                         HowItWorksStep(
                             icon: "camera.fill",
                             title: "Scan any menu",
                             step: "Snap a photo — we'll handle the language and layout."
                         )
-                        Spacer()
                         HowItWorksStep(
                             icon: "translate",
                             title: "Explore your options",
-                            step: "See what matches your diet, with tags and filters that make sense to you."                        )
-                        Spacer()
+                            step: "See what matches your diet, with tags and filters that make sense to you."
+                        )
                         HowItWorksStep(
                             icon: "list.bullet",
                             title: "Order with confidence",
                             step: "Show the dish name in the original language — no guesswork, no surprises."
                         )
-                        Spacer()
                     }
                     Spacer()
                 }
@@ -635,37 +631,30 @@ struct HowItWorksStep: View {
     let step: String
     
     var body: some View {
-        HStack(spacing: 16) {
-
-            ZStack{
-               
+        HStack(alignment: .top, spacing: 16) {
+            ZStack {
                 Circle()
-                    .frame(width: 60, height: 60)
+                    .frame(width: 52, height: 52)
                     .foregroundStyle(.white)
-                Image(
-                    systemName: icon)
-                    .font(.title)
+                    .shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 2)
+                
+                Image(systemName: icon)
+                    .font(.title2)
                     .foregroundStyle(.accent)
             }
             
             VStack(alignment: .leading, spacing: 4) {
-                Text("\(title)")
-                    .font(.system(size: 20, design: .serif))
+                Text(title)
+                    .font(.system(size: 18, weight: .semibold, design: .serif))
                     .foregroundColor(.primary)
-                Text("\(step)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
                 
+                Text(step)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            
-            
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        
-       // .background(
-        //    RoundedRectangle(cornerRadius: 12)
-        //        .fill(Color.white)
-        //        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
-      //  )
     }
 }
 
@@ -805,6 +794,11 @@ struct PricingModelScreen: View {
                             .font(.system(.title, design: .serif))
                             .fontWeight(.semibold)
                             .foregroundColor(.primary)
+                        
+                        Text("A Muorz is a token that unlocks one menu scan — translated, explained, and tailored to you.")
+                                .font(.body)
+                                .multilineTextAlignment(.center)
+                                .foregroundColor(.secondary)
                         
                         Text("As a welcome gift, here's 2 extra on us.")
                             .font(.body)

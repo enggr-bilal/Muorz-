@@ -253,9 +253,9 @@ extension MenuItem {
     
     /// Check if item matches nutrition preferences
     func matchesNutritionPreferences(_ preferences: Set<String>,
-                                   highProteinThreshold: Int = 6,
-                                   lowFatThreshold: Int = 5,
-                                   lowCarbsThreshold: Int = 4) -> Bool {
+                                   highProteinThreshold: Int = 7,
+                                   lowFatThreshold: Int = 3,
+                                   lowCarbsThreshold: Int = 3) -> Bool {
         guard !preferences.isEmpty else { return true }
         
         for preference in preferences {

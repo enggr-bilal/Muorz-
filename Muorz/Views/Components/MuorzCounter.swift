@@ -286,7 +286,7 @@ struct MuorzPurchaseSheet: View {
                         
                         
                         Text(headerTitle)
-                            .font(.title)
+                            .font(.system(.title, design: .serif))
                             .fontWeight(.bold)
                             .foregroundColor(.accentColor)
                         
