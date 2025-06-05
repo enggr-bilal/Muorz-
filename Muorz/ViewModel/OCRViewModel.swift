@@ -189,9 +189,28 @@ class OCRViewModel: ObservableObject {
                 continuation.resume()
             }
             
+            // CRITICAL: Use revision 3 for maximum language support
+            request.revision = VNRecognizeTextRequestRevision3
+            
+            // CRITICAL: Use accurate mode for non-Latin scripts (Chinese, Japanese, Korean, Arabic)
             request.recognitionLevel = .accurate
             request.usesLanguageCorrection = true
-            request.recognitionLanguages = ["fr", "en"]
+            
+            // CRITICAL: Enable automatic language detection for unknown scripts
+            request.automaticallyDetectsLanguage = true
+            
+            // Prioritized language list - order matters for ambiguous cases
+            // First language determines which ML model is used in accurate mode
+            request.recognitionLanguages = [
+                // Asian scripts (require accurate mode + revision 3)
+                "ja", "zh-Hans", "zh-Hant", "ko",
+                // European languages
+                "en", "fr", "es", "it", "de", "pt", "nl", 
+                // Other scripts
+                "ar", "he", "th", "vi", "tr", "el", "ru",
+                // Nordic & Eastern European
+                "sv", "da", "no", "fi", "cs", "hu", "pl"
+            ]
             
             DispatchQueue.global(qos: .userInitiated).async {
                 do {
