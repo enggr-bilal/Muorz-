@@ -194,6 +194,7 @@ class MenuService: MenuServiceProtocol, ObservableObject {
         4. If no prices are found on the menu, omit "currency" and set all "price" to null
         5. Return results in English (target language: \(deviceLanguage))
         6. For nutrition_scores: if you can reasonably estimate nutritional content, provide [protein, fat, carbs] on 0-10 scale. If not possible (like for drinks, wines, simple items), set to null
+        7. For the ingredients, if they're availables on the OCR text use these ones otherwise add from your knowledge. 
         
         Expected JSON format:
         {
