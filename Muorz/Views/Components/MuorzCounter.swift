@@ -275,6 +275,7 @@ struct MuorzCounter: View {
 struct MuorzPurchaseSheet: View {
     @ObservedObject var muorzManager: MuorzManager
     @Environment(\.dismiss) private var dismiss
+    @State private var showingStoreClosedAlert = false
     
     var body: some View {
         NavigationView {
@@ -358,6 +359,11 @@ struct MuorzPurchaseSheet: View {
                     .foregroundColor(.accentColor)
                 }
             }
+            .alert("Muorz Store Temporarily Closed", isPresented: $showingStoreClosedAlert) {
+                Button("Got it!", role: .cancel) { }
+            } message: {
+                Text("We're adding some special ingredients to make your experience even more delicious! The store will reopen soon with exciting new flavors.")
+            }
         }
     }
     
@@ -374,23 +380,8 @@ struct MuorzPurchaseSheet: View {
     }
     
     private func handlePurchase(_ package: MuorzPackage) {
-        // Mock purchase for now - in real app this would integrate with StoreKit
-        let muorzCount = package.muorzCount
-        
-        switch package {
-        case .travelPass:
-            muorzManager.activateTravelDayPass()
-        default:
-            muorzManager.addMuorz(muorzCount)
-            // Set pending coin drop animation AFTER adding Muorz
-            muorzManager.pendingCoinDrop = muorzCount
-        }
-        
-        // Show initial success feedback
-        let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
-        impactFeedback.impactOccurred()
-        
-        dismiss()
+        // 🚧 TESTFLIGHT MODE: Store is temporarily closed
+        showingStoreClosedAlert = true
     }
 }
 
@@ -497,9 +488,7 @@ struct MuorzPackageCard: View {
     }
     
     private var strokeColor: Color {
-        if showSuccessAnimation {
-            return .green.opacity(0.6)
-        } else if package == .travelPass {
+        if package == .travelPass {
             return .accentColor
         } else {
             return .gray.opacity(0.2)
@@ -507,13 +496,7 @@ struct MuorzPackageCard: View {
     }
     
     private var shadowColor: Color {
-        if showSuccessAnimation {
-            return .green.opacity(0.3)
-        } else if isPressed {
-            return  .accentColor
-        } else {
-            return .black.opacity(0.1)
-        }
+        return .black.opacity(0.1)
     }
 }
 
