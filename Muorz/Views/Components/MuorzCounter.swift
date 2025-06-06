@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MuorzCounter: View {
     @ObservedObject var muorzManager: MuorzManager
+    let onDebugLongPress: (() -> Void)?
     @State private var showingPurchaseSheet = false
     @State private var shimmerOffset: CGFloat = -200
     @State private var showAttentionAnimation = false
@@ -12,12 +13,15 @@ struct MuorzCounter: View {
     @State private var animatedMuorzCount: Int = 0
     @State private var startingMuorzCount: Int = 0
     
+    init(muorzManager: MuorzManager, onDebugLongPress: (() -> Void)? = nil) {
+        self.muorzManager = muorzManager
+        self.onDebugLongPress = onDebugLongPress
+    }
+    
     var body: some View {
         VStack(alignment:.trailing, spacing: 6) {
             // Main Muorz Counter - Circle overlaying Capsule
-            Button {
-                showingPurchaseSheet = true
-            } label: {
+            ZStack {
                 ZStack(alignment: .leading) {
                     // Background Capsule (compact width)
                     HStack(spacing: 0) {
@@ -62,7 +66,12 @@ struct MuorzCounter: View {
                 }
                 .fixedSize(horizontal: true, vertical: false) // Compact width
             }
-            .buttonStyle(PlainButtonStyle())
+            .onTapGesture {
+                showingPurchaseSheet = true
+            }
+            .onLongPressGesture {
+                onDebugLongPress?()
+            }
             .onAppear {
                 lastMuorzCount = muorzManager.remainingMuorz
                 animatedMuorzCount = muorzManager.remainingMuorz
