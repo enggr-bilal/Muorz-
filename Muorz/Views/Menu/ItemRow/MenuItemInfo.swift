@@ -30,10 +30,10 @@ struct MenuItemInfo: View {
                 HighlightedText(
                     text: item.translatedName,
                     searchText: searchText,
-                    font: .system(.title3, design: .serif),
+                    font: .system(.title2, design: .serif),
                     highlightColor: .yellow.opacity(0.6)
                 )
-                .fontWeight(.semibold)
+                //.fontWeight(.semibold)
                 .foregroundColor(.black)
                 .fixedSize(horizontal: false, vertical: true)
                 .lineLimit(nil)
@@ -44,7 +44,7 @@ struct MenuItemInfo: View {
                 
                 if let currency = currency, item.hasPrice {
                     Text(item.formattedPrice(with: currency))
-                        .font(.system(size: 18, weight: .regular))
+                        .font(.system(.title3, weight: .regular))
                         .foregroundColor(.black)
                         .fixedSize()
                 }

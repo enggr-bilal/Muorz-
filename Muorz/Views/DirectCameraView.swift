@@ -32,7 +32,7 @@ struct DirectCameraView: View {
                         .scaleEffect(1.5)
                     
                     Text("Preparing camera...")
-                        .font(.system(size: 16, weight: .medium))
+                        .font(.system(.caption, weight: .medium))
                         .foregroundColor(.white)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -251,7 +251,7 @@ struct ProceedButton: View {
                     }
                 } label: {
                     Image(systemName: canProceed ? "arrow.right" : "lock.fill")
-                        .font(.system(size: isLarge ? 24 : 18, weight: .bold))
+                        .font(.system(isLarge ? .title : .title3, weight: .bold))
                         .foregroundColor(.white)
                         .frame(width: isLarge ? 80 : 60, height: isLarge ? 80 : 60)
                         .background(canProceed ? Color.accentColor : Color.gray)
@@ -384,17 +384,18 @@ struct ProcessedMenuView: View {
             
             // App Title
             Text("Muorz")
-                .font(.system(size: 30, design: .serif))
+                .font(.system(.largeTitle, design: .serif))
                 .fontWeight(.semibold)
                 .foregroundColor(.primary)
             
             // Typewriter Animation Area
             VStack(spacing: 20) {
                 Text(displayedText)
-                    .font(.system(size: 18))
+                    .font(.title3)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
-                    .frame(height: 25) // Fixed height to prevent jumping
+                    .lineLimit(3) // Allow up to 3 lines
+                    .frame(minHeight: 60) // Minimum height for up to 3 lines
                     .animation(.none, value: displayedText) // Disable animation on text changes
                 
                 // Subtle progress indicator
@@ -416,7 +417,7 @@ struct ProcessedMenuView: View {
                 ocrViewModel.clearResults()
                 onDismiss()
             }
-            .font(.system(size: 16))
+            .font(.body)
             .foregroundColor(.secondary)
             .padding(.bottom, 50)
         }
@@ -448,7 +449,7 @@ struct ProcessedMenuView: View {
                 
                 if let menu = ocrViewModel.processedMenu {
                     Text("\(menu.menuItems.count) delicious options discovered")
-                        .font(.system(size: 18))
+                        .font(.body)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
                 }
@@ -464,10 +465,10 @@ struct ProcessedMenuView: View {
             } label: {
                 HStack(spacing: 12) {
                     Image(systemName: "fork.knife")
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.system(.body, weight: .semibold))
                     
                     Text("Explore the menu")
-                        .font(.system(size: 18, weight: .semibold))
+                        .font(.system(.title3, weight: .semibold))
                 }
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
@@ -503,7 +504,7 @@ struct ProcessedMenuView: View {
                     Text(message == "empty_menu" ? 
                          "We couldn't find any dishes in this image. Try capturing a clearer photo of the menu, or make sure the text is visible and well-lit." :
                          "Don't worry — even the best chefs have kitchen mishaps. Let's give it another go.")
-                        .font(.system(size: 16))
+                    .font(.system(.caption))
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
                         .lineSpacing(2)
@@ -541,7 +542,7 @@ struct ProcessedMenuView: View {
                         ocrViewModel.clearResults()
                         onDismiss()
                     }
-                    .font(.system(size: 16))
+                    .font(.system(.caption))
                     .foregroundColor(.secondary)
                 }
             }
@@ -762,7 +763,7 @@ struct PhotoStackOverlay: View {
                                 onRemoveImage(index)
                             } label: {
                                 Image(systemName: "xmark.circle.fill")
-                                    .font(.system(size: 20))
+                                    .font(.body)
                                     .foregroundColor(.white)
                             }
                             .offset(x: 8, y: -8)

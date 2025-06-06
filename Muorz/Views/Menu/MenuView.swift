@@ -125,9 +125,9 @@ struct MenuView: View {
                     } label: {
                         HStack(spacing: 4) {
                             Image(systemName: "chevron.left")
-                                .font(.system(size: 16, weight: .medium))
+                               // .font(.system(size: 16, weight: .medium))
                             Text("Lens")
-                                .font(.system(size: 17, weight: .regular))
+                              //  .font(.system(size: 17, weight: .regular))
                         }
                         .foregroundColor(.accentColor)
                     }
@@ -283,7 +283,7 @@ struct MenuListView: View {
                 ForEach(sortedCategories(), id: \.self) { category in
                     VStack(alignment: .leading, spacing: 12) {
                         Text(category.description.capitalized)
-                            .font(.system(.largeTitle, design: .serif))
+                            .font(.system(.title, design: .serif))
                             .fontWeight(.semibold)
                             .foregroundColor(.primary)
                             .padding(.horizontal, 16)

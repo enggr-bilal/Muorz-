@@ -24,7 +24,7 @@ struct FilterButton: View {
         Group {
             if isIconOnly {
                 Image(systemName: icon)
-                    .font(.system(size: 18, weight: .medium))
+                    .font(.system(.headline, weight: .medium))
                     .foregroundColor(isSelected ? .white : .primary)
                     .frame(width: 36, height: 36)
                     .background(
@@ -37,7 +37,7 @@ struct FilterButton: View {
                     )
             } else {
                 Label(title ?? "", systemImage: icon)
-                    .font(.system(size: 16, weight: .medium))
+                    .font(.system(.headline, weight: .medium))
                     .foregroundColor(isSelected ? .white : .primary)
                     .padding(.horizontal, 16)
                     .frame(height: 36)
@@ -270,12 +270,12 @@ struct FilterHeader: View {
         } label: {
             HStack {
                 Image(systemName: nutritionButtonIcon)
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(.black)
+                    .font(.system(.headline, weight: .medium))
+                    .foregroundColor(.primary)
                 
                 Text(nutritionButtonLabel)
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(.black)
+                    .font(.system(.headline, weight: .medium))
+                    .foregroundColor(.primary)
                     .fixedSize()
             }
             .padding(.horizontal, 16)
