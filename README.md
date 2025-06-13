@@ -41,6 +41,42 @@
 - **Persistent settings** that survive app restarts
 - **Temporary overrides** in MenuView without affecting defaults
 
+## Business Model 🎯
+
+### Freemium System
+- **Muorz Currency**: Core virtual currency system
+- **Weekly Allocation**: 3 Muorz automatically refilled every 7 days
+- **Welcome Bonus**: New users receive 2 extra Muorz (5 total)
+- **Smart Deduction**: Muorz only deducted upon successful menu processing
+
+### Purchase Options
+- **Travel Day Pass**: 24-hour unlimited scanning (€1.99)
+- **Muorz Packages**:
+  - Small: 10 Muorz (€1.49)
+  - Medium: 20 Muorz (€2.49)
+  - Large: 30 Muorz (€3.49)
+
+### Revenue Features
+- **In-App Store**: Beautiful purchase interface with package selection
+- **Referral System**: 5 Muorz bonus for both referrer and referee
+- **Smart UI**: 
+  - Muorz counter with refill timer
+  - Lock icons when no Muorz available
+  - Travel Pass indicator
+  - Purchase prompts at strategic moments
+
+### Business Logic
+- **Scan Prevention**: Users cannot scan without available Muorz
+- **Weekly Refills**: Automatic refill every Monday
+- **State Management**: Persistent across app updates
+- **Analytics Ready**: Track conversion, usage patterns, and revenue metrics
+
+### Future Revenue Streams
+- **Restaurant Partnerships**: Bonus Muorz for partner venues
+- **Seasonal Promotions**: Special events with bonus Muorz
+- **Bulk Discounts**: Special pricing for frequent travelers
+- **Social Features**: Premium features for active users
+
 ## Product Vision
 
 The application allows users to:
