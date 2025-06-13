@@ -1,4 +1,6 @@
-# Muorz 🍽️
+# Muorz 
+
+Available on TestFlight : https://testflight.apple.com/join/6yWPWu3N Feedbacks are welcome :)
 
 > **iOS SwiftUI App for Intelligent Menu Processing with OCR and AI**
 
