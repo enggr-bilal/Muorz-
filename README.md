@@ -1,20 +1,20 @@
 # Muorz 🍽️
 
-> **📱 iOS SwiftUI App for Intelligent Menu Processing with OCR and AI**
+> **iOS SwiftUI App for Intelligent Menu Processing with OCR and AI**
 
-## 🎉 Configuration Status
+## Configuration Status
 
-✅ **Gemini 2.0 Flash API configured and ready**  
-✅ **API data flow fixed** - API data now displays correctly  
-📋 **Complete guide:** [CONFIGURATION_COMPLETE.md](CONFIGURATION_COMPLETE.md)  
-🔑 **Your API key:** See `PRIVATE_API_KEY.txt`  
-🛠️ **Instructions:** [API_CONFIGURATION_GUIDE.md](API_CONFIGURATION_GUIDE.md)
+**Gemini 2.0 Flash API configured and ready**  
+**API data flow fixed** - API data now displays correctly  
+
+**Your API key:** See `PRIVATE_API_KEY.txt`  
+
 
 ---
 
-## 🌟 Features
+## Features
 
-### 🤖 Intelligent Menu Processing
+### Intelligent Menu Processing
 - **Gemini 2.0 Flash API** integration for advanced menu analysis
 - **Real-time OCR** using Vision framework
 - **Automatic translation** to English
@@ -22,26 +22,26 @@
 - **Dietary tags** detection (vegetarian, vegan, gluten-free, dairy-free)
 - **Smart categorization** of dishes
 
-### 📸 Advanced OCR
+### Advanced OCR
 - **Apple Vision Framework** for high-accuracy text recognition
 - **Multi-language support** for international menus
 - **Real-time processing** with live camera feed
 - **Automatic image optimization** for better OCR results
 
-### 🔍 Smart Search & Filtering
+### Smart Search & Filtering
 - **Intelligent search** with ingredient-based suggestions
 - **Real-time highlighting** of search terms
 - **Category filtering** (Starter, Main Course, Dessert)
 - **Dietary filtering** with customizable defaults
 - **Nutritional sorting** with priority-based ordering
 
-### ⚙️ User Preferences
+### User Preferences
 - **Default dietary preferences** set in ProfileView
 - **Nutrition sort priorities** (Protein, Low Fat, Low Carbs)
 - **Persistent settings** that survive app restarts
 - **Temporary overrides** in MenuView without affecting defaults
 
-## 🎯 Product Vision
+## Product Vision
 
 The application allows users to:
 - Take photos of restaurant menus
@@ -51,7 +51,7 @@ The application allows users to:
 - Filter and search through dishes and ingredients
 - Customize display according to dietary preferences
 
-## 🚀 API Integration
+## API Integration
 
 ### Gemini API Implementation
 
@@ -88,9 +88,7 @@ The app now uses **Google's Gemini 2.0 Flash** model for intelligent menu proces
 2. **Configure Key**: Use environment variable `GEMINI_API_KEY` or Info.plist
 3. **Test Integration**: App automatically falls back to sample data if no key is configured
 
-For detailed setup instructions, see [GEMINI_API_IMPLEMENTATION.md](GEMINI_API_IMPLEMENTATION.md)
-
-## 🎯 User Preferences & Filtering System
+## User Preferences & Filtering System
 
 ### Architecture Overview
 
@@ -161,7 +159,7 @@ The app uses a clear separation between **default preferences** and **temporary 
 - **Empty**: When no results match filters
 - **Success**: Structured menu display with intelligent sorting
 
-## 🏗️ Architecture
+## Architecture
 
 ### Project Structure
 
@@ -232,9 +230,9 @@ struct MenuItem: Identifiable, Codable {
 ]
 ```
 
-## 🔍 Features
+## Features
 
-### ✅ Implemented
+### Implemented
 - **Camera-First Experience**: Modern camera interface as app entry point
 - **Advanced OCR**: Text extraction with multilingual support (FR/EN)
 - **Gemini AI Processing**: Google's Gemini 2.0 Flash for intelligent menu parsing
@@ -252,7 +250,7 @@ struct MenuItem: Identifiable, Codable {
 - **Error Handling & Retries**: Robust network error handling with exponential backoff
 - **Development Tools**: Mock service and detailed logging for development
 
-### 🔧 API Features
+### API Features
 - **Gemini API Integration**: Complete implementation with Google's latest model
 - **Automatic Fallback**: Sample data when API is unavailable
 - **Retry Logic**: Up to 3 attempts with exponential backoff
@@ -260,7 +258,7 @@ struct MenuItem: Identifiable, Codable {
 - **Development Mode**: Mock service for testing without API calls
 - **Comprehensive Logging**: Detailed request/response logging in debug mode
 
-## 🛠️ Usage
+## Usage
 
 ### API Setup - Required Configuration
 
@@ -275,7 +273,6 @@ struct MenuItem: Identifiable, Codable {
 - Xcode Console should display: `🚀 Attempting Gemini API call`
 - If you see `⚠️ No Gemini API key configured`, the configuration failed
 
-**📋 Complete guide:** See [API_CONFIGURATION_GUIDE.md](API_CONFIGURATION_GUIDE.md)
 
 ### Camera/Lens View
 - Entry point of the application
@@ -298,7 +295,7 @@ struct MenuItem: Identifiable, Codable {
 - **Search Highlighting**: Search terms highlighted in results
 - **Responsive Design**: Adapts to different screen sizes
 
-## 🔧 Technical Implementation
+## Technical Implementation
 
 ### API Integration
 - **Service Layer**: Protocol-based architecture for testability
@@ -320,107 +317,25 @@ struct MenuItem: Identifiable, Codable {
 - **Accessibility**: VoiceOver support and accessibility labels
 - **Dark Mode**: Full support for system appearance modes
 
-## 🚧 Known Issues
+## Known Issues
 
-- **Sample Data Fallback**: App displays hardcoded data when API fails
 - **Menu Persistence**: Menus are not saved between app sessions
 - **Offline Mode**: No offline functionality currently available
 
-## 🔮 Roadmap
+## Roadmap
 
 ### High Priority
-- [ ] Remove hardcoded sample data for production
 - [ ] Implement menu persistence with SwiftData
 - [ ] Add menu history functionality
 - [ ] Improve error handling and user feedback
 
 ### Medium Priority
-- [ ] Add offline OCR capabilities
-- [ ] Implement menu sharing functionality
+- [ ] Add offline LLM capabilities (iOS 26 On device Model)
 - [ ] Add favorite dishes feature
-- [ ] Improve camera interface with live preview
+- [ ] Improve camera interface
 
 ### Low Priority
-- [ ] Add social features
 - [ ] Implement restaurant discovery
 - [ ] Add user reviews and ratings
-- [ ] Integrate with food delivery services
-
-## 🤝 Contributing
-
-### Development Setup
-1. Clone the repository
-2. Open `Muorz.xcodeproj` in Xcode 15+
-3. Configure your Gemini API key (see setup instructions)
-4. Build and run on iOS 17+ device or simulator
-
-### Code Standards
-- **SwiftUI**: Use declarative syntax and view composition
-- **MVVM**: Follow Model-View-ViewModel architecture
-- **Combine**: Use reactive programming for data flow
-- **Documentation**: Comment public interfaces and complex logic
-
-### Pull Request Process
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes with clear commit messages
-4. Update documentation if needed
-5. Submit a pull request with detailed description
-
----
-
-**Muorz - AI-Powered Menu Scanner 🍽️**  
-*Modern interface, intelligent processing, seamless experience*
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- **Xcode 15.0+**
-- **iOS 16.0+** target deployment
-- **Swift 5.9+**
-- **Gemini API Key** from [Google AI Studio](https://makersuite.google.com/app/apikey)
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd Muorz
-   ```
-
-2. **Set up Gemini API Key**
-   
-   #### Method 1: Environment Variable (Recommended for Development)
-   1. In Xcode: **Product** → **Scheme** → **Edit Scheme...**
-   2. Select **"Run"** → **"Arguments"** tab
-   3. Under **"Environment Variables"**, add:
-      - **Name**: `GEMINI_API_KEY`
-      - **Value**: Your actual API key from Google AI Studio
-      - **✅ Check the checkbox to enable**
-   4. Click **"Close"** to save
-   
-   #### Method 2: Info.plist (For Production)
-   1. Open `Info.plist` in Xcode
-   2. Add new key:
-      - **Key**: `GEMINI_API_KEY`
-      - **Type**: String  
-      - **Value**: Your actual API key
-   
-   ⚠️ **Security Note**: Never commit API keys to version control
-
-3. **Build and Run**
-   ```bash
-   # Open in Xcode
-   open Muorz.xcodeproj
-   
-   # Or build from command line
-   xcodebuild -project Muorz.xcodeproj -scheme Muorz build
-   ```
-
-### ✅ API Configuration Status
-- **Gemini API Integration**: ✅ **Working**
-- **OCR Text Processing**: ✅ **Working**  
-- **Menu Item Parsing**: ✅ **Working**
-- **Error Handling**: ✅ **Working**
-- **Sample Data Removed**: ✅ **Complete**
+- [ ] B2B Model partnership with restaurants
+ 
