@@ -9,56 +9,52 @@ import Foundation
 
 // MARK: - API Response Models (Gemini API Format)
 
-/// Root response structure from Gemini API (NEW FORMAT)
+/// Root response structure from Gemini API
 struct GeminiMenuResponse: Codable {
     let currency: String?
     let categories: [MenuCategory]
+}
+
+/// Menu category from API
+struct MenuCategory: Codable {
+    let name: String
+    let dishes: [APIDish]
+}
+
+/// Dish structure from API
+struct APIDish: Codable {
+    let original_name: String
+    let translated_name: String
+    let ingredients_en: [String]
+    let price: Double?
+    let nutrition_scores: [Int]? // [protein, fat, carbs] on 0-10 scale
+    let dietary_tags: [Int] // [vegetarian, vegan, gluten_free, dairy_free] as 0/1
     
-    // Custom decoder to handle the new structure
+    // Custom decoder to handle potential missing values
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.currency = try container.decodeIfPresent(String.self, forKey: .currency)
-        self.categories = try container.decode([MenuCategory].self, forKey: .categories)
-    }
-    
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encodeIfPresent(currency, forKey: .currency)
-        try container.encode(categories, forKey: .categories)
+        self.original_name = try container.decode(String.self, forKey: .original_name)
+        self.translated_name = try container.decode(String.self, forKey: .translated_name)
+        self.ingredients_en = try container.decode([String].self, forKey: .ingredients_en)
+        self.price = try container.decodeIfPresent(Double.self, forKey: .price)
+        self.nutrition_scores = try container.decodeIfPresent([Int].self, forKey: .nutrition_scores)
+        
+        // Ensure dietary_tags is always an array of 4 integers
+        if let tags = try? container.decode([Int].self, forKey: .dietary_tags), tags.count == 4 {
+            self.dietary_tags = tags
+        } else {
+            // Default to all false if tags are missing or invalid
+            self.dietary_tags = [0, 0, 0, 0]
+        }
     }
     
     enum CodingKeys: String, CodingKey {
-        case currency, categories
-    }
-}
-
-/// Menu category from API (NEW FORMAT)
-struct MenuCategory: Codable {
-    let categoryName: String
-    let dishes: [APIDish]
-    
-    enum CodingKeys: String, CodingKey {
-        case categoryName = "name"
-        case dishes = "dishes"
-    }
-}
-
-/// Dish structure from API (NEW FORMAT)
-struct APIDish: Codable {
-    let originalName: String
-    let translatedName: String
-    let ingredients: [String]
-    let price: Double?
-    let nutritionScores: [Int]? // Made optional to handle null from API
-    let dietaryTags: [Int] // [vegetarian, vegan, gluten_free, dairy_free] as 0/1
-    
-    enum CodingKeys: String, CodingKey {
-        case originalName = "original_name"
-        case translatedName = "translated_name"
-        case ingredients = "ingredients_en"
-        case price = "price"
-        case nutritionScores = "nutrition_scores"
-        case dietaryTags = "dietary_tags"
+        case original_name
+        case translated_name
+        case ingredients_en
+        case price
+        case nutrition_scores
+        case dietary_tags
     }
 }
 
@@ -99,25 +95,26 @@ struct MenuItem: Identifiable, Codable, Equatable {
     
     // Initializer from API dish
     init(from apiDish: APIDish, category: String) {
-        self.originalName = apiDish.originalName
-        self.translatedName = apiDish.translatedName
-        self.ingredientsEn = apiDish.ingredients
+        self.originalName = apiDish.original_name
+        self.translatedName = apiDish.translated_name
+        self.ingredientsEn = apiDish.ingredients_en
         self.categoryEn = category.lowercased()
         
-        // Convert Double price to String for internal storage, or nil if no price
+        // Convert Double price to String for internal storage
         if let priceValue = apiDish.price {
-            // Format the price as string for internal storage (we'll handle currency in views)
             self.price = String(format: "%.2f", priceValue)
         } else {
             self.price = nil
         }
         
-        // Convert nutrition scores array to struct
-        if let scores = apiDish.nutritionScores, scores.count >= 3 {
+        // Convert nutrition scores array to struct with validation
+        if let scores = apiDish.nutrition_scores, scores.count >= 3 {
+            // Ensure scores are within valid range (0-10)
+            let validatedScores = scores.map { min(max($0, 0), 10) }
             self.nutritionScores = NutritionScores(
-                protein: scores[0],
-                fat: scores[1],
-                carbs: scores[2]
+                protein: validatedScores[0],
+                fat: validatedScores[1],
+                carbs: validatedScores[2]
             )
         } else {
             // Default nutrition scores when API doesn't provide them
@@ -128,8 +125,8 @@ struct MenuItem: Identifiable, Codable, Equatable {
             )
         }
         
-        // Convert tags array to struct
-        let tagArray = apiDish.dietaryTags
+        // Convert tags array to struct with validation
+        let tagArray = apiDish.dietary_tags
         self.tags = DietaryTags(
             vegetarian: tagArray.count > 0 ? tagArray[0] == 1 : false,
             vegan: tagArray.count > 1 ? tagArray[1] == 1 : false,
@@ -177,21 +174,25 @@ struct MenuResponse: Codable, Equatable {
     let restaurantInfo: RestaurantInfo?
     let currency: String?
     
-    enum CodingKeys: String, CodingKey {
-        case menuItems = "menu_items"
-        case restaurantInfo = "restaurant_info"
-        case currency
-    }
-    
     // Initializer from Gemini API response
     init(from geminiResponse: GeminiMenuResponse, restaurantInfo: RestaurantInfo? = nil) {
         var items: [MenuItem] = []
         
+        // Process each category and its dishes
         for category in geminiResponse.categories {
             for dish in category.dishes {
-                let menuItem = MenuItem(from: dish, category: category.categoryName)
+                // Create MenuItem with validated data
+                let menuItem = MenuItem(from: dish, category: category.name)
                 items.append(menuItem)
             }
+        }
+        
+        // Sort items by category order
+        let categoryOrder = ["starter", "pizza", "pasta", "main course", "dessert", "drink"]
+        items.sort { item1, item2 in
+            let index1 = categoryOrder.firstIndex(of: item1.categoryEn) ?? Int.max
+            let index2 = categoryOrder.firstIndex(of: item2.categoryEn) ?? Int.max
+            return index1 < index2
         }
         
         self.menuItems = items

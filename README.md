@@ -93,33 +93,68 @@ The application allows users to:
 
 ### Gemini API Implementation
 
-The app now uses **Google's Gemini 2.0 Flash** model for intelligent menu processing:
+The app uses **Google's Gemini 2.0 Flash** model for intelligent menu processing:
 
 #### Key Features
 - **Advanced AI Processing**: Gemini 2.0 Flash for fast and accurate menu parsing
 - **Multi-language Support**: Processes menus in any language, outputs in English
-- **Structured Data**: Consistent JSON format with nutrition scores and dietary tags
+- **Structured Data**: Consistent JSON format with validated nutrition scores and dietary tags
 - **Intelligent Inference**: Automatically infers ingredients and nutritional information
 - **Secure Configuration**: Multiple methods for API key management
+- **Robust Validation**: Automatic validation of nutrition scores and dietary tags
 
 #### API Response Format
 ```json
-[
-  {
-    "ctg": "Starter",
-    "dsh": [
-      {
-        "nme": "BRUSCHETTA VEGETARIANA",
-        "tr_nme": "Vegetarian Bruschetta",
-        "ingr": ["tomato", "basil", "mozzarella", "bread"],
-        "n_scr": [4, 5, 7],
-        "tgs": [1, 0, 0, 0],
-        "prc": "8,00 €"
-      }
-    ]
-  }
-]
+{
+  "currency": "€",
+  "categories": [
+    {
+      "name": "starter",
+      "dishes": [
+        {
+          "original_name": "BRUSCHETTA VEGETARIANA",
+          "translated_name": "Vegetarian Bruschetta",
+          "ingredients_en": ["tomato", "basil", "mozzarella", "bread"],
+          "price": 8.00,
+          "nutrition_scores": [4, 5, 7],
+          "dietary_tags": [1, 0, 0, 0]
+        }
+      ]
+    }
+  ]
+}
 ```
+
+#### Data Validation & Processing
+
+##### Nutrition Scores
+- **Scale**: 0-10 for each component (protein, fat, carbs)
+- **Guidelines**:
+  - Protein: 0-2 (low), 3-6 (medium), 7-10 (high)
+  - Fat: 0-3 (low), 4-6 (medium), 7-10 (high)
+  - Carbs: 0-3 (low), 4-6 (medium), 7-10 (high)
+- **Validation**: Scores are automatically clamped to 0-10 range
+- **Null Values**: Used for drinks, wines, or items where estimation is impossible
+
+##### Dietary Tags
+- **Format**: Array of 4 integers [vegetarian, vegan, gluten_free, dairy_free]
+- **Values**: 1 (true) or 0 (false)
+- **Validation Rules**:
+  - Vegetarian: true if no meat/fish
+  - Vegan: true if no animal products
+  - Gluten-free: true if no wheat/barley/rye
+  - Dairy-free: true if no milk/cheese/cream
+- **Default**: [0, 0, 0, 0] if tags are missing or invalid
+
+##### Categories
+- **Standard Order**: "starter", "pizza", "pasta", "main course", "dessert", "drink"
+- **Custom Categories**: Supported but sorted after standard categories
+- **Normalization**: All category names are converted to lowercase
+
+##### Prices
+- **Format**: Double values without currency symbols
+- **Currency**: Extracted once at the top level if visible
+- **Null Values**: Used when no price information is available
 
 #### Setup Instructions
 1. **Get API Key**: Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
@@ -239,34 +274,64 @@ Muorz/
 #### MenuItem (Internal Format)
 ```swift
 struct MenuItem: Identifiable, Codable {
+    let id = UUID()
     let originalName: String        // Original name (any language)
     let translatedName: String      // Translated name (English)
     let ingredientsEn: [String]     // Ingredients in English
-    let categoryEn: String          // Category (starter, main course, dessert)
-    let price: String?              // Price (optional)
-    let nutritionScores: NutritionScores
-    let tags: DietaryTags
+    let categoryEn: String          // Category (normalized to lowercase)
+    let price: String?              // Price as formatted string
+    let nutritionScores: NutritionScores  // Validated scores (0-10)
+    let tags: DietaryTags          // Validated dietary preferences
+}
+
+struct NutritionScores: Codable, Equatable {
+    let protein: Int  // 0-10 scale
+    let fat: Int      // 0-10 scale
+    let carbs: Int    // 0-10 scale
+}
+
+struct DietaryTags: Codable, Equatable {
+    let vegetarian: Bool
+    let vegan: Bool
+    let glutenFree: Bool
+    let dairyFree: Bool
 }
 ```
 
-#### Gemini API Format (Compact)
+#### Gemini API Format
 ```json
-[
-  {
-    "ctg": "Main Course",
-    "dsh": [
-      {
-        "nme": "PIZZA VEGETARIANA",
-        "tr_nme": "Vegetarian Pizza",
-        "ingr": ["tomato", "mozzarella", "vegetables"],
-        "n_scr": [5, 6, 7],
-        "tgs": [1, 0, 0, 0],
-        "prc": "12,00 €"
-      }
-    ]
-  }
-]
+{
+  "currency": "€",
+  "categories": [
+    {
+      "name": "starter",
+      "dishes": [
+        {
+          "original_name": "PIZZA VEGETARIANA",
+          "translated_name": "Vegetarian Pizza",
+          "ingredients_en": ["tomato", "mozzarella", "vegetables"],
+          "price": 12.50,
+          "nutrition_scores": [5, 6, 7],
+          "dietary_tags": [1, 0, 0, 0]
+        }
+      ]
+    }
+  ]
+}
 ```
+
+#### Data Flow
+1. **OCR Text** → Gemini API processes raw menu text
+2. **API Response** → Validated and converted to internal format
+3. **Internal Model** → Used throughout the app for display and filtering
+4. **User Interface** → Displays validated data with proper formatting
+
+#### Validation Rules
+- **Nutrition Scores**: Clamped to 0-10 range
+- **Dietary Tags**: Default to false if missing/invalid
+- **Categories**: Normalized to lowercase, sorted by standard order
+- **Prices**: Converted to Double, currency extracted to top level
+- **Ingredients**: Preserved in English, inferred if missing
 
 ## Features
 
