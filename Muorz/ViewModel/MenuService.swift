@@ -198,11 +198,23 @@ class MenuService: MenuServiceProtocol, ObservableObject {
            - Fat: 0-3 (low), 4-6 (medium), 7-10 (high)
            - Carbs: 0-3 (low), 4-6 (medium), 7-10 (high)
            - Set to null for drinks, wines, or items where estimation is impossible
-        7. For dietary_tags: analyze ingredients and dish name to determine [vegetarian, vegan, gluten_free, dairy_free]
-           - vegetarian: true if no meat/fish (1), false if contains meat/fish (0)
-           - vegan: true if no animal products (1), false if contains any (0)
-           - gluten_free: true if no wheat/barley/rye (1), false if contains any (0)
-           - dairy_free: true if no milk/cheese/cream (1), false if contains any (0)
+        7. For dietary_tags: analyze BOTH category and ingredients to determine [vegetarian, vegan, gluten_free, dairy_free]
+           Category-based rules:
+           - Pizza: Always contains gluten (gluten_free = 0) unless explicitly stated otherwise
+           - Pasta: Always contains gluten (gluten_free = 0) unless explicitly stated otherwise
+           - Bread-based items: Always contain gluten (gluten_free = 0) unless explicitly stated otherwise
+           - Cheese-based items: Always contain dairy (dairy_free = 0) unless explicitly stated otherwise
+           
+           Ingredient-based rules:
+           - vegetarian: true (1) if no meat/fish, false (0) if contains meat/fish
+           - vegan: true (1) if no animal products, false (0) if contains any
+           - gluten_free: true (1) if no wheat/barley/rye AND category doesn't imply gluten
+           - dairy_free: true (1) if no milk/cheese/cream AND category doesn't imply dairy
+           
+           Final determination:
+           - If category implies an ingredient (e.g., pizza = gluten), override ingredient analysis
+           - If category doesn't imply an ingredient, use ingredient analysis
+           - When in doubt, default to 0 (false) for safety
         8. For ingredients: use ingredients from menu if available, otherwise infer from dish name
         
         Expected JSON format:
@@ -229,7 +241,8 @@ class MenuService: MenuServiceProtocol, ObservableObject {
         - Prices must be Double numbers without currency symbols
         - Currency should be extracted once at the top level if visible
         - nutrition_scores must follow the 0-10 scale guidelines above
-        - dietary_tags must be determined by analyzing ingredients and dish name
+        - dietary_tags must consider BOTH category and ingredients
+        - Category rules override ingredient analysis when applicable
         - If uncertain about a tag, default to 0 (false)
         - If uncertain about nutrition scores, set to null
         

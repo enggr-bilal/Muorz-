@@ -52,7 +52,6 @@ struct DirectCameraView: View {
             // 🎯 NEW: Muorz Counter in top-right corner
             VStack {
                 HStack {
-<<<<<<< HEAD
                     // 🧪 DEBUG: Temporary debug button (remove in production)
 //                    Button("🧪") {
 //                        showingDebugView = true
@@ -62,14 +61,13 @@ struct DirectCameraView: View {
 //                    .padding(.top, 60)
 //                    .padding(.leading, 20)
                     
-=======
->>>>>>> Main
+
                     Spacer()
                     MuorzCounter(
                         muorzManager: muorzManager,
                         onDebugLongPress: {
                             // 🧪 DEBUG: Long press to show debug view
-                            showingDebugView = true
+                            showingDebugView = false
                         }
                     )
                     .padding(.top, 60) // Safe area padding
