@@ -13,6 +13,7 @@ struct OCRMenuApp: App {
         WindowGroup {
             ContentView()
                 .preferredColorScheme(.light)
+                
         }
     }
 }
