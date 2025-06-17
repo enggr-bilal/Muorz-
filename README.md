@@ -1,20 +1,22 @@
-# Muorz 🍽️
+# Muorz 
 
-> **📱 iOS SwiftUI App for Intelligent Menu Processing with OCR and AI**
+Available on TestFlight : https://testflight.apple.com/join/6yWPWu3N Feedbacks are welcome :)
 
-## 🎉 Configuration Status
+> **iOS SwiftUI App for Intelligent Menu Processing with OCR and AI**
 
-✅ **Gemini 2.0 Flash API configured and ready**  
-✅ **API data flow fixed** - API data now displays correctly  
-📋 **Complete guide:** [CONFIGURATION_COMPLETE.md](CONFIGURATION_COMPLETE.md)  
-🔑 **Your API key:** See `PRIVATE_API_KEY.txt`  
-🛠️ **Instructions:** [API_CONFIGURATION_GUIDE.md](API_CONFIGURATION_GUIDE.md)
+## Configuration Status
+
+**Gemini 2.0 Flash API configured and ready**  
+**API data flow fixed** - API data now displays correctly  
+
+**Your API key:** See `PRIVATE_API_KEY.txt`  
+
 
 ---
 
-## 🌟 Features
+## Features
 
-### 🤖 Intelligent Menu Processing
+### Intelligent Menu Processing
 - **Gemini 2.0 Flash API** integration for advanced menu analysis
 - **Real-time OCR** using Vision framework
 - **Automatic translation** to English
@@ -22,26 +24,62 @@
 - **Dietary tags** detection (vegetarian, vegan, gluten-free, dairy-free)
 - **Smart categorization** of dishes
 
-### 📸 Advanced OCR
+### Advanced OCR
 - **Apple Vision Framework** for high-accuracy text recognition
 - **Multi-language support** for international menus
 - **Real-time processing** with live camera feed
 - **Automatic image optimization** for better OCR results
 
-### 🔍 Smart Search & Filtering
+### Smart Search & Filtering
 - **Intelligent search** with ingredient-based suggestions
 - **Real-time highlighting** of search terms
 - **Category filtering** (Starter, Main Course, Dessert)
 - **Dietary filtering** with customizable defaults
 - **Nutritional sorting** with priority-based ordering
 
-### ⚙️ User Preferences
+### User Preferences
 - **Default dietary preferences** set in ProfileView
 - **Nutrition sort priorities** (Protein, Low Fat, Low Carbs)
 - **Persistent settings** that survive app restarts
 - **Temporary overrides** in MenuView without affecting defaults
 
-## 🎯 Product Vision
+## Business Model 🎯
+
+### Freemium System
+- **Muorz Currency**: Core virtual currency system
+- **Weekly Allocation**: 3 Muorz automatically refilled every 7 days
+- **Welcome Bonus**: New users receive 2 extra Muorz (5 total)
+- **Smart Deduction**: Muorz only deducted upon successful menu processing
+
+### Purchase Options
+- **Travel Day Pass**: 24-hour unlimited scanning (€1.99)
+- **Muorz Packages**:
+  - Small: 10 Muorz (€1.49)
+  - Medium: 20 Muorz (€2.49)
+  - Large: 30 Muorz (€3.49)
+
+### Revenue Features
+- **In-App Store**: Beautiful purchase interface with package selection
+- **Referral System**: 5 Muorz bonus for both referrer and referee
+- **Smart UI**: 
+  - Muorz counter with refill timer
+  - Lock icons when no Muorz available
+  - Travel Pass indicator
+  - Purchase prompts at strategic moments
+
+### Business Logic
+- **Scan Prevention**: Users cannot scan without available Muorz
+- **Weekly Refills**: Automatic refill every Monday
+- **State Management**: Persistent across app updates
+- **Analytics Ready**: Track conversion, usage patterns, and revenue metrics
+
+### Future Revenue Streams
+- **Restaurant Partnerships**: Bonus Muorz for partner venues
+- **Seasonal Promotions**: Special events with bonus Muorz
+- **Bulk Discounts**: Special pricing for frequent travelers
+- **Social Features**: Premium features for active users
+
+## Product Vision
 
 The application allows users to:
 - Take photos of restaurant menus
@@ -51,46 +89,79 @@ The application allows users to:
 - Filter and search through dishes and ingredients
 - Customize display according to dietary preferences
 
-## 🚀 API Integration
+## API Integration
 
 ### Gemini API Implementation
 
-The app now uses **Google's Gemini 2.0 Flash** model for intelligent menu processing:
+The app uses **Google's Gemini 2.0 Flash** model for intelligent menu processing:
 
 #### Key Features
 - **Advanced AI Processing**: Gemini 2.0 Flash for fast and accurate menu parsing
 - **Multi-language Support**: Processes menus in any language, outputs in English
-- **Structured Data**: Consistent JSON format with nutrition scores and dietary tags
+- **Structured Data**: Consistent JSON format with validated nutrition scores and dietary tags
 - **Intelligent Inference**: Automatically infers ingredients and nutritional information
 - **Secure Configuration**: Multiple methods for API key management
+- **Robust Validation**: Automatic validation of nutrition scores and dietary tags
 
 #### API Response Format
 ```json
-[
-  {
-    "ctg": "Starter",
-    "dsh": [
-      {
-        "nme": "BRUSCHETTA VEGETARIANA",
-        "tr_nme": "Vegetarian Bruschetta",
-        "ingr": ["tomato", "basil", "mozzarella", "bread"],
-        "n_scr": [4, 5, 7],
-        "tgs": [1, 0, 0, 0],
-        "prc": "8,00 €"
-      }
-    ]
-  }
-]
+{
+  "currency": "€",
+  "categories": [
+    {
+      "name": "starter",
+      "dishes": [
+        {
+          "original_name": "BRUSCHETTA VEGETARIANA",
+          "translated_name": "Vegetarian Bruschetta",
+          "ingredients_en": ["tomato", "basil", "mozzarella", "bread"],
+          "price": 8.00,
+          "nutrition_scores": [4, 5, 7],
+          "dietary_tags": [1, 0, 0, 0]
+        }
+      ]
+    }
+  ]
+}
 ```
+
+#### Data Validation & Processing
+
+##### Nutrition Scores
+- **Scale**: 0-10 for each component (protein, fat, carbs)
+- **Guidelines**:
+  - Protein: 0-2 (low), 3-6 (medium), 7-10 (high)
+  - Fat: 0-3 (low), 4-6 (medium), 7-10 (high)
+  - Carbs: 0-3 (low), 4-6 (medium), 7-10 (high)
+- **Validation**: Scores are automatically clamped to 0-10 range
+- **Null Values**: Used for drinks, wines, or items where estimation is impossible
+
+##### Dietary Tags
+- **Format**: Array of 4 integers [vegetarian, vegan, gluten_free, dairy_free]
+- **Values**: 1 (true) or 0 (false)
+- **Validation Rules**:
+  - Vegetarian: true if no meat/fish
+  - Vegan: true if no animal products
+  - Gluten-free: true if no wheat/barley/rye
+  - Dairy-free: true if no milk/cheese/cream
+- **Default**: [0, 0, 0, 0] if tags are missing or invalid
+
+##### Categories
+- **Standard Order**: "starter", "pizza", "pasta", "main course", "dessert", "drink"
+- **Custom Categories**: Supported but sorted after standard categories
+- **Normalization**: All category names are converted to lowercase
+
+##### Prices
+- **Format**: Double values without currency symbols
+- **Currency**: Extracted once at the top level if visible
+- **Null Values**: Used when no price information is available
 
 #### Setup Instructions
 1. **Get API Key**: Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
 2. **Configure Key**: Use environment variable `GEMINI_API_KEY` or Info.plist
 3. **Test Integration**: App automatically falls back to sample data if no key is configured
 
-For detailed setup instructions, see [GEMINI_API_IMPLEMENTATION.md](GEMINI_API_IMPLEMENTATION.md)
-
-## 🎯 User Preferences & Filtering System
+## User Preferences & Filtering System
 
 ### Architecture Overview
 
@@ -161,7 +232,7 @@ The app uses a clear separation between **default preferences** and **temporary 
 - **Empty**: When no results match filters
 - **Success**: Structured menu display with intelligent sorting
 
-## 🏗️ Architecture
+## Architecture
 
 ### Project Structure
 
@@ -203,38 +274,68 @@ Muorz/
 #### MenuItem (Internal Format)
 ```swift
 struct MenuItem: Identifiable, Codable {
+    let id = UUID()
     let originalName: String        // Original name (any language)
     let translatedName: String      // Translated name (English)
     let ingredientsEn: [String]     // Ingredients in English
-    let categoryEn: String          // Category (starter, main course, dessert)
-    let price: String?              // Price (optional)
-    let nutritionScores: NutritionScores
-    let tags: DietaryTags
+    let categoryEn: String          // Category (normalized to lowercase)
+    let price: String?              // Price as formatted string
+    let nutritionScores: NutritionScores  // Validated scores (0-10)
+    let tags: DietaryTags          // Validated dietary preferences
+}
+
+struct NutritionScores: Codable, Equatable {
+    let protein: Int  // 0-10 scale
+    let fat: Int      // 0-10 scale
+    let carbs: Int    // 0-10 scale
+}
+
+struct DietaryTags: Codable, Equatable {
+    let vegetarian: Bool
+    let vegan: Bool
+    let glutenFree: Bool
+    let dairyFree: Bool
 }
 ```
 
-#### Gemini API Format (Compact)
+#### Gemini API Format
 ```json
-[
-  {
-    "ctg": "Main Course",
-    "dsh": [
-      {
-        "nme": "PIZZA VEGETARIANA",
-        "tr_nme": "Vegetarian Pizza",
-        "ingr": ["tomato", "mozzarella", "vegetables"],
-        "n_scr": [5, 6, 7],
-        "tgs": [1, 0, 0, 0],
-        "prc": "12,00 €"
-      }
-    ]
-  }
-]
+{
+  "currency": "€",
+  "categories": [
+    {
+      "name": "starter",
+      "dishes": [
+        {
+          "original_name": "PIZZA VEGETARIANA",
+          "translated_name": "Vegetarian Pizza",
+          "ingredients_en": ["tomato", "mozzarella", "vegetables"],
+          "price": 12.50,
+          "nutrition_scores": [5, 6, 7],
+          "dietary_tags": [1, 0, 0, 0]
+        }
+      ]
+    }
+  ]
+}
 ```
 
-## 🔍 Features
+#### Data Flow
+1. **OCR Text** → Gemini API processes raw menu text
+2. **API Response** → Validated and converted to internal format
+3. **Internal Model** → Used throughout the app for display and filtering
+4. **User Interface** → Displays validated data with proper formatting
 
-### ✅ Implemented
+#### Validation Rules
+- **Nutrition Scores**: Clamped to 0-10 range
+- **Dietary Tags**: Default to false if missing/invalid
+- **Categories**: Normalized to lowercase, sorted by standard order
+- **Prices**: Converted to Double, currency extracted to top level
+- **Ingredients**: Preserved in English, inferred if missing
+
+## Features
+
+### Implemented
 - **Camera-First Experience**: Modern camera interface as app entry point
 - **Advanced OCR**: Text extraction with multilingual support (FR/EN)
 - **Gemini AI Processing**: Google's Gemini 2.0 Flash for intelligent menu parsing
@@ -252,7 +353,7 @@ struct MenuItem: Identifiable, Codable {
 - **Error Handling & Retries**: Robust network error handling with exponential backoff
 - **Development Tools**: Mock service and detailed logging for development
 
-### 🔧 API Features
+### API Features
 - **Gemini API Integration**: Complete implementation with Google's latest model
 - **Automatic Fallback**: Sample data when API is unavailable
 - **Retry Logic**: Up to 3 attempts with exponential backoff
@@ -260,7 +361,7 @@ struct MenuItem: Identifiable, Codable {
 - **Development Mode**: Mock service for testing without API calls
 - **Comprehensive Logging**: Detailed request/response logging in debug mode
 
-## 🛠️ Usage
+## Usage
 
 ### API Setup - Required Configuration
 
@@ -275,7 +376,6 @@ struct MenuItem: Identifiable, Codable {
 - Xcode Console should display: `🚀 Attempting Gemini API call`
 - If you see `⚠️ No Gemini API key configured`, the configuration failed
 
-**📋 Complete guide:** See [API_CONFIGURATION_GUIDE.md](API_CONFIGURATION_GUIDE.md)
 
 ### Camera/Lens View
 - Entry point of the application
@@ -298,7 +398,7 @@ struct MenuItem: Identifiable, Codable {
 - **Search Highlighting**: Search terms highlighted in results
 - **Responsive Design**: Adapts to different screen sizes
 
-## 🔧 Technical Implementation
+## Technical Implementation
 
 ### API Integration
 - **Service Layer**: Protocol-based architecture for testability
@@ -320,107 +420,25 @@ struct MenuItem: Identifiable, Codable {
 - **Accessibility**: VoiceOver support and accessibility labels
 - **Dark Mode**: Full support for system appearance modes
 
-## 🚧 Known Issues
+## Known Issues
 
-- **Sample Data Fallback**: App displays hardcoded data when API fails
 - **Menu Persistence**: Menus are not saved between app sessions
 - **Offline Mode**: No offline functionality currently available
 
-## 🔮 Roadmap
+## Roadmap
 
 ### High Priority
-- [ ] Remove hardcoded sample data for production
 - [ ] Implement menu persistence with SwiftData
 - [ ] Add menu history functionality
 - [ ] Improve error handling and user feedback
 
 ### Medium Priority
-- [ ] Add offline OCR capabilities
-- [ ] Implement menu sharing functionality
+- [ ] Add offline LLM capabilities (iOS 26 On device Model)
 - [ ] Add favorite dishes feature
-- [ ] Improve camera interface with live preview
+- [ ] Improve camera interface
 
 ### Low Priority
-- [ ] Add social features
 - [ ] Implement restaurant discovery
 - [ ] Add user reviews and ratings
-- [ ] Integrate with food delivery services
-
-## 🤝 Contributing
-
-### Development Setup
-1. Clone the repository
-2. Open `Muorz.xcodeproj` in Xcode 15+
-3. Configure your Gemini API key (see setup instructions)
-4. Build and run on iOS 17+ device or simulator
-
-### Code Standards
-- **SwiftUI**: Use declarative syntax and view composition
-- **MVVM**: Follow Model-View-ViewModel architecture
-- **Combine**: Use reactive programming for data flow
-- **Documentation**: Comment public interfaces and complex logic
-
-### Pull Request Process
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes with clear commit messages
-4. Update documentation if needed
-5. Submit a pull request with detailed description
-
----
-
-**Muorz - AI-Powered Menu Scanner 🍽️**  
-*Modern interface, intelligent processing, seamless experience*
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- **Xcode 15.0+**
-- **iOS 16.0+** target deployment
-- **Swift 5.9+**
-- **Gemini API Key** from [Google AI Studio](https://makersuite.google.com/app/apikey)
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd Muorz
-   ```
-
-2. **Set up Gemini API Key**
-   
-   #### Method 1: Environment Variable (Recommended for Development)
-   1. In Xcode: **Product** → **Scheme** → **Edit Scheme...**
-   2. Select **"Run"** → **"Arguments"** tab
-   3. Under **"Environment Variables"**, add:
-      - **Name**: `GEMINI_API_KEY`
-      - **Value**: Your actual API key from Google AI Studio
-      - **✅ Check the checkbox to enable**
-   4. Click **"Close"** to save
-   
-   #### Method 2: Info.plist (For Production)
-   1. Open `Info.plist` in Xcode
-   2. Add new key:
-      - **Key**: `GEMINI_API_KEY`
-      - **Type**: String  
-      - **Value**: Your actual API key
-   
-   ⚠️ **Security Note**: Never commit API keys to version control
-
-3. **Build and Run**
-   ```bash
-   # Open in Xcode
-   open Muorz.xcodeproj
-   
-   # Or build from command line
-   xcodebuild -project Muorz.xcodeproj -scheme Muorz build
-   ```
-
-### ✅ API Configuration Status
-- **Gemini API Integration**: ✅ **Working**
-- **OCR Text Processing**: ✅ **Working**  
-- **Menu Item Parsing**: ✅ **Working**
-- **Error Handling**: ✅ **Working**
-- **Sample Data Removed**: ✅ **Complete**
+- [ ] B2B Model partnership with restaurants
+ 

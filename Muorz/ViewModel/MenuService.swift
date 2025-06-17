@@ -188,13 +188,22 @@ class MenuService: MenuServiceProtocol, ObservableObject {
         Parse it and return a JSON object with the following structure.
         
         IMPORTANT REQUIREMENTS:
-        1. Sort categories in logical meal order: "starter", "pizza", "pasta", "main courses", "dessert", "drink". You can create other categories regarding the different dishes available. 
+        1. Sort categories in logical meal order: "starter", "pizza", "pasta", "main courses", "dessert", "drink"
         2. If a currency symbol (€, $, £, etc.) is visible on the menu, extract it ONCE at the top level
         3. Convert all prices to Double values (remove currency symbols, use dots for decimals)
         4. If no prices are found on the menu, omit "currency" and set all "price" to null
         5. Return results in English (target language: \(deviceLanguage))
-        6. For nutrition_scores: if you can reasonably estimate nutritional content, provide [protein, fat, carbs] on 0-10 scale. If not possible (like for drinks, wines, simple items), set to null
-        7. For the ingredients, if they're availables on the OCR text use these ones otherwise add from your knowledge. 
+        6. For nutrition_scores: provide [protein, fat, carbs] on 0-10 scale. Use these guidelines:
+           - Protein: 0-2 (low), 3-6 (medium), 7-10 (high)
+           - Fat: 0-3 (low), 4-6 (medium), 7-10 (high)
+           - Carbs: 0-3 (low), 4-6 (medium), 7-10 (high)
+           - Set to null for drinks, wines, or items where estimation is impossible
+        7. For dietary_tags: analyze ingredients and dish name to determine [vegetarian, vegan, gluten_free, dairy_free]
+           - vegetarian: true if no meat/fish (1), false if contains meat/fish (0)
+           - vegan: true if no animal products (1), false if contains any (0)
+           - gluten_free: true if no wheat/barley/rye (1), false if contains any (0)
+           - dairy_free: true if no milk/cheese/cream (1), false if contains any (0)
+        8. For ingredients: use ingredients from menu if available, otherwise infer from dish name
         
         Expected JSON format:
         {
@@ -209,18 +218,20 @@ class MenuService: MenuServiceProtocol, ObservableObject {
                   "ingredients_en": ["ingredient1", "ingredient2"],
                   "price": 12.50 or null,
                   "nutrition_scores": [7, 5, 6] or null,
-                  "dietary_tags": [1, 0, 0, 1]
+                  "dietary_tags": [1, 0, 0, 1]  // [vegetarian, vegan, gluten_free, dairy_free]
                 }
               ]
             }
           ]
         }
         
-        CRITICAL: 
-        - Prices must be Double numbers without currency symbols  
+        CRITICAL RULES:
+        - Prices must be Double numbers without currency symbols
         - Currency should be extracted once at the top level if visible
-        - nutrition_scores: [protein, fat, carbs] on 0-10 scale OR null if cannot estimate
-        - dietary_tags: [vegetarian, vegan, gluten_free, dairy_free] as 0/1
+        - nutrition_scores must follow the 0-10 scale guidelines above
+        - dietary_tags must be determined by analyzing ingredients and dish name
+        - If uncertain about a tag, default to 0 (false)
+        - If uncertain about nutrition scores, set to null
         
         Return compact JSON only, no explanations.
 
