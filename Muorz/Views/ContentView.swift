@@ -6,32 +6,26 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct ContentView: View {
     @StateObject private var preferences = UserPreferences()
     @StateObject private var muorzManager = MuorzManager()
-    @StateObject private var onboardingState = OnboardingState()
-
+    @State private var showingHistory = false
+    
     var body: some View {
-        Group {
-            if onboardingState.hasCompletedOnboarding {
-                // Main app flow
-                CameraView(preferences: preferences)
-            } else {
-                // Onboarding flow
-                OnboardingView(
-                    preferences: preferences,
-                    muorzManager: muorzManager,
-                    onComplete: {
-                        onboardingState.completeOnboarding()
-                    }
-                )
-            }
+        NavigationStack {
+            CameraView(preferences: preferences, muorzManager: muorzManager, showingHistory: $showingHistory)
+                .navigationDestination(isPresented: $showingHistory) {
+                    ScannedMenuHistoryView(preferences: preferences)
+                        .navigationBarBackButtonHidden(false)
+                }
         }
-        .animation(.easeInOut(duration: 0.5), value: onboardingState.hasCompletedOnboarding)
+        .modelContainer(for: ScannedMenu.self, inMemory: false)
     }
 }
 
 #Preview {
     ContentView()
+        .modelContainer(for: ScannedMenu.self, inMemory: true)
 }

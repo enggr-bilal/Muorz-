@@ -6,6 +6,7 @@ struct DirectCameraView: View {
     @ObservedObject var ocrViewModel: OCRViewModel
     @ObservedObject var muorzManager: MuorzManager
     @ObservedObject var preferences: UserPreferences
+    @Binding var showingHistory: Bool
     
     let hasProcessedMenu: Bool
     let onViewMenu: () -> Void
@@ -78,7 +79,8 @@ struct DirectCameraView: View {
                         processImages()
                     },
                     hasProcessedMenu: hasProcessedMenu,
-                    onViewMenu: onViewMenu
+                    onViewMenu: onViewMenu,
+                    showingHistory: $showingHistory
                 )
                 .padding(.bottom, 50) // Safe area padding
             }
@@ -643,6 +645,7 @@ struct BottomControlsOverlay: View {
     let onProceed: () -> Void
     let hasProcessedMenu: Bool
     let onViewMenu: () -> Void
+    @Binding var showingHistory: Bool
     
     var body: some View {
         VStack(spacing: 20) {
@@ -700,13 +703,13 @@ struct BottomControlsOverlay: View {
                     .animation(.easeInOut(duration: 0.6), value: cameraManager.canTakeMorePhotos)
                 }
                 
-                // View Menu button overlay positioned to the left
-                if hasProcessedMenu && cameraManager.canTakeMorePhotos {
+                // History button overlay positioned to the left
+                if cameraManager.canTakeMorePhotos {
                     HStack {
                         Button {
-                            onViewMenu()
+                            showingHistory = true
                         } label: {
-                            Image(systemName: "list.bullet.clipboard.fill")
+                            Image(systemName: "clock.arrow.circlepath")
                                 .font(.system(size: 18, weight: .bold))
                                 .foregroundColor(.gray)
                                 .frame(width: 55, height: 55)
@@ -850,6 +853,7 @@ struct FocusReticle: View {
         ocrViewModel: OCRViewModel(),
         muorzManager: MuorzManager(),
         preferences: UserPreferences(),
+        showingHistory: .constant(false),
         hasProcessedMenu: false,
         onViewMenu: {}
     )

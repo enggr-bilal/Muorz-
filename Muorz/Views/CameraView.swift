@@ -7,16 +7,31 @@
 
 import SwiftUI
 import AVFoundation
+import SwiftData
 
 struct CameraView: View {
     @StateObject private var ocrViewModel = OCRViewModel()
     @StateObject private var menuViewModel = MenuViewModel()
-    @StateObject private var muorzManager = MuorzManager()
     @ObservedObject var preferences: UserPreferences
+    @ObservedObject var muorzManager: MuorzManager
+    @Binding var showingHistory: Bool
+    
+    @Environment(\.modelContext) private var modelContext
+    @StateObject private var scannedMenuService: ScannedMenuService
     
     @State private var showMenuView = false
     @State private var hasProcessedMenu = false
     @State private var isReturningFromMenu = false
+    
+    // MARK: - Initialization
+    
+    init(preferences: UserPreferences, muorzManager: MuorzManager, showingHistory: Binding<Bool>) {
+        self.preferences = preferences
+        self.muorzManager = muorzManager
+        self._showingHistory = showingHistory
+        // Note: scannedMenuService will be properly initialized in onAppear
+        self._scannedMenuService = StateObject(wrappedValue: ScannedMenuService.create(with: ModelContext(try! ModelContainer(for: ScannedMenu.self))))
+    }
     
     var body: some View {
         NavigationView {
@@ -26,6 +41,7 @@ struct CameraView: View {
                     ocrViewModel: ocrViewModel,
                     muorzManager: muorzManager,
                     preferences: preferences,
+                    showingHistory: $showingHistory,
                     hasProcessedMenu: hasProcessedMenu && !menuViewModel.menuItems.isEmpty,
                     onViewMenu: {
                         showMenuView = true
@@ -47,6 +63,16 @@ struct CameraView: View {
                             print("⚠️ No Muorz available but allowing scan (shouldn't happen if UI is working correctly)")
                         }
                         
+                        // 💾 SAVE MENU TO HISTORY
+                        Task {
+                            do {
+                                try await scannedMenuService.saveScannedMenu(menu)
+                                print("✅ Menu saved to history: \(menu.restaurantInfo?.name ?? "Unknown restaurant")")
+                            } catch {
+                                print("❌ Failed to save menu to history: \(error)")
+                            }
+                        }
+                        
                         showMenuView = true
                         isReturningFromMenu = false
                     } else if let menu = processedMenu, menu.menuItems.isEmpty {
@@ -65,6 +91,8 @@ struct CameraView: View {
                 MenuView(viewModel: menuViewModel, preferences: preferences)
             }
             .onAppear {
+                scannedMenuService.updateModelContext(modelContext)
+                
                 // Reset OCR state when initially appearing or returning from menu
                 if isReturningFromMenu {
                     ocrViewModel.clearResults()
@@ -370,5 +398,5 @@ struct SuccessView: View {
 // MARK: - Preview
 
 #Preview {
-    CameraView(preferences: UserPreferences())
+    CameraView(preferences: UserPreferences(), muorzManager: MuorzManager(), showingHistory: .constant(false))
 } 

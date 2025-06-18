@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 @main
 struct OCRMenuApp: App {
@@ -14,5 +15,6 @@ struct OCRMenuApp: App {
             ContentView()
                 .preferredColorScheme(.light)
         }
+        .modelContainer(for: [ScannedMenu.self, PersistedMenuItem.self])
     }
 }
