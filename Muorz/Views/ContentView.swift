@@ -9,8 +9,8 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
-    @StateObject private var preferences = UserPreferences()
-    @StateObject private var muorzManager = MuorzManager()
+    @ObservedObject var preferences: UserPreferences
+    @ObservedObject var muorzManager: MuorzManager
     @State private var showingHistory = false
     
     var body: some View {
@@ -26,6 +26,9 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView()
+    ContentView(
+        preferences: UserPreferences(),
+        muorzManager: MuorzManager()
+    )
         .modelContainer(for: ScannedMenu.self, inMemory: true)
 }

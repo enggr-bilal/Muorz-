@@ -19,9 +19,6 @@ struct ScannedMenuCard: View {
                 // Header with restaurant info and actions
                 headerSection
                 
-                // Menu preview
-                menuPreviewSection
-                
                 // Footer with metadata
                 footerSection
             }
@@ -41,13 +38,29 @@ struct ScannedMenuCard: View {
             VStack(alignment: .leading, spacing: 4) {
                                     VStack(alignment: .leading) {
                         HStack {
-                            TextField("Restaurant Name", text: Binding(
-                                get: { menu.restaurantName ?? "" },
-                                set: { menu.restaurantName = $0.isEmpty ? nil : $0 }
-                            ))
-                            .font(.system(.title2, design: .serif))
-                            .fontWeight(.bold)
-                            .textFieldStyle(PlainTextFieldStyle())
+                            ZStack(alignment: .leading) {
+                                TextField("", text: Binding(
+                                    get: { menu.restaurantName ?? "" },
+                                    set: { menu.restaurantName = $0.isEmpty ? nil : $0 }
+                                ))
+                                .font(.system(.title2, design: .serif))
+                                .fontWeight(.bold)
+                                .textFieldStyle(PlainTextFieldStyle())
+                                
+                                // Custom placeholder with pencil icon
+                                if (menu.restaurantName ?? "").isEmpty {
+                                    HStack {
+                                        Text("Restaurant Name")
+                                            .font(.system(.title2, design: .serif))
+                                            .fontWeight(.bold)
+                                            .foregroundColor(.secondary)
+                                        Image(systemName: "pencil")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    .allowsHitTesting(false)
+                                }
+                            }
                             
                             
                             
@@ -98,69 +111,6 @@ struct ScannedMenuCard: View {
          
             
             
-        }
-    }
-    
-    // MARK: - Menu Preview Section
-    
-    private var menuPreviewSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            // Categories preview
-            if !menu.categories.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 6) {
-                        ForEach(menu.categories.prefix(3), id: \.self) { category in
-                            Text(category.capitalized)
-                                .font(.caption2)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(Color.accentColor.opacity(0.1))
-                                .foregroundColor(.accentColor)
-                                .cornerRadius(6)
-                        }
-                        
-                        if menu.categories.count > 3 {
-                            Text("+\(menu.categories.count - 3)")
-                                .font(.caption2)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(Color.secondary.opacity(0.1))
-                                .foregroundColor(.secondary)
-                                .cornerRadius(6)
-                        }
-                    }
-                }
-            }
-            
-            // Sample items
-            VStack(alignment: .leading, spacing: 4) {
-                ForEach(menu.menuItems.prefix(3), id: \.id) { item in
-                    HStack {
-                        Text("•")
-                            .foregroundColor(.secondary)
-                        
-                        Text(item.translatedName)
-                            .font(.caption)
-                            .foregroundColor(.primary)
-                            .lineLimit(1)
-                        
-                        Spacer()
-                        
-                        if let price = item.price {
-                            Text(price)
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                }
-                
-                if menu.menuItems.count > 3 {
-                    Text("... and \(menu.menuItems.count - 3) more dishes")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                        .italic()
-                }
-            }
         }
     }
     
@@ -233,19 +183,18 @@ struct StarRatingView: View {
 struct ScannedMenuDetailView: View {
     let menu: ScannedMenu
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
     @State private var showingEditNotes = false
     @State private var notes: String
     @State private var rating: Int
     @State private var review: String
-    @State private var isEditingRestaurantName = false
-    @State private var tempRestaurantName: String = ""
+    @State private var showingDeleteConfirmation = false
     
     init(menu: ScannedMenu) {
         self.menu = menu
         self._notes = State(initialValue: menu.notes ?? "")
         self._rating = State(initialValue: menu.rating ?? 0)
         self._review = State(initialValue: menu.review ?? "")
-        self._tempRestaurantName = State(initialValue: menu.restaurantName ?? "")
     }
     
     var body: some View {
@@ -256,7 +205,32 @@ struct ScannedMenuDetailView: View {
             VStack(spacing: 0) {
                 // Content Section
                 ScrollView {
-                    VStack(spacing: 16) {
+                    VStack(spacing: 20) {
+                        // Header with date and item count
+                        HStack {
+                            HStack(spacing: 4) {
+                                Image(systemName: "calendar")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Text(menu.scannedAt.formatted(date: .abbreviated, time: .omitted))
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            HStack(spacing: 4) {
+                                Text("\(menu.menuItems.count)")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Image(systemName: "fork.knife")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 16)
+                        
                         // Menu Items
                         MenuDetailListView(
                             menu: menu,
@@ -276,49 +250,8 @@ struct ScannedMenuDetailView: View {
                                 rating = newRating
                                 menu.rating = newRating
                             }
-                            
-                            if rating > 0 {
-                                Text("\(rating) out of 5 stars")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
                         }
-                        .padding(16)
-                        .background(Color.white)
-                        .cornerRadius(20)
-                        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
-                        
-                        // Review Section
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack {
-                                Text("Review")
-                                    .font(.headline)
-                                    .fontWeight(.semibold)
-                                
-                                Spacer()
-                                
-                                Button("Save") {
-                                    menu.review = review
-                                }
-                                .font(.caption)
-                                .foregroundColor(.accentColor)
-                                .disabled(review.isEmpty)
-                            }
-                            
-                            TextEditor(text: $review)
-                                .frame(minHeight: 80)
-                                .padding(8)
-                                .background(Color(UIColor.secondarySystemBackground))
-                                .cornerRadius(8)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                                )
-                        }
-                        .padding(16)
-                        .background(Color.white)
-                        .cornerRadius(20)
-                        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+                        .padding(.horizontal, 12)
                         
                         // Notes Section (if any)
                         if let notes = menu.notes, !notes.isEmpty {
@@ -341,14 +274,10 @@ struct ScannedMenuDetailView: View {
                                     .font(.body)
                                     .foregroundColor(.primary)
                             }
-                            .padding(16)
-                            .background(Color.white)
-                            .cornerRadius(20)
-                            .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+                            .padding(.horizontal, 12)
                         }
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 16)
+                    .padding(.bottom, 20)
                 }
             }
         }
@@ -370,13 +299,12 @@ struct ScannedMenuDetailView: View {
                               systemImage: menu.isFavorite ? "heart.slash" : "heart")
                     }
                     
-                    if menu.restaurantName?.isEmpty == false {
-                        Button {
-                            tempRestaurantName = menu.restaurantName ?? ""
-                            isEditingRestaurantName = true
-                        } label: {
-                            Label("Edit restaurant name", systemImage: "pencil")
-                        }
+                    Divider()
+                    
+                    Button(role: .destructive) {
+                        showingDeleteConfirmation = true
+                    } label: {
+                        Label("Delete menu", systemImage: "trash")
                     }
                 } label: {
                     Image(systemName: "ellipsis.circle")
@@ -387,6 +315,21 @@ struct ScannedMenuDetailView: View {
         }
         .sheet(isPresented: $showingEditNotes) {
             EditNotesView(notes: $notes, menu: menu)
+        }
+        .alert("Delete Menu", isPresented: $showingDeleteConfirmation) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete", role: .destructive) {
+                // Delete the menu and return to history
+                modelContext.delete(menu)
+                do {
+                    try modelContext.save()
+                    dismiss()
+                } catch {
+                    print("Error deleting menu: \(error)")
+                }
+            }
+        } message: {
+            Text("Are you sure you want to delete this menu? This action cannot be undone.")
         }
     }
 }
@@ -415,43 +358,41 @@ struct MenuDetailListView: View {
     }
     
     var body: some View {
-        ScrollView {
-            LazyVStack(spacing: 24) {
-                ForEach(sortedCategories(), id: \.self) { category in
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text(category.description.capitalized)
-                            .font(.system(.title, design: .serif))
-                            .fontWeight(.semibold)
-                            .foregroundColor(.primary)
-                            .padding(.horizontal, 16)
-                            .padding(.top, 8)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .lineLimit(nil)
-                            .minimumScaleFactor(0.8)
-                        
-                        VStack(alignment: .leading, spacing: 0) {
-                            ForEach(menu.menuItems.filter { $0.categoryEn == category }, id: \.id) { item in
-                                MenuItemDetailInfo(
-                                    item: item,
-                                    currency: currency
-                                )
-                                
-                                if item.id != menu.menuItems.filter({ $0.categoryEn == category }).last?.id {
-                                    Divider()
-                                        .padding(.horizontal, 16)
-                                }
+        LazyVStack(spacing: 20) {
+            ForEach(sortedCategories(), id: \.self) { category in
+                VStack(alignment: .leading, spacing: 16) {
+                    Text(category.description.capitalized)
+                        .font(.system(.title, design: .serif))
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+                        .padding(.horizontal, 20)
+                        .padding(.top, 8)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .lineLimit(nil)
+                        .minimumScaleFactor(0.8)
+                    
+                    VStack(alignment: .leading, spacing: 0) {
+                        ForEach(menu.menuItems.filter { $0.categoryEn == category }, id: \.id) { item in
+                            MenuItemDetailInfo(
+                                item: item,
+                                currency: currency
+                            )
+                            
+                            if item.id != menu.menuItems.filter({ $0.categoryEn == category }).last?.id {
+                                Divider()
+                                    .padding(.horizontal, 20)
                             }
                         }
-                        .background(Color.white)
-                        .cornerRadius(18)
-                        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
                     }
-                    .padding(.horizontal)
+                    .background(Color.white)
+                    .cornerRadius(20)
+                    .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
                 }
+                .padding(.horizontal, 12)
             }
-            .padding(.vertical)
-            .padding(.bottom, 80)
         }
+        .padding(.top, -8)
+        .padding(.bottom, 20)
     }
 }
 
@@ -477,7 +418,7 @@ struct MenuItemDetailInfo: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
             // Title and Price row
             HStack(alignment: .top) {
                 Text(item.translatedName)
@@ -514,34 +455,36 @@ struct MenuItemDetailInfo: View {
             }
             
             // Nutrition Tags
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    if isHighProtein {
-                        NutritionTag(
-                            systemName: "figure.strengthtraining.traditional",
-                            label: "High Protein",
-                            color: .blue
-                        )
-                    }
-                    if isLowFat {
-                        NutritionTag(
-                            systemName: "leaf.fill",
-                            label: "Low Fat",
-                            color: .green
-                        )
-                    }
-                    if isLowCarbs {
-                        NutritionTag(
-                            systemName: "chart.line.downtrend.xyaxis",
-                            label: "Low Carbs",
-                            color: .orange
-                        )
+            if isHighProtein || isLowFat || isLowCarbs {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        if isHighProtein {
+                            NutritionTag(
+                                systemName: "figure.strengthtraining.traditional",
+                                label: "High Protein",
+                                color: .blue
+                            )
+                        }
+                        if isLowFat {
+                            NutritionTag(
+                                systemName: "leaf.fill",
+                                label: "Low Fat",
+                                color: .green
+                            )
+                        }
+                        if isLowCarbs {
+                            NutritionTag(
+                                systemName: "chart.line.downtrend.xyaxis",
+                                label: "Low Carbs",
+                                color: .orange
+                            )
+                        }
                     }
                 }
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
         .background(Color(UIColor.systemBackground))
     }
 }
