@@ -70,6 +70,7 @@ struct DirectCameraView: View {
             // Overlay UI elements
             VStack(spacing: 0) {
                 Spacer()
+                    .allowsHitTesting(false) // Allow touches to pass through the spacer
                 
                 // Bottom controls area
                 BottomControlsOverlay(

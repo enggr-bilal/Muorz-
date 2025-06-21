@@ -34,71 +34,68 @@ struct CameraView: View {
     }
     
     var body: some View {
-        NavigationView {
-            ZStack {
-                // Use the new DirectCameraView for better UX
-                DirectCameraView(
-                    ocrViewModel: ocrViewModel,
-                    muorzManager: muorzManager,
-                    preferences: preferences,
-                    showingHistory: $showingHistory,
-                    hasProcessedMenu: hasProcessedMenu && !menuViewModel.menuItems.isEmpty,
-                    onViewMenu: {
-                        showMenuView = true
-                    }
-                )
-                .onReceive(ocrViewModel.$processedMenu) { processedMenu in
-                    if let menu = processedMenu, !menu.menuItems.isEmpty {
-                        // Update MenuViewModel with processed data
-                        menuViewModel.menuItems = menu.menuItems
-                        menuViewModel.restaurantInfo = menu.restaurantInfo
-                        menuViewModel.currency = menu.currency
-                        hasProcessedMenu = true
-                        
-                        // 🎯 BUSINESS LOGIC: Deduct Muorz when successfully reaching MenuView with API data
-                        let muorzDeducted = muorzManager.deductMuorz()
-                        if muorzDeducted {
-                            print("💰 Muorz deducted - Menu scan successful")
-                        } else {
-                            print("⚠️ No Muorz available but allowing scan (shouldn't happen if UI is working correctly)")
-                        }
-                        
-                        // 💾 SAVE MENU TO HISTORY
-                        Task {
-                            do {
-                                try await scannedMenuService.saveScannedMenu(menu)
-                                print("✅ Menu saved to history: \(menu.restaurantInfo?.name ?? "Unknown restaurant")")
-                            } catch {
-                                print("❌ Failed to save menu to history: \(error)")
-                            }
-                        }
-                        
-                        showMenuView = true
-                        isReturningFromMenu = false
-                    } else if let menu = processedMenu, menu.menuItems.isEmpty {
-                        // Menu exists but is empty - don't show MenuView, let ProcessedMenuView handle the error
-                        print("📝 Processed menu is empty - staying in ProcessedMenuView for error handling")
-                    }
+        ZStack {
+            // Use the new DirectCameraView for better UX
+            DirectCameraView(
+                ocrViewModel: ocrViewModel,
+                muorzManager: muorzManager,
+                preferences: preferences,
+                showingHistory: $showingHistory,
+                hasProcessedMenu: hasProcessedMenu && !menuViewModel.menuItems.isEmpty,
+                onViewMenu: {
+                    showMenuView = true
                 }
-            }
-            .navigationBarHidden(true)
-            .fullScreenCover(isPresented: $showMenuView, onDismiss: {
-                // When returning from MenuView, mark that we're returning and clear OCR state
-                isReturningFromMenu = true
-                ocrViewModel.clearResults()
-                print("🔄 Returned from MenuView - OCR state cleared for fresh scan")
-            }) {
-                MenuView(viewModel: menuViewModel, preferences: preferences)
-            }
-            .onAppear {
-                scannedMenuService.updateModelContext(modelContext)
-                
-                // Reset OCR state when initially appearing or returning from menu
-                if isReturningFromMenu {
-                    ocrViewModel.clearResults()
+            )
+            .onReceive(ocrViewModel.$processedMenu) { processedMenu in
+                if let menu = processedMenu, !menu.menuItems.isEmpty {
+                    // Update MenuViewModel with processed data
+                    menuViewModel.menuItems = menu.menuItems
+                    menuViewModel.restaurantInfo = menu.restaurantInfo
+                    menuViewModel.currency = menu.currency
+                    hasProcessedMenu = true
+                    
+                    // 🎯 BUSINESS LOGIC: Deduct Muorz when successfully reaching MenuView with API data
+                    let muorzDeducted = muorzManager.deductMuorz()
+                    if muorzDeducted {
+                        print("💰 Muorz deducted - Menu scan successful")
+                    } else {
+                        print("⚠️ No Muorz available but allowing scan (shouldn't happen if UI is working correctly)")
+                    }
+                    
+                    // 💾 SAVE MENU TO HISTORY
+                    Task {
+                        do {
+                            try await scannedMenuService.saveScannedMenu(menu)
+                            print("✅ Menu saved to history: \(menu.restaurantInfo?.name ?? "Unknown restaurant")")
+                        } catch {
+                            print("❌ Failed to save menu to history: \(error)")
+                        }
+                    }
+                    
+                    showMenuView = true
                     isReturningFromMenu = false
-                    print("🧹 OCR state reset for new scan session")
+                } else if let menu = processedMenu, menu.menuItems.isEmpty {
+                    // Menu exists but is empty - don't show MenuView, let ProcessedMenuView handle the error
+                    print("📝 Processed menu is empty - staying in ProcessedMenuView for error handling")
                 }
+            }
+        }
+        .fullScreenCover(isPresented: $showMenuView, onDismiss: {
+            // When returning from MenuView, mark that we're returning and clear OCR state
+            isReturningFromMenu = true
+            ocrViewModel.clearResults()
+            print("🔄 Returned from MenuView - OCR state cleared for fresh scan")
+        }) {
+            MenuView(viewModel: menuViewModel, preferences: preferences)
+        }
+        .onAppear {
+            scannedMenuService.updateModelContext(modelContext)
+            
+            // Reset OCR state when initially appearing or returning from menu
+            if isReturningFromMenu {
+                ocrViewModel.clearResults()
+                isReturningFromMenu = false
+                print("🧹 OCR state reset for new scan session")
             }
         }
     }
