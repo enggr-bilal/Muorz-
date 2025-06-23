@@ -30,6 +30,18 @@ Available on TestFlight : https://testflight.apple.com/join/6yWPWu3N Feedbacks a
 - **Real-time processing** with live camera feed
 - **Automatic image optimization** for better OCR results
 
+### Menu History & Persistence
+- **SwiftData Integration**: All scanned menus automatically saved
+- **Comprehensive History**: View all previously scanned menus with metadata
+- **Smart Organization**: Menus sorted by scan date with restaurant names
+- **Rating System**: 5-star rating system for each scanned menu
+- **Review Notes**: Add personal notes and reviews to saved menus
+- **Favorites System**: Mark favorite menus for quick access
+- **Menu Details**: Full menu recreation with same UI as original scan
+- **Search & Filter**: Find specific menus by restaurant name or date
+- **Persistent Storage**: All data saved locally using SwiftData
+- **GPS Integration**: Location data saved with each scan for context
+
 ### Smart Search & Filtering
 - **Intelligent search** with ingredient-based suggestions
 - **Real-time highlighting** of search terms
@@ -241,20 +253,24 @@ Muorz/
 ├── Model/
 │   ├── MenuItem.swift          # Data models with Gemini API support
 │   ├── FilterModels.swift      # Filter models
-│   └── OCRResult.swift         # OCR results
+│   ├── OCRResult.swift         # OCR results
+│   └── ScannedMenu.swift       # SwiftData models for menu persistence
 ├── ViewModel/
 │   ├── MenuViewModel.swift     # Main ViewModel with search
 │   ├── MenuService.swift       # Gemini API service
 │   ├── OCRViewModel.swift      # Enhanced OCR processing
 │   ├── SelectionManager.swift  # Cart management
 │   ├── UserPreferences.swift   # User preferences
+│   ├── ScannedMenuService.swift # History management service
 │   └── APIConfiguration.swift  # Secure API configuration
 ├── Views/
-│   ├── ContentView.swift       # Main view
+│   ├── ContentView.swift       # Main view with navigation
 │   ├── CameraView.swift        # Camera/Lens view (entry point)
+│   ├── DirectCameraView.swift  # Enhanced camera interface
 │   ├── Components/
 │   │   ├── SearchBar.swift     # Search bar with suggestions
-│   │   └── QuantityControl.swift
+│   │   ├── QuantityControl.swift
+│   │   └── MuorzCounter.swift  # Currency display component
 │   ├── Menu/
 │   │   ├── MenuView.swift      # Refactored menu view
 │   │   ├── Filters/
@@ -264,6 +280,9 @@ Muorz/
 │   │       ├── MenuItemInfo.swift
 │   │       ├── NutritionTag.swift
 │   │       └── NutritionTagsSection.swift
+│   ├── History/
+│   │   ├── ScannedMenuHistoryView.swift  # History list view
+│   │   └── ScannedMenuCard.swift         # Menu cards with rating system
 │   ├── Selection/
 │   └── Settings/
 └── Assets.xcassets/
@@ -333,12 +352,64 @@ struct DietaryTags: Codable, Equatable {
 - **Prices**: Converted to Double, currency extracted to top level
 - **Ingredients**: Preserved in English, inferred if missing
 
+#### ScannedMenu (SwiftData Model)
+```swift
+@Model
+class ScannedMenu {
+    // MARK: - Core Properties
+    var id: UUID
+    var menuItems: [PersistedMenuItem]
+    var currency: String?
+    
+    // MARK: - Location & Context
+    var restaurantName: String?
+    var scannedAt: Date
+    var latitude: Double?
+    var longitude: Double?
+    
+    // MARK: - User Data
+    var notes: String?
+    var rating: Int?        // 1-5 stars rating
+    var review: String?     // User review text
+    var isFavorite: Bool
+    var tags: [String]      // Custom tags for organization
+    
+    // MARK: - Metadata
+    var ocrText: String?
+    var processingDuration: TimeInterval?
+}
+
+@Model
+class PersistedMenuItem {
+    var id: UUID
+    var originalName: String
+    var translatedName: String
+    var ingredientsEn: [String]
+    var categoryEn: String
+    var price: String?
+    
+    // Nutrition scores (0-10 scale)
+    var proteinScore: Int
+    var fatScore: Int
+    var carbsScore: Int
+    
+    // Dietary tags
+    var isVegetarian: Bool
+    var isVegan: Bool
+    var isGlutenFree: Bool
+    var isDairyFree: Bool
+}
+```
+
 ## Features
 
 ### Implemented
 - **Camera-First Experience**: Modern camera interface as app entry point
 - **Advanced OCR**: Text extraction with multilingual support (FR/EN)
 - **Gemini AI Processing**: Google's Gemini 2.0 Flash for intelligent menu parsing
+- **Menu History System**: Complete SwiftData-powered menu persistence and history
+- **Rating & Reviews**: 5-star rating system with personal notes for each menu
+- **Smart Navigation**: Seamless navigation between camera, menu, and history views
 - **Smart Search**: Search in dish names AND ingredients with suggestions
 - **Multiple Filters**: By category, diet, and nutrition
 - **Intelligent Sorting**: Sort menu items by nutritional priorities (protein, fat, carbs)
@@ -398,6 +469,17 @@ struct DietaryTags: Codable, Equatable {
 - **Search Highlighting**: Search terms highlighted in results
 - **Responsive Design**: Adapts to different screen sizes
 
+### Menu History
+- **Access**: History button in camera view for quick access
+- **Menu Cards**: Beautiful cards showing restaurant name, date, and rating
+- **Star Ratings**: Display and edit 5-star ratings with secondary color styling
+- **Favorites**: Heart icon to mark/unmark favorite menus
+- **Menu Details**: Tap any card to view full menu with same UI as original scan
+- **Navigation**: Clean navigation with back buttons and serif typography
+- **Automatic Saving**: All scanned menus automatically saved with metadata
+- **Rating System**: Rate menus and add personal reviews for future reference
+- **Organization**: Menus sorted by scan date with clear visual hierarchy
+
 ## Technical Implementation
 
 ### API Integration
@@ -410,8 +492,9 @@ struct DietaryTags: Codable, Equatable {
 ### Data Processing
 - **OCR Pipeline**: Vision framework → Text extraction → API processing
 - **Data Transformation**: Gemini API response → Internal data models
+- **SwiftData Persistence**: Automatic menu saving with comprehensive metadata
 - **State Management**: Reactive updates using Combine framework
-- **Persistence**: User preferences saved locally
+- **Persistence**: User preferences and menu history saved locally
 
 ### User Interface
 - **SwiftUI**: Modern declarative UI framework
@@ -422,23 +505,30 @@ struct DietaryTags: Codable, Equatable {
 
 ## Known Issues
 
-- **Menu Persistence**: Menus are not saved between app sessions
 - **Offline Mode**: No offline functionality currently available
+- **Menu Export**: No export functionality for menu data
 
 ## Roadmap
 
 ### High Priority
-- [ ] Implement menu persistence with SwiftData
-- [ ] Add menu history functionality
-- [ ] Improve error handling and user feedback
+- [ ] Add offline LLM capabilities (iOS 26 On device Model)
+- [ ] Implement menu export and sharing features
+- [ ] Add location-based restaurant discovery
 
 ### Medium Priority
-- [ ] Add offline LLM capabilities (iOS 26 On device Model)
-- [ ] Add favorite dishes feature
-- [ ] Improve camera interface
+- [ ] Enhance rating system with detailed categories
+- [ ] Add menu comparison features
+- [ ] Improve camera interface with manual controls
 
 ### Low Priority
 - [ ] Implement restaurant discovery
-- [ ] Add user reviews and ratings
+- [ ] Add social sharing of favorite menus
 - [ ] B2B Model partnership with restaurants
+
+### Recently Completed ✅
+- [x] Implement menu persistence with SwiftData
+- [x] Add menu history functionality
+- [x] Implement rating and review system
+- [x] Add favorites functionality
+- [x] Create seamless navigation between views
  
