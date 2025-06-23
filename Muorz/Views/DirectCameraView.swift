@@ -1,3 +1,10 @@
+//
+//  CameraView.swift
+//  Muorz'
+//
+//  Created by Simon Naud on 26/05/25.
+//
+
 import SwiftUI
 import AVFoundation
 
